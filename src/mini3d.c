@@ -230,6 +230,13 @@ int main(int argc, char* argv[])
 #endif
     /* Load OpenGL Stuff */
 
+    GLuint basic_program = shader_program_compile("shaders/default.vert",
+                                                  "shaders/default.frag"); 
+    if (basic_program == 0) {
+        glfwTerminate();
+        mini_die("[GL] Shader compilation failed!");
+    }
+
     const GLfloat triangle[] = {
         -1.0f, -1.0f, 0.0f,
         1.0f, -1.0f, 0.0f,
@@ -269,6 +276,7 @@ int main(int argc, char* argv[])
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glUseProgram(basic_program);
         glBindVertexArray(VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 3);
        
