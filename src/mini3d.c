@@ -270,6 +270,13 @@ int main(int argc, char* argv[])
         mat4x4_scale_aniso(model, model, 0.5f, 0.5f, 0.5f);
         // mat4x4_rotate_Z(model, model, );
 
+        float degree = 1.0f;
+        float radian = 1.0f;
+
+        fprintf(stdout, "D TO R: %f\n", mini_degrees_to_radians(degree));
+        fprintf(stdout, "R TO D: %f\n", mini_radians_to_degrees(radian));
+        fflush(stdout);
+
 
         
         mini_math_print_mat4x4(model);
