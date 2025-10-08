@@ -6,13 +6,16 @@
 #include <stdarg.h>
 #include <assert.h>
 
-//////////////////
-// External libs
-#define GLFW_INCLUDE_NONE    // <- glad/GLFW can be included in any order
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#define GLFW_INCLUDE_NONE // <- glad/GLFW can be included in any order
+#define NK_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
 
 #define MINI_MATH_TYPE_LIN
+
+//////////////////
+// External libs
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 #ifdef MINI_MATH_TYPE_LIN
 #include <linmath/linmath.h>
@@ -20,25 +23,22 @@
 #include <cglm/call.h>
 #endif
 
-#define NK_IMPLEMENTATION
 #include "Nuklear/nuklear.h"
-
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
 ///////////////
 // My headers
-
 #ifdef DEBUG
 #warning "Debug build enabled!"
 #endif
 
 // Debug math tools (Linmath only)
 #if defined(DEBUG) && defined(MINI_MATH_TYPE_LIN)
-#include "math_debug.h"
+#warning "Leaving this for the memorization :D"
 #endif
 
 #include "gl_helpers.h"
+#include "math_helpers.h"
 
 ///////////////////////////////////////////
 //
@@ -262,18 +262,25 @@ int main(int argc, char* argv[])
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     /* Playgroud stuff, might be messy! */
+
     {
-        mat4x4 M;
-        vec4 V4;
-        vec3 V3;
-        vec2 V2;
-        mat4x4_identity(M); 
-    
-        mini_math_print_mat4x4(M);
-        mini_math_print_vec4(V4);
-        mini_math_print_vec3(V3);
-        mini_math_print_vec2(V2);
+        mat4x4 model;
+        mat4x4_identity(model);
+
+        mat4x4_scale_aniso(model, model, 0.5f, 0.5f, 0.5f);
+        // mat4x4_rotate_Z(model, model, );
+
+
+        
+        mini_math_print_mat4x4(model);
+        // mat4x4_translate(MVP, 0.2f, 0.2f, 0.0f);
+        // mini_math_print_mat4x4(MVP);
+
+        GLint uniform_loc = glGetUniformLocation(default_program, "model");
+        glUseProgram(default_program);
+        glUniformMatrix4fv(uniform_loc, 1, GL_FALSE, &model[0][0]);
     }
+
 
 
     /* OpenGL initial options setup */
@@ -296,7 +303,7 @@ int main(int argc, char* argv[])
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(default_program);
+        //glUseProgram(default_program);
         glBindVertexArray(VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 3);
        

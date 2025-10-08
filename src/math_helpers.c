@@ -1,17 +1,21 @@
-#include "math_debug.h"
+#include "math_helpers.h"
 
 #include <stdio.h>
 #include <linmath/linmath.h>
 
+/////////////////////////////
+// Debug prints for linmath
 void mini_math_print_mat4x4(const mat4x4 M)
 {
     int i, j;
+    fprintf(stdout, "-------\n");
 	for(i=0; i<4; ++i) {
         for(j=0; j<4; ++j) {
-            fprintf(stdout, "%.2f ", M[i][j]);
+            fprintf(stdout, "%.2f ", M[j][i]);
         }
         putchar('\n');
     }
+    fprintf(stdout, "-------\n");
     fflush(stdout);
 }
 
@@ -31,4 +35,16 @@ void mini_math_print_vec2(const vec2 V)
 {
     fprintf(stdout, "%.2f, %.2f\n", V[0], V[1]);
     fflush(stdout);
+}
+
+////////////////
+// Conversions
+float mini_degrees_to_radians(float d)
+{
+    return (MINI_PI / 180.0f) * d;
+}
+
+float mini_radians_to_degrees(float r)
+{
+    return (180.0f / MINI_PI) * r;
 }
