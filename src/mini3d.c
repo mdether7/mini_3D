@@ -285,6 +285,8 @@ int main(int argc, char* argv[])
     }
 
     /* OpenGL objects cleanup */
+    glDeleteProgram(basic_program);
+
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
 
