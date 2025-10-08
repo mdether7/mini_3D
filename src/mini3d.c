@@ -264,34 +264,45 @@ int main(int argc, char* argv[])
     /* Playgroud stuff, might be messy! */
 
     {
-        mat4x4 model;
+        // init matrices
+        mat4x4 model, view, projection, mvp;
         mat4x4_identity(model);
+        mat4x4_identity(view);
+        mat4x4_identity(projection);
+        mat4x4_identity(mvp);
 
+        // Model = Translate * Rotate * Scale
+        mat4x4_translate_in_place(model, 0.0f, 0.0f, 0.0f);
+        mat4x4_rotate_Y(model, model, mini_degrees_to_radians(85.0f));
+        mat4x4_rotate_Z(model, model, mini_degrees_to_radians(45.0f));
         mat4x4_scale_aniso(model, model, 0.5f, 0.5f, 0.5f);
-        // mat4x4_rotate_Z(model, model, );
 
-        float degree = 1.0f;
-        float radian = 1.0f;
+        // View
+        vec3 eye    = {0.0f, 0.0f, 5.0f}; // from
+        vec3 center = {0.0f, 0.0f, 0.0f}; // to
+        vec3 up     = {0.0f, 1.0f, 0.0f}; // up
+        mat4x4_look_at(view, eye, center, up);
 
-        fprintf(stdout, "D TO R: %f\n", mini_degrees_to_radians(degree));
-        fprintf(stdout, "R TO D: %f\n", mini_radians_to_degrees(radian));
-        fflush(stdout);
-
-
+        // Projection
+        float fov = mini_degrees_to_radians(45.0f);
+        float aspect = (float) g_window_setting.width / (float)g_window_setting.height;
+        mat4x4_perspective(projection, fov, aspect, 0.1f, 100.0f);
         
-        mini_math_print_mat4x4(model);
-        // mat4x4_translate(MVP, 0.2f, 0.2f, 0.0f);
-        // mini_math_print_mat4x4(MVP);
+        // MVP = Projection * View * Model
+        mat4x4 temp;
+        mat4x4_mul(temp, view, model);
+        mat4x4_mul(mvp, projection, temp);
 
-        GLint uniform_loc = glGetUniformLocation(default_program, "model");
+        mini_math_print_mat4x4(mvp);
+
+        // send matrix data to shader
+        GLint uniform_loc = glGetUniformLocation(default_program, "mvp");
         glUseProgram(default_program);
-        glUniformMatrix4fv(uniform_loc, 1, GL_FALSE, &model[0][0]);
+        glUniformMatrix4fv(uniform_loc, 1, GL_FALSE, &mvp[0][0]);
     }
 
-
-
     /* OpenGL initial options setup */
-    glClearColor(0.5f, 0.5f, 0.15f, 1.0f);
+    glClearColor(0.25f, 0.2f, 0.45f, 1.0f);
     glEnable(GL_DEPTH_TEST);
 
     double last_time = glfwGetTime();
@@ -310,7 +321,7 @@ int main(int argc, char* argv[])
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //glUseProgram(default_program);
+        glUseProgram(default_program);
         glBindVertexArray(VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 3);
        

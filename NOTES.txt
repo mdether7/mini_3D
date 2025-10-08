@@ -11,3 +11,7 @@ Scale into a new matrix: mat4x4_scale_aniso(result, original, 2, 3, 4)
 Scale in-place:          mat4x4_scale_aniso(myMatrix, myMatrix, 2, 3, 4)
 
 Model = Translate * Rotate * Scale
+
+Code order                  = Multiplication order (left to right)
+Transform application order = Reverse of multiplication order (right to left)
+                              (so backwards in code)

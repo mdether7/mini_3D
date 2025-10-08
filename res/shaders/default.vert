@@ -2,9 +2,9 @@
 
 layout(location = 0) in vec3 vertexPosition_modelspace;
 
-uniform mat4 model;
+uniform mat4 mvp;
 
 void main()
 {
-    gl_Position = model * vec4(vertexPosition_modelspace, 1.0f);
+    gl_Position = mvp * vec4(vertexPosition_modelspace, 1.0f);
 }
