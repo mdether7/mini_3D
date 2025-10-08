@@ -28,8 +28,14 @@
 
 ///////////////
 // My headers
+
 #ifdef DEBUG
 #warning "Debug build enabled!"
+#endif
+
+// Debug math tools (Linmath only)
+#if defined(DEBUG) && defined(MINI_MATH_TYPE_LIN)
+#include "math_debug.h"
 #endif
 
 #include "gl_helpers.h"
@@ -230,9 +236,9 @@ int main(int argc, char* argv[])
 #endif
     /* Load OpenGL Stuff */
 
-    GLuint basic_program = shader_program_compile("shaders/default.vert",
+    GLuint default_program = shader_program_compile("shaders/default.vert",
                                                   "shaders/default.frag"); 
-    if (basic_program == 0) {
+    if (default_program == 0) {
         glfwTerminate();
         mini_die("[GL] Shader compilation failed!");
     }
@@ -255,9 +261,23 @@ int main(int argc, char* argv[])
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
+    /* Playgroud stuff, might be messy! */
+    {
+        mat4x4 M;
+        vec4 V4;
+        vec3 V3;
+        vec2 V2;
+        mat4x4_identity(M); 
+    
+        mini_math_print_mat4x4(M);
+        mini_math_print_vec4(V4);
+        mini_math_print_vec3(V3);
+        mini_math_print_vec2(V2);
+    }
+
 
     /* OpenGL initial options setup */
-    glClearColor(0.6f, 0.3f, 0.15f, 1.0f);
+    glClearColor(0.5f, 0.5f, 0.15f, 1.0f);
     glEnable(GL_DEPTH_TEST);
 
     double last_time = glfwGetTime();
@@ -276,7 +296,7 @@ int main(int argc, char* argv[])
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(basic_program);
+        glUseProgram(default_program);
         glBindVertexArray(VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 3);
        
@@ -285,7 +305,7 @@ int main(int argc, char* argv[])
     }
 
     /* OpenGL objects cleanup */
-    glDeleteProgram(basic_program);
+    glDeleteProgram(default_program);
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);

@@ -1,0 +1,2 @@
+if w = 1 => then vec4 is a position in space.
+if w = 0 => then vec4 is a direction.
