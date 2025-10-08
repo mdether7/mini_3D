@@ -1,9 +1,13 @@
 #include "gl_helpers.h"
-#include <glad/glad.h>
-#include <stdio.h>
 
-///////////////////////////
-// Thanks learnopengl.com
+#include <stdlib.h>
+#include <stdio.h>
+#include <glad/glad.h>
+
+#include "file_read.h"
+
+//////////////////////////////////////////////
+// OpenGL debugging (Thanks learnopengl.com)
 
 GLenum
 gl_check_error_(const char* file, int line)
@@ -76,4 +80,94 @@ void APIENTRY gl_debug_output_callback(GLenum source, GLenum type, unsigned int 
                     id, message, _source, _type, _severity);
     // just to be sure
     fflush(stdout);
+}
+
+///////////////////
+// Shader Loading
+
+static int 
+shader_compile_error(GLuint shader)
+{
+	GLint success;
+	char info_log[1024] = {0};
+
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		glGetShaderInfoLog(shader, sizeof(info_log), NULL, info_log);
+		fprintf(stderr, "SHADER ERROR! Log: %s\n", info_log);
+		return -1;
+	}
+
+	return 0;
+}
+
+static int 
+shader_program_link_error(GLuint program)
+{
+    GLint success;
+    char info_log[1024] = {0};
+
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(program, sizeof(info_log), NULL, info_log);
+        fprintf(stderr, "SHADER ERROR! Log: %s\n", info_log);
+        return -1;
+    }
+
+    return 0;
+}
+
+GLuint
+shader_program_compile(const char* vert_path, const char* frag_path)
+{  
+    char*         vertex_source;
+    char*         fragment_source;
+
+    vertex_source   = read_file(vert_path);
+    fragment_source = read_file(frag_path);
+
+    if (!vertex_source || !fragment_source) {
+        free(vertex_source);
+        free(fragment_source);
+        return 0; // 0 never valid object in GL
+    }
+
+    GLuint vertex_shader_id   = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
+
+    glShaderSource(vertex_shader_id, 1, (const GLchar**)&vertex_source, NULL);
+    glShaderSource(fragment_shader_id, 1, (const GLchar**)&fragment_source, NULL);
+
+    free(vertex_source);
+    free(fragment_source);
+
+    glCompileShader(vertex_shader_id);
+    glCompileShader(fragment_shader_id);
+
+    if (shader_compile_error(vertex_shader_id)   < 0 ||
+        shader_compile_error(fragment_shader_id) < 0) {
+
+        glDeleteShader(vertex_shader_id);  
+        glDeleteShader(fragment_shader_id);
+
+        return 0;
+    }
+
+    GLuint program_id = glCreateProgram();
+
+    glAttachShader(program_id, vertex_shader_id);
+    glAttachShader(program_id, fragment_shader_id);
+    glLinkProgram(program_id);
+
+    glDeleteShader(vertex_shader_id);  
+    glDeleteShader(fragment_shader_id);
+
+    if (shader_program_link_error(program_id) < 0) {
+
+        glDeleteProgram(program_id);
+        return 0;
+
+    }
+
+    return program_id;
 }

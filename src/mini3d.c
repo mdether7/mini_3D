@@ -230,6 +230,23 @@ int main(int argc, char* argv[])
 #endif
     /* Load OpenGL Stuff */
 
+    const GLfloat triangle[] = {
+        -1.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+    };
+
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    GLuint VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(triangle), triangle, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
 
     /* OpenGL initial options setup */
@@ -251,10 +268,17 @@ int main(int argc, char* argv[])
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glBindVertexArray(VAO); 
+        glDrawArrays(GL_TRIANGLES, 0, 3);
        
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    /* OpenGL objects cleanup */
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
 
     // no need to destroy technically.
     glfwDestroyWindow(window);
