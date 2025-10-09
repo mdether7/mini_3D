@@ -59,11 +59,12 @@
 //
 ///////////////////////////////////////////
 
-typedef struct s_window_settings {
+typedef struct s_window_state {
     char  name[WINDOW_MAX_NAME_LEN];
     int   width;
     int   height;
-} WindowSettings;
+    bool  resized;
+} WindowState;
 
 typedef struct s_frame_counter {
     double ms_per_frame;
@@ -76,8 +77,10 @@ typedef struct s_user_config {
 } UserConfig;
 
 typedef struct s_mini_camera {
+    vec3  pos;
+    vec3  direction;
+    vec3  up;
     float fov;
-    vec3 pos;
 } Camera;
 
 ///////////////////////////////////////////
@@ -86,10 +89,11 @@ typedef struct s_mini_camera {
 //
 ///////////////////////////////////////////
 
-static WindowSettings g_window_setting = {
-    .width  = WINDOW_DEFAULT_WIDTH,
-    .height = WINDOW_DEFAULT_HEIGHT,
-    .name   = "mini 3D",
+static WindowState g_window_state = {
+    .width   = WINDOW_DEFAULT_WIDTH,
+    .height  = WINDOW_DEFAULT_HEIGHT,
+    .name    = "mini 3D",
+    .resized = false,
 };
 
 static UserConfig g_user_config = {
@@ -131,6 +135,12 @@ mini_print_n_flush(char* fmt, ...)
 }
 
 static void
+mini_update_projection(void)
+{
+
+}
+
+static void
 mini_update_framecounter(FrameCounter* counter, double ms_per_frame)
 {   
     counter->ms_per_frame = ms_per_frame;
@@ -148,6 +158,9 @@ static void error_callback(int error, const char* description) { fprintf(stderr,
 // Optional: Update your projection matrix here too (aspect ratio)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) { 
     glViewport(0, 0, width, height);
+    g_window_state.width   = width;
+    g_window_state.height  = height;
+    g_window_state.resized = true;
     // TODO: Recalculate projection matrix with new aspect ratio!
     // those width and height are the framebuffer sizes not window ones
 }
@@ -197,7 +210,7 @@ int main(int argc, char* argv[])
 #endif
 
     /* create window */
-    window = glfwCreateWindow(g_window_setting.width, g_window_setting.height, g_window_setting.name, NULL, NULL);
+    window = glfwCreateWindow(g_window_state.width, g_window_state.height, g_window_state.name, NULL, NULL);
     if (window == NULL) { 
         const char* error;
         glfwGetError(&error);
@@ -294,30 +307,31 @@ int main(int argc, char* argv[])
 
     /* Playgroud stuff, might be messy! */
 
-    { /* General matrices applied to camera/viewport */
-        
-        mat4x4 view, projection;
-        mat4x4_identity(view);
-        mat4x4_identity(projection);
+    mat4x4 view, projection;
+    mat4x4_identity(view);
+    mat4x4_identity(projection);
 
-        // View
-        vec3 eye    = {0.0f, 0.0f, 5.0f}; // FROM
-        vec3 center = {0.0f, 0.0f, 0.0f}; // TO
-        vec3 up     = {0.0f, 1.0f, 0.0f}; // UP
-        mat4x4_look_at(view, eye, center, up);
+    // View
+    vec3 eye    = {0.0f, 0.0f, 3.0f}; // FROM
+    vec3 center = {0.0f, 0.0f, 0.0f}; // TO
+    vec3 up     = {0.0f, 1.0f, 0.0f}; // UP
+    mat4x4_look_at(view, eye, center, up);
 
-        // Projection
-        float fov = mini_degrees_to_radians(60.0f);
-        float aspect = (float) g_window_setting.width / (float)g_window_setting.height;
-        mat4x4_perspective(projection, fov, aspect, 0.1f, 100.0f);
+    // Projection
+    float fov = mini_degrees_to_radians(60.0f);
+    float aspect = (float) g_window_state.width / (float)g_window_state.height;
+    mat4x4_perspective(projection, fov, aspect, 0.1f, 100.0f);
 
-        GLint view_loc = glGetUniformLocation(default_program, "view");
-        GLint projection_loc = glGetUniformLocation(default_program, "projection");
+    GLuint view_loc = glGetUniformLocation(default_program, "view");
+    GLuint projection_loc = glGetUniformLocation(default_program, "projection");
 
-        glUseProgram(default_program);
-        glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view[0][0]);
-        glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &projection[0][0]);
-    }
+    glfwSetWindowUserPointer(window, (void*)&projection_loc);
+
+    glUseProgram(default_program);
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view[0][0]);
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &projection[0][0]);
+
+    /*--------------------------------------------------------------------*/
 
     mat4x4 model_tri, model_cube;
     mat4x4_identity(model_tri);
@@ -352,6 +366,11 @@ int main(int argc, char* argv[])
                 g_frame_counter.ms_per_frame, g_frame_counter.avg_fps);
             frames = 0;
             last_time += 1.0;
+        }
+
+        if (g_window_state.resized) {
+            mini_print_n_flush("W: %d, H: %d", g_window_state.width, g_window_state.height);
+            g_window_state.resized = false;
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
