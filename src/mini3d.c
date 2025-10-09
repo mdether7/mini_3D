@@ -354,25 +354,23 @@ int main(int argc, char* argv[])
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
 
+    glfwSetTime(0.0);
     double last_time = glfwGetTime();
     int frames = 0;
     while (!glfwWindowShouldClose(window))
     {
+        /* Start frame*/
         double current_time = glfwGetTime();
-        frames++;
-        if ( current_time - last_time >= 1.0) {
-            mini_update_framecounter(&g_frame_counter, 1000.0/(double)frames);
-            mini_print_n_flush("%.2f ms/frame | %.2f FPS", 
-                g_frame_counter.ms_per_frame, g_frame_counter.avg_fps);
-            frames = 0;
-            last_time += 1.0;
-        }
 
+        /* TODO: Input*/
+
+        /* TODO: Update*/
         if (g_window_state.resized) {
             mini_print_n_flush("W: %d, H: %d", g_window_state.width, g_window_state.height);
             g_window_state.resized = false;
         }
 
+        /* Render */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(default_program);
@@ -387,8 +385,19 @@ int main(int argc, char* argv[])
         glBindVertexArray(cube_VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 36);
        
+        /* Present frame */
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        /* Frame Counter */
+        frames++;
+        if ( current_time - last_time >= 1.0) {
+            mini_update_framecounter(&g_frame_counter, 1000.0/(double)frames);
+            mini_print_n_flush("[%.2f ms/frame | %.2f FPS]", 
+                g_frame_counter.ms_per_frame, g_frame_counter.avg_fps);
+            frames = 0;
+            last_time += 1.0;
+        }
     }
 
     /* OpenGL objects cleanup */
