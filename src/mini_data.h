@@ -9,6 +9,12 @@ static const GLfloat mini_triangle[] = {
     0.0f, 1.0f, 0.0f,
 };
 
+static const GLfloat mini_triangle_colors[] = {
+    1.0f, 0.0f, 0.0f,  
+    0.0f, 1.0f, 0.0f,  
+    0.0f, 0.0f, 1.0f  
+};
+
 static const GLfloat mini_cube[] = {
     -1.0f,-1.0f,-1.0f, // triangle 1 : begin
     -1.0f,-1.0f, 1.0f,
