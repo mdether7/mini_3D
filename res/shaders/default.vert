@@ -1,10 +1,16 @@
 #version 460 core
 
 layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 1) in vec3 vertexColorData;
 
-uniform mat4 mvp;
+out vec3 fragment_color;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
 
 void main()
 {
-    gl_Position = mvp * vec4(vertexPosition_modelspace, 1.0f);
+    gl_Position = projection * view * model * vec4(vertexPosition_modelspace, 1.0f);
+    fragment_color = vertexColorData;
 }

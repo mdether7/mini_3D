@@ -15,3 +15,8 @@ Model = Translate * Rotate * Scale
 Code order                  = Multiplication order (left to right)
 Transform application order = Reverse of multiplication order (right to left)
                               (so backwards in code)
+
+MVP = Projection * View * Model
+mat4x4 temp;
+mat4x4_mul(temp, view, model);
+mat4x4_mul(mvp, projection, temp);

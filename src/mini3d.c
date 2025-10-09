@@ -39,6 +39,7 @@
 
 #include "gl_helpers.h"
 #include "math_helpers.h"
+#include "mini_data.h"
 
 ///////////////////////////////////////////
 //
@@ -73,6 +74,11 @@ typedef struct s_user_config {
     bool   should_start_maximized;
     bool   should_start_vsync;
 } UserConfig;
+
+typedef struct s_mini_camera {
+    float fov;
+    vec3 pos;
+} Camera;
 
 ///////////////////////////////////////////
 //
@@ -244,12 +250,7 @@ int main(int argc, char* argv[])
         mini_die("[GL] Shader compilation failed!");
     }
 
-    const GLfloat triangle[] = {
-        -1.0f, -1.0f, 0.0f,
-        1.0f, -1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-    };
-
+    // Triangle
     GLuint VAO;
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -257,53 +258,70 @@ int main(int argc, char* argv[])
     GLuint VBO;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(triangle), triangle, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(mini_triangle), mini_triangle, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
+    // Cube
+    GLuint cube_VAO;
+    glGenVertexArrays(1, &cube_VAO);
+    glBindVertexArray(cube_VAO);
+
+    GLuint cube_VBO;
+    glGenBuffers(1, &cube_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, cube_VBO);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(mini_cube), mini_cube, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    GLuint color_VBO;
+    glGenBuffers(1, &color_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, color_VBO);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(mini_cube_colors), mini_cube_colors, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
     /* Playgroud stuff, might be messy! */
 
-    {
-        // init matrices
-        mat4x4 model, view, projection, mvp;
-        mat4x4_identity(model);
+    { /* General matrices applied to camera/viewport */
+        
+        mat4x4 view, projection;
         mat4x4_identity(view);
         mat4x4_identity(projection);
-        mat4x4_identity(mvp);
-
-        // Model = Translate * Rotate * Scale
-        mat4x4_translate_in_place(model, 0.0f, 0.0f, 0.0f);
-        mat4x4_rotate_Y(model, model, mini_degrees_to_radians(85.0f));
-        mat4x4_rotate_Z(model, model, mini_degrees_to_radians(45.0f));
-        mat4x4_scale_aniso(model, model, 0.5f, 0.5f, 0.5f);
 
         // View
-        vec3 eye    = {0.0f, 0.0f, 5.0f}; // from
-        vec3 center = {0.0f, 0.0f, 0.0f}; // to
-        vec3 up     = {0.0f, 1.0f, 0.0f}; // up
+        vec3 eye    = {0.0f, 0.0f, 5.0f}; // FROM
+        vec3 center = {0.0f, 0.0f, 0.0f}; // TO
+        vec3 up     = {0.0f, 1.0f, 0.0f}; // UP
         mat4x4_look_at(view, eye, center, up);
 
         // Projection
-        float fov = mini_degrees_to_radians(45.0f);
+        float fov = mini_degrees_to_radians(60.0f);
         float aspect = (float) g_window_setting.width / (float)g_window_setting.height;
         mat4x4_perspective(projection, fov, aspect, 0.1f, 100.0f);
-        
-        // MVP = Projection * View * Model
-        mat4x4 temp;
-        mat4x4_mul(temp, view, model);
-        mat4x4_mul(mvp, projection, temp);
 
-        mini_math_print_mat4x4(mvp);
+        GLint view_loc = glGetUniformLocation(default_program, "view");
+        GLint projection_loc = glGetUniformLocation(default_program, "projection");
 
-        // send matrix data to shader
-        GLint uniform_loc = glGetUniformLocation(default_program, "mvp");
         glUseProgram(default_program);
-        glUniformMatrix4fv(uniform_loc, 1, GL_FALSE, &mvp[0][0]);
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view[0][0]);
+        glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &projection[0][0]);
     }
 
+    mat4x4 model_tri, model_cube;
+    mat4x4_identity(model_tri);
+    mat4x4_identity(model_cube);
+
+    
+
+
+   
+    
     /* OpenGL initial options setup */
-    glClearColor(0.25f, 0.2f, 0.45f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
 
     double last_time = glfwGetTime();
@@ -323,8 +341,14 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(default_program);
+
+        // set triangle model
         glBindVertexArray(VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        // set cube model
+        glBindVertexArray(cube_VAO); 
+        glDrawArrays(GL_TRIANGLES, 0, 36);
        
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -335,6 +359,10 @@ int main(int argc, char* argv[])
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+
+    glDeleteVertexArrays(1, &cube_VAO);
+    glDeleteBuffers(1, &cube_VBO);
+    glDeleteBuffers(1, &color_VBO);
 
     // no need to destroy technically.
     glfwDestroyWindow(window);
