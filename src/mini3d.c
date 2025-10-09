@@ -76,7 +76,7 @@ typedef struct s_user_config {
     bool   should_start_vsync;
 } UserConfig;
 
-typedef struct s_mini_camera {
+typedef struct s_camera {
     vec3  pos;
     vec3  direction;
     vec3  up;
@@ -104,6 +104,13 @@ static UserConfig g_user_config = {
 static FrameCounter g_frame_counter = {
     .ms_per_frame = 0.0,
     .avg_fps      = 0.0,
+};
+
+static Camera g_camera = {
+    .pos       = (vec3){0.0f, 0.0f, 0.0f},
+    .direction = (vec3){0.0f, 0.0f, 0.0f},
+    .up        = (vec3){0.0f, 0.0f, 0.0f},
+    .fov       = 90.0f,
 };
 
 ///////////////////////////////////////////
@@ -155,7 +162,7 @@ mini_update_framecounter(FrameCounter* counter, double ms_per_frame)
 ///////////////////////////////////////////
 
 static void error_callback(int error, const char* description) { fprintf(stderr, "Error: %s\n", description); }
-// Optional: Update your projection matrix here too (aspect ratio)
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) { 
     glViewport(0, 0, width, height);
     g_window_state.width   = width;
@@ -164,6 +171,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     // TODO: Recalculate projection matrix with new aspect ratio!
     // those width and height are the framebuffer sizes not window ones
 }
+
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     // Thats crazy useful! // 
