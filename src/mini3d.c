@@ -142,6 +142,7 @@ static void error_callback(int error, const char* description) { fprintf(stderr,
 // Optional: Update your projection matrix here too (aspect ratio)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) { 
     glViewport(0, 0, width, height);
+    // TODO: Recalculate projection matrix with new aspect ratio!
     // those width and height are the framebuffer sizes not window ones
 }
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
