@@ -315,8 +315,15 @@ int main(int argc, char* argv[])
     mat4x4_identity(model_tri);
     mat4x4_identity(model_cube);
 
-    
+    mat4x4_translate_in_place(model_tri, -1.0f, 0.0f, 0.0f);
+    mat4x4_rotate_Y(model_tri, model_tri, mini_degrees_to_radians(5.0f));
+    mat4x4_scale_aniso(model_tri, model_tri, 0.75f, 0.75f, 0.75f);
 
+    mat4x4_translate_in_place(model_cube, 1.0f, 0.0f, 0.0f);
+    mat4x4_rotate_Y(model_cube, model_cube, mini_degrees_to_radians(45.0f));
+    mat4x4_scale_aniso(model_cube, model_cube, 0.75f, 0.75f, 0.75f);
+
+    GLuint model_loc = glGetUniformLocation(default_program, "model");
 
    
     
@@ -343,10 +350,12 @@ int main(int argc, char* argv[])
         glUseProgram(default_program);
 
         // set triangle model
+        glUniformMatrix4fv(model_loc, 1, GL_FALSE, &model_tri[0][0]);
         glBindVertexArray(VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // set cube model
+        glUniformMatrix4fv(model_loc, 1, GL_FALSE, &model_cube[0][0]);
         glBindVertexArray(cube_VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 36);
        
