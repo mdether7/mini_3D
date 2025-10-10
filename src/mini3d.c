@@ -76,6 +76,13 @@ typedef struct s_user_config {
     bool   should_start_vsync;
 } UserConfig;
 
+typedef struct s_input_state {
+    bool move_forward;
+    bool move_back;
+    bool move_left;
+    bool move_right;
+} InputState;
+
 typedef struct s_camera {
     vec3  pos;
     vec3  direction;
@@ -107,12 +114,19 @@ static FrameCounter g_frame_counter = {
     .avg_fps      = 0.0,
 };
 
+static InputState g_input_state = {
+    .move_forward = false,
+    .move_back    = false,
+    .move_left    = false,
+    .move_right   = false,
+};
+
 static Camera g_camera = {
     .pos       = (vec3){0.0f, 0.0f, 10.0f},
     .direction = (vec3){0.0f, 0.0f, -1.0f},
     .up        = (vec3){0.0f, 1.0f, 0.0f},
     .fov       = 90.0f,
-    .speed     = 0.5f,
+    .speed     = 0.2f,
 };
 
 ///////////////////////////////////////////
@@ -179,10 +193,18 @@ process_input(GLFWwindow* window)
         vec3_sub(g_camera.pos, g_camera.pos, speed_final);
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-
+        vec3 camera_right;
+        vec3_mul_cross(camera_right, g_camera.direction, g_camera.up);
+        vec3_norm(camera_right, camera_right);
+        vec3_scale(camera_right, camera_right, g_camera.speed);
+        vec3_sub(g_camera.pos, g_camera.pos, camera_right);
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-
+        vec3 camera_right;
+        vec3_mul_cross(camera_right, g_camera.direction, g_camera.up);
+        vec3_norm(camera_right, camera_right);
+        vec3_scale(camera_right, camera_right, g_camera.speed);
+        vec3_add(g_camera.pos, g_camera.pos, camera_right);
     }
 }
 
@@ -372,8 +394,6 @@ int main(int argc, char* argv[])
 
     GLuint view_loc = glGetUniformLocation(default_program, "view");
     GLuint projection_loc = glGetUniformLocation(default_program, "projection");
-
-    glfwSetWindowUserPointer(window, (void*)&projection_loc);
 
     glUseProgram(default_program);
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view[0][0]);
