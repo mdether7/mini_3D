@@ -360,10 +360,10 @@ int main(int argc, char* argv[])
     mat4x4_identity(projection);
 
     // View
-    vec3 eye    = {0.0f, 0.0f, 3.0f}; // FROM
-    vec3 center = {0.0f, 0.0f, 0.0f}; // TO
-    vec3 up     = {0.0f, 1.0f, 0.0f}; // UP
-    mat4x4_look_at(view, eye, center, up);
+    // vec3 eye    = {0.0f, 0.0f, 3.0f}; // FROM
+    // vec3 center = {0.0f, 0.0f, 0.0f}; // TO
+    // vec3 up     = {0.0f, 1.0f, 0.0f}; // UP
+    // mat4x4_look_at(view, eye, center, up);
 
     // Projection
     float fov = mini_degrees_to_radians(60.0f);
