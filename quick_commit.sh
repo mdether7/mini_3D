@@ -3,7 +3,7 @@
 
 status=$(git status)
 
-echo status
+echo "$status"
 
 
 git add .
