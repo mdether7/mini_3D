@@ -102,7 +102,7 @@ typedef struct s_camera {
     vec3  direction;
     vec3  up;
     float fov;
-    float speed; // shoudl be here?
+    float speed; // shoudl be here??
 } Camera;
 
 ///////////////////////////////////////////
