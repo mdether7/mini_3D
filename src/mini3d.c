@@ -91,10 +91,7 @@ typedef struct s_user_config {
 } UserConfig;
 
 typedef struct s_input_state {
-    bool move_forward;
-    bool move_back;
-    bool move_left;
-    bool move_right;
+    bool actions[ACTION_COUNT];
 } InputState;
 
 typedef struct s_camera {
@@ -128,13 +125,6 @@ static FrameCounter g_frame_counter = {
     .avg_fps      = 0.0,
 };
 
-static InputState g_input_state = {
-    .move_forward = false,
-    .move_back    = false,
-    .move_left    = false,
-    .move_right   = false,
-};
-
 static Camera g_camera = {
     .pos       = (vec3){0.0f, 0.0f, 10.0f},
     .direction = (vec3){0.0f, 0.0f, -1.0f},
@@ -142,6 +132,12 @@ static Camera g_camera = {
     .fov       = 90.0f,
     .speed     = 0.2f,
 };
+
+/* INPUT */
+static InputState g_input_state = {
+    .actions = {0},
+};
+static int g_intput_key_to_action[GLFW_KEY_LAST + 1];
 
 ///////////////////////////////////////////
 //
@@ -459,7 +455,8 @@ int main(int argc, char* argv[])
             g_window_state.resized = false;
         }
 
-
+        fprintf(stdout, "%d\n", g_intput_key_to_action[GLFW_KEY_LAST + 1]);
+        fflush(stdout);
 
         /* Render */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
