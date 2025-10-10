@@ -60,6 +60,7 @@
 ///////////////////////////////////////////
 
 typedef enum {
+    ACTION_NONE = -1,
     ACTION_MOVE_FORWARD,
     ACTION_MOVE_BACKWARD,
     ACTION_MOVE_LEFT,
@@ -137,7 +138,8 @@ static Camera g_camera = {
 static InputState g_input_state = {
     .actions = {0},
 };
-static int g_intput_key_to_action[GLFW_KEY_LAST + 1];
+                                                // off by one
+static GameAction g_input_key_to_action[GLFW_KEY_LAST + 1] = {ACTION_NONE};
 
 ///////////////////////////////////////////
 //
@@ -168,6 +170,20 @@ mini_print_n_flush(char* fmt, ...)
 }
 
 static void
+mini_init_keybindings(void)
+{
+    g_input_key_to_action[GLFW_KEY_W] = ACTION_MOVE_FORWARD;
+    g_input_key_to_action[GLFW_KEY_S] = ACTION_MOVE_BACKWARD;
+    g_input_key_to_action[GLFW_KEY_A] = ACTION_MOVE_LEFT;
+    g_input_key_to_action[GLFW_KEY_D] = ACTION_MOVE_RIGHT;
+
+    g_input_key_to_action[GLFW_KEY_UP] = ACTION_MOVE_FORWARD;
+    g_input_key_to_action[GLFW_KEY_DOWN] = ACTION_MOVE_BACKWARD;
+    g_input_key_to_action[GLFW_KEY_LEFT] = ACTION_MOVE_LEFT;
+    g_input_key_to_action[GLFW_KEY_RIGHT] = ACTION_MOVE_RIGHT;
+}
+
+static void
 mini_update_projection(void)
 {
     // TODO
@@ -187,6 +203,23 @@ mini_print_camera(Camera* camera)
     fprintf(stdout, "SPEED: %f\n", camera->speed);
     fprintf(stdout, "--------------\n");
     fflush(stdout);
+}
+
+static void
+process_input_v2(GLFWwindow* window)
+{
+    // reset input state
+    for (int i = 0; i < ACTION_COUNT; i++)
+        g_input_state.actions[i] = false;
+
+    for (int key = GLFW_KEY_SPACE; key <= GLFW_KEY_LAST; key++) {
+        if (glfwGetKey(window, key) == GLFW_PRESS) {
+            GameAction action = g_input_key_to_action[key];
+            if (action != ACTION_NONE) {
+                g_input_state.actions[action] = true;
+            }
+        }
+    }
 }
 
 static void
@@ -305,6 +338,9 @@ int main(int argc, char* argv[])
     /* GLFW callbacks setup */
     glfwSetKeyCallback(window, key_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    
+    // HERE ?
+    mini_init_keybindings();
 
     /* openGL */
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -449,14 +485,10 @@ int main(int argc, char* argv[])
         vec3_add(center, g_camera.pos, g_camera.direction);
         mat4x4_look_at(view, g_camera.pos, center, g_camera.up);
 
-
         if (g_window_state.resized) {
             mini_print_n_flush("W: %d, H: %d", g_window_state.width, g_window_state.height);
             g_window_state.resized = false;
         }
-
-        fprintf(stdout, "%d\n", g_intput_key_to_action[GLFW_KEY_LAST + 1]);
-        fflush(stdout);
 
         /* Render */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
