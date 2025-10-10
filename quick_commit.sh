@@ -1,10 +1,7 @@
 #!/bin/bash
 
-
-status=$(git status)
-
+status=$(pwd)
 echo "$status"
-
 
 git add .
 git commit -m "quick commit"
