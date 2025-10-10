@@ -20,3 +20,5 @@ MVP = Projection * View * Model
 mat4x4 temp;
 mat4x4_mul(temp, view, model);
 mat4x4_mul(mvp, projection, temp);
+
+TODO: normal input handling!
