@@ -81,6 +81,7 @@ typedef struct s_camera {
     vec3  direction;
     vec3  up;
     float fov;
+    float speed; // shoudl be here?
 } Camera;
 
 ///////////////////////////////////////////
@@ -107,10 +108,11 @@ static FrameCounter g_frame_counter = {
 };
 
 static Camera g_camera = {
-    .pos       = (vec3){0.0f, 0.0f, 0.0f},
-    .direction = (vec3){0.0f, 0.0f, 0.0f},
-    .up        = (vec3){0.0f, 0.0f, 0.0f},
+    .pos       = (vec3){0.0f, 0.0f, 10.0f},
+    .direction = (vec3){0.0f, 0.0f, -1.0f},
+    .up        = (vec3){0.0f, 1.0f, 0.0f},
     .fov       = 90.0f,
+    .speed     = 0.5f,
 };
 
 ///////////////////////////////////////////
@@ -144,8 +146,47 @@ mini_print_n_flush(char* fmt, ...)
 static void
 mini_update_projection(void)
 {
-
+    // TODO
 }
+
+static void
+mini_print_camera(Camera* camera)
+{
+    fprintf(stdout, "--- CAMERA ---\n");
+    fprintf(stdout, "POS: ");
+    mini_math_print_vec3(camera->pos);
+    fprintf(stdout, "DIR: ");
+    mini_math_print_vec3(camera->direction);
+    fprintf(stdout, "UP: ");
+    mini_math_print_vec3(camera->up);
+    fprintf(stdout, "FOV: %f\n", camera->fov);
+    fprintf(stdout, "SPEED: %f\n", camera->speed);
+    fprintf(stdout, "--------------\n");
+    fflush(stdout);
+}
+
+static void
+process_input(GLFWwindow* window)
+{
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        vec3 speed_final;
+        vec3_scale(speed_final, g_camera.direction, g_camera.speed);
+        vec3_add(g_camera.pos, g_camera.pos, speed_final);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        vec3 speed_final;
+        vec3_scale(speed_final, g_camera.direction, g_camera.speed);
+        vec3_sub(g_camera.pos, g_camera.pos, speed_final);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+
+    }
+}
+
+
 
 static void
 mini_update_framecounter(FrameCounter* counter, double ms_per_frame)
@@ -168,7 +209,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     g_window_state.width   = width;
     g_window_state.height  = height;
     g_window_state.resized = true;
-    // TODO: Recalculate projection matrix with new aspect ratio!
     // those width and height are the framebuffer sizes not window ones
 }
 
@@ -371,17 +411,28 @@ int main(int argc, char* argv[])
         double current_time = glfwGetTime();
 
         /* TODO: Input*/
+        process_input(window);
 
         /* TODO: Update*/
+
+        vec3 center;
+        vec3_add(center, g_camera.pos, g_camera.direction);
+        mat4x4_look_at(view, g_camera.pos, center, g_camera.up);
+
+
         if (g_window_state.resized) {
             mini_print_n_flush("W: %d, H: %d", g_window_state.width, g_window_state.height);
             g_window_state.resized = false;
         }
 
+
+
         /* Render */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(default_program);
+        // update view matrix (camera)
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view[0][0]);
 
         // set triangle model
         glUniformMatrix4fv(model_loc, 1, GL_FALSE, &model_tri[0][0]);
@@ -405,6 +456,7 @@ int main(int argc, char* argv[])
                 g_frame_counter.ms_per_frame, g_frame_counter.avg_fps);
             frames = 0;
             last_time += 1.0;
+            mini_print_camera(&g_camera); // DEBUG ONLY
         }
     }
 
