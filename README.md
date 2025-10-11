@@ -1,1 +1,1 @@
-Read me baby one more time!
+Trying to build something non trivial using OpenGL.
