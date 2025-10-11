@@ -170,7 +170,7 @@ mini_print_n_flush(char* fmt, ...)
 }
 
 static void
-mini_init_keybindings(void)
+mini_input_init_keybindings(void)
 {
     g_input_key_to_action[GLFW_KEY_W] = ACTION_MOVE_FORWARD;
     g_input_key_to_action[GLFW_KEY_S] = ACTION_MOVE_BACKWARD;
@@ -223,26 +223,26 @@ process_input_v2(GLFWwindow* window)
 }
 
 static void
-process_input(GLFWwindow* window)
+mini_update()
 {
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    if (g_input_state.actions[ACTION_MOVE_FORWARD]) {
         vec3 speed_final;
         vec3_scale(speed_final, g_camera.direction, g_camera.speed);
         vec3_add(g_camera.pos, g_camera.pos, speed_final);
     }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    if (g_input_state.actions[ACTION_MOVE_BACKWARD]) {
         vec3 speed_final;
         vec3_scale(speed_final, g_camera.direction, g_camera.speed);
         vec3_sub(g_camera.pos, g_camera.pos, speed_final);
     }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+    if (g_input_state.actions[ACTION_MOVE_LEFT]) {
         vec3 camera_right;
         vec3_mul_cross(camera_right, g_camera.direction, g_camera.up);
         vec3_norm(camera_right, camera_right);
         vec3_scale(camera_right, camera_right, g_camera.speed);
         vec3_sub(g_camera.pos, g_camera.pos, camera_right);
     }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    if (g_input_state.actions[ACTION_MOVE_RIGHT]) {
         vec3 camera_right;
         vec3_mul_cross(camera_right, g_camera.direction, g_camera.up);
         vec3_norm(camera_right, camera_right);
@@ -251,15 +251,12 @@ process_input(GLFWwindow* window)
     }
 }
 
-
-
 static void
 mini_update_framecounter(FrameCounter* counter, double ms_per_frame)
 {   
     counter->ms_per_frame = ms_per_frame;
     counter->avg_fps = 1000.0 / ms_per_frame;
 }
-
 
 ///////////////////////////////////////////
 //
@@ -340,7 +337,7 @@ int main(int argc, char* argv[])
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     
     // HERE ?
-    mini_init_keybindings();
+    mini_input_init_keybindings();
 
     /* openGL */
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -476,10 +473,11 @@ int main(int argc, char* argv[])
         /* Start frame*/
         double current_time = glfwGetTime();
 
-        /* TODO: Input*/
-        process_input(window);
+        /* Input*/
+        process_input_v2(window);
 
-        /* TODO: Update*/
+        /* Update*/
+        mini_update();
 
         vec3 center;
         vec3_add(center, g_camera.pos, g_camera.direction);
