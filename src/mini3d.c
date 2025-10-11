@@ -100,7 +100,9 @@ typedef struct s_camera {
     vec3  direction;
     vec3  up;
     float fov;
-    float speed; // shoudl be here??
+    float speed; // should be here??
+    float near;  // ?? 
+    float far;   // ??
 } Camera;
 
 ///////////////////////////////////////////
@@ -132,11 +134,13 @@ static Camera g_camera = {
     .up        = (vec3){0.0f, 1.0f, 0.0f},
     .fov       = 90.0f,
     .speed     = 0.2f,
+    .near      = 0.1f, 
+    .far       = 100.0f,
 };
 
 /* INPUT */
 static InputState g_input_state = {
-    .actions = {0},
+    .actions = {false},
 };
                                                 // off by one
 static GameAction g_input_key_to_action[GLFW_KEY_LAST + 1] = {ACTION_NONE};
@@ -170,8 +174,11 @@ mini_print_n_flush(char* fmt, ...)
 }
 
 static void
-mini_input_init_keybindings(void)
-{
+mini_input_init_keybindings(void)          
+{   // Need to do this cus the initialization in global scope is shit.
+    for (int i = 0; i <= GLFW_KEY_LAST; i++) // (only first element was
+        g_input_key_to_action[i] = ACTION_NONE; // initialized to -1 XD)
+
     g_input_key_to_action[GLFW_KEY_W] = ACTION_MOVE_FORWARD;
     g_input_key_to_action[GLFW_KEY_S] = ACTION_MOVE_BACKWARD;
     g_input_key_to_action[GLFW_KEY_A] = ACTION_MOVE_LEFT;
@@ -181,12 +188,6 @@ mini_input_init_keybindings(void)
     g_input_key_to_action[GLFW_KEY_DOWN] = ACTION_MOVE_BACKWARD;
     g_input_key_to_action[GLFW_KEY_LEFT] = ACTION_MOVE_LEFT;
     g_input_key_to_action[GLFW_KEY_RIGHT] = ACTION_MOVE_RIGHT;
-}
-
-static void
-mini_update_projection(void)
-{
-    // TODO
 }
 
 static void
@@ -223,8 +224,8 @@ process_input_v2(GLFWwindow* window)
 }
 
 static void
-mini_update()
-{
+mini_update_actions()
+{ /* TODO(mdether7): clean it up! */
     if (g_input_state.actions[ACTION_MOVE_FORWARD]) {
         vec3 speed_final;
         vec3_scale(speed_final, g_camera.direction, g_camera.speed);
@@ -249,6 +250,13 @@ mini_update()
         vec3_scale(camera_right, camera_right, g_camera.speed);
         vec3_add(g_camera.pos, g_camera.pos, camera_right);
     }
+}
+
+static void
+update_projection_matrix(mat4x4 proj)
+{
+    mat4x4_perspective(proj, mini_degrees_to_radians(g_camera.fov), ((float)g_window_state.width / 
+                    (float)g_window_state.height), g_camera.near, g_camera.far);
 }
 
 static void
@@ -338,6 +346,7 @@ int main(int argc, char* argv[])
     
     // HERE ?
     mini_input_init_keybindings();
+
 
     /* openGL */
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -431,9 +440,11 @@ int main(int argc, char* argv[])
     // mat4x4_look_at(view, eye, center, up);
 
     // Projection
-    float fov = mini_degrees_to_radians(60.0f);
-    float aspect = (float) g_window_state.width / (float)g_window_state.height;
-    mat4x4_perspective(projection, fov, aspect, 0.1f, 100.0f);
+    // float fov = mini_degrees_to_radians(60.0f);
+    // float aspect = (float) g_window_state.width / (float)g_window_state.height;
+    // mat4x4_perspective(projection, fov, aspect, 0.1f, 100.0f);
+
+    update_projection_matrix(projection);
 
     GLuint view_loc = glGetUniformLocation(default_program, "view");
     GLuint projection_loc = glGetUniformLocation(default_program, "projection");
@@ -477,7 +488,7 @@ int main(int argc, char* argv[])
         process_input_v2(window);
 
         /* Update*/
-        mini_update();
+        mini_update_actions();
 
         vec3 center;
         vec3_add(center, g_camera.pos, g_camera.direction);
@@ -485,6 +496,7 @@ int main(int argc, char* argv[])
 
         if (g_window_state.resized) {
             mini_print_n_flush("W: %d, H: %d", g_window_state.width, g_window_state.height);
+            update_projection_matrix(projection); 
             g_window_state.resized = false;
         }
 
@@ -492,8 +504,11 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(default_program);
-        // update view matrix (camera)
+
+        // upload view matrix (camera)
         glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view[0][0]);
+        // upload projection matrix TODO(mdether): maybe flag? if g_window_state.resized??
+        glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &projection[0][0]);
 
         // set triangle model
         glUniformMatrix4fv(model_loc, 1, GL_FALSE, &model_tri[0][0]);
