@@ -101,7 +101,7 @@ typedef struct s_camera {
     vec3  up;
     float fov;
     float speed; // should be here??
-    float near;  // ?? 
+    float near;  // ?? (i'll leave it for now)
     float far;   // ??
 } Camera;
 
@@ -174,7 +174,7 @@ mini_print_n_flush(char* fmt, ...)
 }
 
 static void
-mini_input_init_keybindings(void)          
+input_init_keybindings(void)          
 {   // Need to do this cus the initialization in global scope is shit.
     for (int i = 0; i <= GLFW_KEY_LAST; i++) // (only first element was
         g_input_key_to_action[i] = ACTION_NONE; // initialized to -1 XD)
@@ -207,9 +207,9 @@ mini_print_camera(Camera* camera)
 }
 
 static void
-process_input_v2(GLFWwindow* window)
+input_process(GLFWwindow* window)
 {
-    // reset input state
+    // reset input state TODO(eter): add HELD, RELEASED!
     for (int i = 0; i < ACTION_COUNT; i++)
         g_input_state.actions[i] = false;
 
@@ -345,8 +345,7 @@ int main(int argc, char* argv[])
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     
     // HERE ?
-    mini_input_init_keybindings();
-
+    input_init_keybindings();
 
     /* openGL */
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -485,7 +484,7 @@ int main(int argc, char* argv[])
         double current_time = glfwGetTime();
 
         /* Input*/
-        process_input_v2(window);
+        input_process(window);
 
         /* Update*/
         mini_update_actions();
