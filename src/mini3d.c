@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <stdarg.h>
 #include <assert.h>
 
 #define GLFW_INCLUDE_NONE // <- glad/GLFW can be included in any order
@@ -14,13 +13,13 @@
 
 //////////////////
 // External libs
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
 
 #ifdef MINI_MATH_TYPE_LIN
-#include <linmath/linmath.h>
+#include "linmath/linmath.h"
 #else
-#include <cglm/call.h>
+#include "cglm/call.h"
 #endif
 
 #include "Nuklear/nuklear.h"
@@ -37,6 +36,7 @@
 #warning "Leaving this for the memorization :D"
 #endif
 
+#include "mini_utils.h"
 #include "gl_helpers.h"
 #include "math_helpers.h"
 #include "mini_data.h"
@@ -96,6 +96,8 @@ typedef struct s_input_state {
 } InputState;
 
 typedef struct s_camera {
+    mat4x4 view;
+    mat4x4 projection;
     vec3  pos;
     vec3  direction;
     vec3  up;
@@ -129,13 +131,15 @@ static FrameCounter g_frame_counter = {
 };
 
 static Camera g_camera = {
-    .pos       = (vec3){0.0f, 0.0f, 10.0f},
-    .direction = (vec3){0.0f, 0.0f, -1.0f},
-    .up        = (vec3){0.0f, 1.0f, 0.0f},
-    .fov       = 60.0f,
-    .speed     = 5.0f,
-    .near      = 0.1f, 
-    .far       = 100.0f,
+    .view       = MAT4x4_IDENTITY,
+    .projection = MAT4x4_IDENTITY,
+    .pos        = (vec3){0.0f, 0.0f, 10.0f},
+    .direction  = (vec3){0.0f, 0.0f, -1.0f},
+    .up         = (vec3){0.0f, 1.0f, 0.0f},
+    .fov        = 60.0f,
+    .speed      = 5.0f,
+    .near       = 0.1f, 
+    .far        = 100.0f,
 };
 
 /* INPUT */
@@ -150,28 +154,6 @@ static GameAction g_input_key_to_action[GLFW_KEY_LAST + 1] = {ACTION_NONE};
 //  Functionality hopefully XD
 //
 ///////////////////////////////////////////
-
-static void
-mini_die(char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-    fputs("\n", stderr);
-    exit(EXIT_FAILURE);
-}
-
-static void
-mini_print_n_flush(char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    vfprintf(stdout, fmt, ap);
-    va_end(ap);
-    fputs("\n", stdout);
-    fflush(stdout);
-}
 
 static void
 input_init_keybindings(void)          
@@ -224,32 +206,52 @@ input_process(GLFWwindow* window)
 }
 
 static void
-mini_update_actions(double dt)
-{ /* TODO(mdether7): clean it up! */
+camera_apply_movement(vec3 direction, double dt)
+{
+    vec3 final = {0};
+    vec3_scale(final, direction, g_camera.speed * dt);
+    vec3_add(g_camera.pos, g_camera.pos, final);
+}
+
+static void
+camera_get_right_vector_norm(vec3 r)
+{
+    vec3_mul_cross(r, g_camera.direction, g_camera.up);
+    vec3_norm(r, r);
+}
+
+static void
+mini_update_camera_movement(double dt)
+// NOTE(mdether7): This function now runs every frame, right vector calculation
+//                 could be if'ed and even this whole function only run if camera
+//                 movement occured.
+{
+    vec3 movement_direction = {0};
+
     if (g_input_state.actions[ACTION_MOVE_FORWARD]) {
-        vec3 speed_final;
-        vec3_scale(speed_final, g_camera.direction, g_camera.speed * dt);
-        vec3_add(g_camera.pos, g_camera.pos, speed_final );
+        vec3_add(movement_direction, movement_direction, g_camera.direction);
     }
     if (g_input_state.actions[ACTION_MOVE_BACKWARD]) {
-        vec3 speed_final;
-        vec3_scale(speed_final, g_camera.direction, g_camera.speed * dt);
-        vec3_sub(g_camera.pos, g_camera.pos, speed_final);
+        vec3_sub(movement_direction, movement_direction, g_camera.direction);
     }
+
+    vec3 right;
+    camera_get_right_vector_norm(right);
+
     if (g_input_state.actions[ACTION_MOVE_LEFT]) {
-        vec3 camera_right;
-        vec3_mul_cross(camera_right, g_camera.direction, g_camera.up);
-        vec3_norm(camera_right, camera_right);
-        vec3_scale(camera_right, camera_right, g_camera.speed * dt);
-        vec3_sub(g_camera.pos, g_camera.pos, camera_right);
+        vec3_sub(movement_direction, movement_direction, right);
     }
     if (g_input_state.actions[ACTION_MOVE_RIGHT]) {
-        vec3 camera_right;
-        vec3_mul_cross(camera_right, g_camera.direction, g_camera.up);
-        vec3_norm(camera_right, camera_right);
-        vec3_scale(camera_right, camera_right, g_camera.speed * dt);
-        vec3_add(g_camera.pos, g_camera.pos, camera_right);
+        vec3_add(movement_direction, movement_direction, right);
     }
+
+    // if there is movement apply noralization (diagonal)
+    if (vec3_len(movement_direction) > 0.0f) {
+        vec3 norm = {0};
+        vec3_norm(norm, movement_direction);
+        camera_apply_movement(norm, dt); 
+    }
+    
 }
 
 static void
@@ -493,9 +495,10 @@ int main(int argc, char* argv[])
         input_process(window);
 
         /* Update*/
-        mini_update_actions(delta_time);
+        //mini_update_actions(delta_time);
+        mini_update_camera_movement(delta_time);
 
-        vec3 center;
+        vec3 center = {0};
         vec3_add(center, g_camera.pos, g_camera.direction);
         mat4x4_look_at(view, g_camera.pos, center, g_camera.up);
 

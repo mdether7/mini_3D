@@ -5,6 +5,11 @@
 
 #define MINI_PI 3.14159265358979323846f
 
+#define MAT4x4_IDENTITY {{1.0f, 0.0f, 0.0f, 0.0f}, \
+                         {0.0f, 1.0f, 0.0f, 0.0f}, \
+                         {0.0f, 0.0f, 1.0f, 0.0f}, \
+                         {0.0f, 0.0f, 0.0f, 1.0f}} \
+
 /////////////////////////////
 // Debug prints for linmath
 void mini_math_print_mat4x4(const mat4x4 M);

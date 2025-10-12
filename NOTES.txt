@@ -21,4 +21,5 @@ mat4x4 temp;
 mat4x4_mul(temp, view, model);
 mat4x4_mul(mvp, projection, temp);
 
-TODO: normal input handling!
+"..." makes sure your project-local version is found even if a system-wide one exists.
+<...> avoids accidental shadowing and says “this is a system or library header.”
