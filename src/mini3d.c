@@ -222,9 +222,7 @@ camera_get_right_vector_norm(vec3 r)
 
 static void
 mini_update_camera_movement(double dt)
-// NOTE(mdether7): This function now runs every frame, right vector calculation
-//                 could be if'ed and even this whole function only run if camera
-//                 movement occured.
+// NOTE(mdether7): Right now this function runs every frame. 
 {
     vec3 movement_direction = {0};
 
@@ -235,22 +233,24 @@ mini_update_camera_movement(double dt)
         vec3_sub(movement_direction, movement_direction, g_camera.direction);
     }
 
-    vec3 right;
-    camera_get_right_vector_norm(right);
+    if (g_input_state.actions[ACTION_MOVE_LEFT] || g_input_state.actions[ACTION_MOVE_RIGHT]) {
+        vec3 right;
+        camera_get_right_vector_norm(right);
 
-    if (g_input_state.actions[ACTION_MOVE_LEFT]) {
-        vec3_sub(movement_direction, movement_direction, right);
-    }
-    if (g_input_state.actions[ACTION_MOVE_RIGHT]) {
-        vec3_add(movement_direction, movement_direction, right);
+        if (g_input_state.actions[ACTION_MOVE_LEFT]) {
+            vec3_sub(movement_direction, movement_direction, right);
+        }
+        if (g_input_state.actions[ACTION_MOVE_RIGHT]) {
+            vec3_add(movement_direction, movement_direction, right);
+        }
     }
 
-    // if there is movement apply noralization (diagonal)
-    if (vec3_len(movement_direction) > 0.0f) {
-        vec3 norm = {0};
-        vec3_norm(norm, movement_direction);
-        camera_apply_movement(norm, dt); 
-    }
+    if (vec3_len(movement_direction) <= 0.0f) 
+        return;
+
+    vec3 norm = {0};
+    vec3_norm(norm, movement_direction);
+    camera_apply_movement(norm, dt); 
     
 }
 
