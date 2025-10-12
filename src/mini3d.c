@@ -190,8 +190,9 @@ mini_print_camera(Camera* camera)
 
 static void
 input_process(GLFWwindow* window)
+// TODO(eter): add HELD, RELEASED!
 {
-    // reset input state TODO(eter): add HELD, RELEASED!
+    // reset input state
     for (int i = 0; i < ACTION_COUNT; i++)
         g_input_state.actions[i] = false;
 
@@ -254,14 +255,22 @@ mini_update_camera_movement(double dt)
 }
 
 static void
-update_projection_matrix(mat4x4 proj)
+camera_update_view_matrix(Camera* cam)
 {
-    mat4x4_perspective(proj, mini_degrees_to_radians(g_camera.fov), ((float)g_window_state.width / 
-                    (float)g_window_state.height), g_camera.near, g_camera.far);
+    vec3 center = {0};
+    vec3_add(center, cam->pos, cam->direction);
+    mat4x4_look_at(cam->view, cam->pos, center, cam->up);
 }
 
 static void
-update_camera_view_matrix();
+camera_update_projection_matrix(Camera* cam)
+{
+    mat4x4_perspective(cam->projection,
+                       mini_degrees_to_radians(cam->fov),
+                       ((float)g_window_state.width / (float)g_window_state.height),
+                       cam->near,
+                       cam->far);
+}
 
 static void
 mini_update_framecounter(FrameCounter* counter, double ms_per_frame)
@@ -430,32 +439,10 @@ int main(int argc, char* argv[])
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-    /* Playgroud stuff, might be messy! */
-
-    /* enclose it in a camera ?? */
-    mat4x4 view, projection;
-    mat4x4_identity(view);
-    mat4x4_identity(projection);
-
-    // View
-    // vec3 eye    = {0.0f, 0.0f, 3.0f}; // FROM
-    // vec3 center = {0.0f, 0.0f, 0.0f}; // TO
-    // vec3 up     = {0.0f, 1.0f, 0.0f}; // UP
-    // mat4x4_look_at(view, eye, center, up);
-
-    // Projection
-    // float fov = mini_degrees_to_radians(60.0f);
-    // float aspect = (float)g_window_state.width / (float)g_window_state.height;
-    // mat4x4_perspective(projection, fov, aspect, 0.1f, 100.0f);
-
-    update_projection_matrix(projection);
-
+    // Get locations
+    GLuint u_model_loc = glGetUniformLocation(default_program, "u_model");
     GLuint u_view_loc = glGetUniformLocation(default_program, "u_view");
     GLuint u_projection_loc = glGetUniformLocation(default_program, "u_projection");
-
-    glUseProgram(default_program);
-    glUniformMatrix4fv(u_view_loc, 1, GL_FALSE, &view[0][0]);
-    glUniformMatrix4fv(u_projection_loc, 1, GL_FALSE, &projection[0][0]);
 
     /*--------------------------------------------------------------------*/
 
@@ -471,14 +458,13 @@ int main(int argc, char* argv[])
     mat4x4_rotate_Y(model_cube, model_cube, mini_degrees_to_radians(45.0f));
     mat4x4_scale_aniso(model_cube, model_cube, 0.75f, 0.75f, 0.75f);
 
-    // still using default program from previous bind
-    GLuint u_model_loc = glGetUniformLocation(default_program, "u_model");
-
-   
-    
     /* OpenGL initial options setup */
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
+
+    /* Game/Engine specific initialization */
+    // Projection needs to be updated at least once before start
+    camera_update_projection_matrix(&g_camera);
 
     glfwSetTime(0.0);
     double last_time = glfwGetTime();
@@ -500,13 +486,12 @@ int main(int argc, char* argv[])
         mini_update_camera_movement(delta_time);
 
         // Update Matrices
-        vec3 center = {0};
-        vec3_add(center, g_camera.pos, g_camera.direction);
-        mat4x4_look_at(view, g_camera.pos, center, g_camera.up);
+        camera_update_view_matrix(&g_camera);
 
         if (g_window_state.resized) {
-            mini_print_n_flush("W: %d, H: %d", g_window_state.width, g_window_state.height);
-            update_projection_matrix(projection); 
+            camera_update_projection_matrix(&g_camera);
+            mini_print_n_flush("W: %d, H: %d", g_window_state.width,
+                                               g_window_state.height);
             g_window_state.resized = false;
         }
 
@@ -516,8 +501,8 @@ int main(int argc, char* argv[])
         glUseProgram(default_program);
 
         // upload view and projection matrix (camera)
-        glUniformMatrix4fv(u_view_loc, 1, GL_FALSE, &view[0][0]);
-        glUniformMatrix4fv(u_projection_loc, 1, GL_FALSE, &projection[0][0]);
+        glUniformMatrix4fv(u_view_loc, 1, GL_FALSE, &g_camera.view[0][0]);
+        glUniformMatrix4fv(u_projection_loc, 1, GL_FALSE, &g_camera.projection[0][0]);
 
         // set triangle model
         glUniformMatrix4fv(u_model_loc, 1, GL_FALSE, &model_tri[0][0]);
