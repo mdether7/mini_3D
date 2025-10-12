@@ -428,6 +428,7 @@ int main(int argc, char* argv[])
 
     /* Playgroud stuff, might be messy! */
 
+    /* enclose it in a camera ?? */
     mat4x4 view, projection;
     mat4x4_identity(view);
     mat4x4_identity(projection);
@@ -445,12 +446,12 @@ int main(int argc, char* argv[])
 
     update_projection_matrix(projection);
 
-    GLuint view_loc = glGetUniformLocation(default_program, "view");
-    GLuint projection_loc = glGetUniformLocation(default_program, "projection");
+    GLuint u_view_loc = glGetUniformLocation(default_program, "u_view");
+    GLuint u_projection_loc = glGetUniformLocation(default_program, "u_projection");
 
     glUseProgram(default_program);
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view[0][0]);
-    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &projection[0][0]);
+    glUniformMatrix4fv(u_view_loc, 1, GL_FALSE, &view[0][0]);
+    glUniformMatrix4fv(u_projection_loc, 1, GL_FALSE, &projection[0][0]);
 
     /*--------------------------------------------------------------------*/
 
@@ -467,7 +468,7 @@ int main(int argc, char* argv[])
     mat4x4_scale_aniso(model_cube, model_cube, 0.75f, 0.75f, 0.75f);
 
     // still using default program from previous bind
-    GLuint model_loc = glGetUniformLocation(default_program, "model");
+    GLuint u_model_loc = glGetUniformLocation(default_program, "u_model");
 
    
     
@@ -477,13 +478,9 @@ int main(int argc, char* argv[])
 
     glfwSetTime(0.0);
     double last_time = glfwGetTime();
+    double previous_time = glfwGetTime();
     unsigned int frames = 0;
     double delta_time = 0.0;
-    double previous_time = 0.0;
-
-    // Delta time is the time it took to render the frame.
-    // Another way to put it: delta time is the time period between
-    // last frame and the current.
 
     while (!glfwWindowShouldClose(window))
     {
@@ -491,8 +488,6 @@ int main(int argc, char* argv[])
         double current_time = glfwGetTime();
         delta_time = current_time - previous_time;
         previous_time = current_time;
-
-        mini_print_n_flush("%f", delta_time);
 
         /* Input*/
         input_process(window);
@@ -516,17 +511,17 @@ int main(int argc, char* argv[])
         glUseProgram(default_program);
 
         // upload view matrix (camera)
-        glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view[0][0]);
+        glUniformMatrix4fv(u_view_loc, 1, GL_FALSE, &view[0][0]);
         // upload projection matrix TODO(mdether): maybe flag? if g_window_state.resized??
-        glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &projection[0][0]);
+        glUniformMatrix4fv(u_projection_loc, 1, GL_FALSE, &projection[0][0]);
 
         // set triangle model
-        glUniformMatrix4fv(model_loc, 1, GL_FALSE, &model_tri[0][0]);
+        glUniformMatrix4fv(u_model_loc, 1, GL_FALSE, &model_tri[0][0]);
         glBindVertexArray(VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // set cube model
-        glUniformMatrix4fv(model_loc, 1, GL_FALSE, &model_cube[0][0]);
+        glUniformMatrix4fv(u_model_loc, 1, GL_FALSE, &model_cube[0][0]);
         glBindVertexArray(cube_VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 36);
        
@@ -538,7 +533,7 @@ int main(int argc, char* argv[])
         frames++;
         if ( current_time - last_time >= 1.0) {
             mini_update_framecounter(&g_frame_counter, 1000.0/(double)frames);
-            mini_print_n_flush("[%.2f ms/frame | %.2f FPS]", 
+            mini_print_n_flush("[FPS COUNTER: %.2f ms/frame | %.2f FPS]", 
                 g_frame_counter.ms_per_frame, g_frame_counter.avg_fps);
             frames = 0;
             last_time += 1.0;
