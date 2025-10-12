@@ -133,7 +133,7 @@ static Camera g_camera = {
     .direction = (vec3){0.0f, 0.0f, -1.0f},
     .up        = (vec3){0.0f, 1.0f, 0.0f},
     .fov       = 60.0f,
-    .speed     = 0.2f,
+    .speed     = 5.0f,
     .near      = 0.1f, 
     .far       = 100.0f,
 };
@@ -224,30 +224,30 @@ input_process(GLFWwindow* window)
 }
 
 static void
-mini_update_actions()
+mini_update_actions(double dt)
 { /* TODO(mdether7): clean it up! */
     if (g_input_state.actions[ACTION_MOVE_FORWARD]) {
         vec3 speed_final;
-        vec3_scale(speed_final, g_camera.direction, g_camera.speed);
-        vec3_add(g_camera.pos, g_camera.pos, speed_final);
+        vec3_scale(speed_final, g_camera.direction, g_camera.speed * dt);
+        vec3_add(g_camera.pos, g_camera.pos, speed_final );
     }
     if (g_input_state.actions[ACTION_MOVE_BACKWARD]) {
         vec3 speed_final;
-        vec3_scale(speed_final, g_camera.direction, g_camera.speed);
+        vec3_scale(speed_final, g_camera.direction, g_camera.speed * dt);
         vec3_sub(g_camera.pos, g_camera.pos, speed_final);
     }
     if (g_input_state.actions[ACTION_MOVE_LEFT]) {
         vec3 camera_right;
         vec3_mul_cross(camera_right, g_camera.direction, g_camera.up);
         vec3_norm(camera_right, camera_right);
-        vec3_scale(camera_right, camera_right, g_camera.speed);
+        vec3_scale(camera_right, camera_right, g_camera.speed * dt);
         vec3_sub(g_camera.pos, g_camera.pos, camera_right);
     }
     if (g_input_state.actions[ACTION_MOVE_RIGHT]) {
         vec3 camera_right;
         vec3_mul_cross(camera_right, g_camera.direction, g_camera.up);
         vec3_norm(camera_right, camera_right);
-        vec3_scale(camera_right, camera_right, g_camera.speed);
+        vec3_scale(camera_right, camera_right, g_camera.speed * dt);
         vec3_add(g_camera.pos, g_camera.pos, camera_right);
     }
 }
@@ -477,17 +477,28 @@ int main(int argc, char* argv[])
 
     glfwSetTime(0.0);
     double last_time = glfwGetTime();
-    int frames = 0;
+    unsigned int frames = 0;
+    double delta_time = 0.0;
+    double previous_time = 0.0;
+
+    // Delta time is the time it took to render the frame.
+    // Another way to put it: delta time is the time period between
+    // last frame and the current.
+
     while (!glfwWindowShouldClose(window))
     {
         /* Start frame*/
         double current_time = glfwGetTime();
+        delta_time = current_time - previous_time;
+        previous_time = current_time;
+
+        mini_print_n_flush("%f", delta_time);
 
         /* Input*/
         input_process(window);
 
         /* Update*/
-        mini_update_actions();
+        mini_update_actions(delta_time);
 
         vec3 center;
         vec3_add(center, g_camera.pos, g_camera.direction);
