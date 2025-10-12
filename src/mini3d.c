@@ -248,10 +248,9 @@ mini_update_camera_movement(double dt)
     if (vec3_len(movement_direction) <= 0.0f) 
         return;
 
-    vec3 norm = {0};
-    vec3_norm(norm, movement_direction);
-    camera_apply_movement(norm, dt); 
-    
+    vec3 normalized_movement = {0};
+    vec3_norm(normalized_movement, movement_direction);
+    camera_apply_movement(normalized_movement, dt);   
 }
 
 static void
@@ -260,6 +259,9 @@ update_projection_matrix(mat4x4 proj)
     mat4x4_perspective(proj, mini_degrees_to_radians(g_camera.fov), ((float)g_window_state.width / 
                     (float)g_window_state.height), g_camera.near, g_camera.far);
 }
+
+static void
+update_camera_view_matrix();
 
 static void
 mini_update_framecounter(FrameCounter* counter, double ms_per_frame)
@@ -495,9 +497,9 @@ int main(int argc, char* argv[])
         input_process(window);
 
         /* Update*/
-        //mini_update_actions(delta_time);
         mini_update_camera_movement(delta_time);
 
+        // Update Matrices
         vec3 center = {0};
         vec3_add(center, g_camera.pos, g_camera.direction);
         mat4x4_look_at(view, g_camera.pos, center, g_camera.up);
@@ -513,9 +515,8 @@ int main(int argc, char* argv[])
 
         glUseProgram(default_program);
 
-        // upload view matrix (camera)
+        // upload view and projection matrix (camera)
         glUniformMatrix4fv(u_view_loc, 1, GL_FALSE, &view[0][0]);
-        // upload projection matrix TODO(mdether): maybe flag? if g_window_state.resized??
         glUniformMatrix4fv(u_projection_loc, 1, GL_FALSE, &projection[0][0]);
 
         // set triangle model
