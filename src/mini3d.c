@@ -132,7 +132,7 @@ static Camera g_camera = {
     .pos       = (vec3){0.0f, 0.0f, 10.0f},
     .direction = (vec3){0.0f, 0.0f, -1.0f},
     .up        = (vec3){0.0f, 1.0f, 0.0f},
-    .fov       = 90.0f,
+    .fov       = 60.0f,
     .speed     = 0.2f,
     .near      = 0.1f, 
     .far       = 100.0f,
@@ -440,7 +440,7 @@ int main(int argc, char* argv[])
 
     // Projection
     // float fov = mini_degrees_to_radians(60.0f);
-    // float aspect = (float) g_window_state.width / (float)g_window_state.height;
+    // float aspect = (float)g_window_state.width / (float)g_window_state.height;
     // mat4x4_perspective(projection, fov, aspect, 0.1f, 100.0f);
 
     update_projection_matrix(projection);
