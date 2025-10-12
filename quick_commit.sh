@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#status=$(pwd)
-#echo "$status"
-echo "The first argument is: $#"
-
-
+if [ $# -ge 1 ]; then
+    mess=$1
+else 
+    mess="quick commit"
+fi
 
 git add .
-git commit -m "quick commit"
+git commit -m "$mess"
 git push origin main
 git status #sanity check
