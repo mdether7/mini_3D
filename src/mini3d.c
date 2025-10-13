@@ -357,8 +357,12 @@ int main(int argc, char* argv[])
     glfwSetKeyCallback(window, key_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     
-    // HERE ?
+    /* Game/Engine specific input settings. (not sure if it is in good place tho)*/
     input_init_keybindings();
+    // For motion based camera controls
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    if (glfwRawMouseMotionSupported())
+        glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 
     /* openGL */
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -482,6 +486,13 @@ int main(int argc, char* argv[])
         /* Input*/
         input_process(window);
 
+        {
+            // camera stuff debugging
+            double xpos, ypos;
+            glfwGetCursorPos(window, &xpos, &ypos);
+            mini_print_n_flush("[MOUSE POS X: %f, Y: %f]\n", xpos, ypos);
+        }
+
         /* Update*/
         mini_update_camera_movement(delta_time);
 
@@ -494,6 +505,7 @@ int main(int argc, char* argv[])
                                                g_window_state.height);
             g_window_state.resized = false;
         }
+    
 
         /* Render */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
