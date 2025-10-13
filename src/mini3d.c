@@ -89,6 +89,7 @@ typedef struct s_frame_counter {
 typedef struct s_user_config {
     bool   should_start_maximized;
     bool   should_start_vsync;
+    bool   should_start_focused;
 } UserConfig;
 
 typedef struct s_input_state {
@@ -101,6 +102,8 @@ typedef struct s_camera {
     vec3  pos;
     vec3  direction;
     vec3  up;
+    float yaw;
+    float pitch;
     float fov;
     float speed; // should be here??
     float near;  // ?? (i'll leave it for now)
@@ -123,6 +126,7 @@ static WindowState g_window_state = {
 static UserConfig g_user_config = {
     .should_start_maximized     = false,
     .should_start_vsync         = true,
+    .should_start_focused       = true,
 };
 
 static FrameCounter g_frame_counter = {
@@ -136,6 +140,8 @@ static Camera g_camera = {
     .pos        = (vec3){0.0f, 0.0f, 10.0f},
     .direction  = (vec3){0.0f, 0.0f, -1.0f},
     .up         = (vec3){0.0f, 1.0f, 0.0f},
+    .yaw        = 0.0f,
+    .pitch      = 0.0f,
     .fov        = 60.0f,
     .speed      = 5.0f,
     .near       = 0.1f, 
@@ -258,7 +264,8 @@ static void
 camera_update_view_matrix(Camera* cam)
 {
     vec3 center = {0};
-    vec3_add(center, cam->pos, cam->direction);
+    // we need to add to put the direction of the camera at
+    vec3_add(center, cam->pos, cam->direction); // its current position
     mat4x4_look_at(cam->view, cam->pos, center, cam->up);
 }
 
@@ -285,15 +292,63 @@ mini_update_framecounter(FrameCounter* counter, double ms_per_frame)
 //
 ///////////////////////////////////////////
 
-static void error_callback(int error, const char* description) { fprintf(stderr, "Error: %s\n", description); }
+static void error_callback(int error, const char* description)
+{
+    fprintf(stderr, "Error: %s\n", description);
+}
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) { 
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) 
+{ 
     glViewport(0, 0, width, height);
     g_window_state.width   = width;
     g_window_state.height  = height;
     g_window_state.resized = true;
     // those width and height are the framebuffer sizes not window ones
 }
+
+static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    //mini_print_n_flush("[MOUSE POS X: %f, Y: %f]\n", xpos, ypos);
+    static float xlast = 0;
+    static float ylast = 0;
+    static const float sens = 0.05f;
+
+    float xoffset = xpos - xlast; // calculate delta
+    float yoffset = ylast - ypos; // same here, inverted!
+    xlast = xpos;
+    ylast = ypos;
+
+    xoffset *= sens;
+    yoffset *= sens;
+
+    g_camera.yaw += xoffset;
+    g_camera.pitch += yoffset;
+
+    if(g_camera.pitch > 89.0f)
+        g_camera.pitch = 89.0f;
+    if(g_camera.pitch < -89.0f)
+        g_camera.pitch = -89.0f;
+
+    // yaw = 0, pitch = 0
+
+    // direction.x = cos(0°) * cos(0°) = 1 * 1 = 1
+    // direction.y = sin(0°)           = 0
+    // direction.z = sin(0°) * cos(0°) = 0 * 1 = 0
+
+    // direction = (1, 0, 0)
+
+    // direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    // direction.y = sin(glm::radians(pitch));
+    // direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+    vec3 direction;
+    direction[0] = cos(mini_degrees_to_radians(g_camera.yaw)) * cos(mini_degrees_to_radians(g_camera.pitch));
+    direction[1] = sin(mini_degrees_to_radians(g_camera.pitch));
+    direction[2] = sin(mini_degrees_to_radians(g_camera.yaw)) * cos(mini_degrees_to_radians(g_camera.pitch));
+    vec3_norm(direction, direction);
+    vec3_dup(g_camera.direction, direction);    
+}
+
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -334,6 +389,9 @@ int main(int argc, char* argv[])
 
     if (g_user_config.should_start_maximized) {
         glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+    }
+    if (g_user_config.should_start_focused) {
+        glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
     } 
 
 #ifdef ENABLE_GL_DEBUG_OUTPUT
@@ -355,14 +413,15 @@ int main(int argc, char* argv[])
 
     /* GLFW callbacks setup */
     glfwSetKeyCallback(window, key_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     
     /* Game/Engine specific input settings. (not sure if it is in good place tho)*/
     input_init_keybindings();
     // For motion based camera controls
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    if (glfwRawMouseMotionSupported())
-        glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    if (glfwRawMouseMotionSupported()) // <= raw motion is better for controlling
+        glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE); //  a 3D camera.
 
     /* openGL */
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -465,6 +524,7 @@ int main(int argc, char* argv[])
     /* OpenGL initial options setup */
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE); // <= read on this
 
     /* Game/Engine specific initialization */
     // Projection needs to be updated at least once before start
@@ -485,13 +545,6 @@ int main(int argc, char* argv[])
 
         /* Input*/
         input_process(window);
-
-        {
-            // camera stuff debugging
-            double xpos, ypos;
-            glfwGetCursorPos(window, &xpos, &ypos);
-            mini_print_n_flush("[MOUSE POS X: %f, Y: %f]\n", xpos, ypos);
-        }
 
         /* Update*/
         mini_update_camera_movement(delta_time);
