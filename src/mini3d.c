@@ -92,6 +92,10 @@ typedef struct s_user_config {
     bool   should_start_focused;
 } UserConfig;
 
+typedef struct s_settings {
+    float mouse_sensitivity;
+} Settings;
+
 typedef struct s_input_state {
     bool actions[ACTION_COUNT];
 } InputState;
@@ -132,6 +136,10 @@ static UserConfig g_user_config = {
 static FrameCounter g_frame_counter = {
     .ms_per_frame = 0.0,
     .avg_fps      = 0.0,
+};
+
+static Settings g_settings = {
+    .mouse_sensitivity = 0.05f,
 };
 
 static Camera g_camera = {
@@ -311,15 +319,17 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
     //mini_print_n_flush("[MOUSE POS X: %f, Y: %f]\n", xpos, ypos);
     static float xlast = 0;
     static float ylast = 0;
-    static const float sens = 0.05f;
 
     float xoffset = xpos - xlast; // calculate delta
     float yoffset = ylast - ypos; // same here, inverted!
     xlast = xpos;
     ylast = ypos;
 
-    xoffset *= sens;
-    yoffset *= sens;
+    xoffset *= g_settings.mouse_sensitivity;
+    yoffset *= g_settings.mouse_sensitivity;
+
+    // g_camera.pitch = asin(-d.Y); // direction to pitch/yaw?
+    // g_camera.yaw = atan2(d.X, d.Z)
 
     g_camera.yaw += xoffset;
     g_camera.pitch += yoffset;
@@ -328,18 +338,6 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
         g_camera.pitch = 89.0f;
     if(g_camera.pitch < -89.0f)
         g_camera.pitch = -89.0f;
-
-    // yaw = 0, pitch = 0
-
-    // direction.x = cos(0°) * cos(0°) = 1 * 1 = 1
-    // direction.y = sin(0°)           = 0
-    // direction.z = sin(0°) * cos(0°) = 0 * 1 = 0
-
-    // direction = (1, 0, 0)
-
-    // direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    // direction.y = sin(glm::radians(pitch));
-    // direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 
     vec3 direction;
     direction[0] = cos(mini_degrees_to_radians(g_camera.yaw)) * cos(mini_degrees_to_radians(g_camera.pitch));
