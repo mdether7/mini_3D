@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <float.h>
 
 #define GLFW_INCLUDE_NONE // <- glad/GLFW can be included in any order
 #define NK_IMPLEMENTATION
@@ -67,6 +68,14 @@ typedef enum {
     ACTION_MOVE_RIGHT,
     ACTION_COUNT
 } GameAction;
+
+typedef enum {
+    NORTH,
+    EAST,
+    SOUTH,
+    WEST,
+    NWSE_COUNT,
+} Direction;
 
 ///////////////////////////////////////////
 //
@@ -304,16 +313,25 @@ mini_update_framecounter(FrameCounter* counter, double ms_per_frame)
 
 static void
 debug_mini_print_facing_direction(Camera* cam)
-// Doting with 2D vector ignoring Y cus that's all i need for facing directions
+// Doting with 2D vector ignoring Y
 {
-    vec2 dir2d = { cam->direction[0], cam->direction[2] };
+    float dot_products[NWSE_COUNT];
 
-    float dot_negative_z = vec2_dot(dir2d, (vec2){DIR_FORWARD[0], DIR_FORWARD[2]});
-    float dot_positive_x = vec2_dot(dir2d, (vec2){DIR_RIGHT[0], DIR_RIGHT[2]});
-    float dot_positive_z = vec2_dot(dir2d, (vec2){DIR_BACKWARD[0], DIR_BACKWARD[2]});
-    float dot_negative_x = vec2_dot(dir2d, (vec2){DIR_LEFT[0], DIR_LEFT[2]}); 
-    
-    
+    vec2 dir2d = { cam->direction[0], cam->direction[2] };
+    dot_products[NORTH] = vec2_dot(dir2d, (vec2){DIR_FORWARD[0], DIR_FORWARD[2]});
+    dot_products[EAST]  = vec2_dot(dir2d, (vec2){DIR_RIGHT[0], DIR_RIGHT[2]});
+    dot_products[SOUTH] = vec2_dot(dir2d, (vec2){DIR_BACKWARD[0], DIR_BACKWARD[2]});
+    dot_products[WEST]  = vec2_dot(dir2d, (vec2){DIR_LEFT[0], DIR_LEFT[2]}); 
+
+    float max_val = dot_products[0];
+    int max_dir = 0;
+    for (size_t i = 1; i < 4; i++)
+        if (dot_products[i] > max_val) {
+            max_val = dot_products[i];
+            max_dir = i;
+        }
+
+    printf("MAX VAL: %f (DIR: %d)\n", max_val, max_dir);   
 }
 
 ///////////////////////////////////////////
