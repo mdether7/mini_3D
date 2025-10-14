@@ -556,6 +556,8 @@ int main(int argc, char* argv[])
                                                g_window_state.height);
             g_window_state.resized = false;
         }
+
+        printf("[DOT: %f\n]", vec3_dot(g_camera.direction, (vec3){1, 0, 0}));
     
 
         /* Render */

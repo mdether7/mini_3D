@@ -22,4 +22,8 @@ void mini_math_print_vec2(const vec2 V);
 float mini_degrees_to_radians(float d);
 float mini_radians_to_degrees(float r);
 
+////////////
+// My math
+float vec3_dot(vec3 v1, vec3 v2);
+
 #endif

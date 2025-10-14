@@ -48,3 +48,10 @@ float mini_radians_to_degrees(float r)
 {
     return (180.0f / MINI_PI) * r;
 }
+
+////////////
+// My math
+float vec3_dot(vec3 v1, vec3 v2)
+{
+    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
