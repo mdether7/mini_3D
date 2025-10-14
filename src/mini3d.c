@@ -156,12 +156,20 @@ static Camera g_camera = {
     .far        = 100.0f,
 };
 
-/* INPUT */
+/////////
+// Input
 static InputState g_input_state = {
     .actions = {false},
 };
                                                 // off by one
 static GameAction g_input_key_to_action[GLFW_KEY_LAST + 1] = {ACTION_NONE};
+
+////////////////////////
+// Cardinal Directions
+static const vec3 DIR_FORWARD  = {0.0f, 0.0f, -1.0f}; //north (-z)
+static const vec3 DIR_BACKWARD = {0.0f, 0.0f, 1.0f};  //south (+z)
+static const vec3 DIR_RIGHT    = {1.0f, 0.0f, 0.0f};  //east (+x)
+static const vec3 DIR_LEFT     = {-1.0f, 0.0f, 0.0f}; //west (-x)
 
 ///////////////////////////////////////////
 //
@@ -294,6 +302,20 @@ mini_update_framecounter(FrameCounter* counter, double ms_per_frame)
     counter->avg_fps = 1000.0 / ms_per_frame;
 }
 
+static void
+debug_mini_print_facing_direction(Camera* cam)
+// Doting with 2D vector ignoring Y cus that's all i need for facing directions
+{
+    vec2 dir2d = { cam->direction[0], cam->direction[2] };
+
+    float dot_negative_z = vec2_dot(dir2d, (vec2){DIR_FORWARD[0], DIR_FORWARD[2]});
+    float dot_positive_x = vec2_dot(dir2d, (vec2){DIR_RIGHT[0], DIR_RIGHT[2]});
+    float dot_positive_z = vec2_dot(dir2d, (vec2){DIR_BACKWARD[0], DIR_BACKWARD[2]});
+    float dot_negative_x = vec2_dot(dir2d, (vec2){DIR_LEFT[0], DIR_LEFT[2]}); 
+    
+    
+}
+
 ///////////////////////////////////////////
 //
 //  GLFW callbacks
@@ -316,7 +338,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    //mini_print_n_flush("[MOUSE POS X: %f, Y: %f]\n", xpos, ypos);
+    //TODO: move it to polling/while loop.
     static float xlast = 0;
     static float ylast = 0;
 
@@ -535,16 +557,16 @@ int main(int argc, char* argv[])
     double delta_time = 0.0;
 
     while (!glfwWindowShouldClose(window))
-    {
-        /* Start frame*/
+    { /*_/LOOP*/
+        /* Start frame */
         double current_time = glfwGetTime();
         delta_time = current_time - previous_time;
         previous_time = current_time;
 
-        /* Input*/
+        /* Input */
         input_process(window);
 
-        /* Update*/
+        /* Update */
         mini_update_camera_movement(delta_time);
 
         // Update Matrices
@@ -557,8 +579,10 @@ int main(int argc, char* argv[])
             g_window_state.resized = false;
         }
 
-        printf("[DOT: %f\n]", vec3_dot(g_camera.direction, (vec3){1, 0, 0}));
-    
+        // printf("[DOT WITH POSITIVE X: %f]\n", vec3_dot(g_camera.direction, (vec3){1, 0, 0}));
+        // printf("[MAX: %f]\n", fmaxf(1.0f, 1.001f));
+        debug_mini_print_facing_direction(&g_camera);
+
 
         /* Render */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

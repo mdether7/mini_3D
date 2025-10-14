@@ -37,6 +37,10 @@ void mini_math_print_vec2(const vec2 V)
     fflush(stdout);
 }
 
+////////////
+// My math
+////////////
+
 ////////////////
 // Conversions
 float mini_degrees_to_radians(float d)
@@ -50,8 +54,25 @@ float mini_radians_to_degrees(float r)
 }
 
 ////////////
-// My math
+// Vectors
 float vec3_dot(vec3 v1, vec3 v2)
 {
     return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+
+float vec2_dot(vec2 v1, vec2 v2)
+{
+    return v1[0] * v2[0] + v1[1] * v2[1];
+}
+
+////////////////
+// Comparisons
+float minf(float f1, float f2)
+{
+    return f1 > f2 ? f2 : f1;
+}
+
+float maxf(float f1, float f2)
+{
+    return f1 > f2 ? f1 : f2;
 }
