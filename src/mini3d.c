@@ -311,8 +311,8 @@ mini_update_framecounter(FrameCounter* counter, double ms_per_frame)
     counter->avg_fps = 1000.0 / ms_per_frame;
 }
 
-static void
-debug_mini_print_facing_direction(Camera* cam)
+static Direction
+camera_get_facing_direction(Camera* cam)
 // Doting with 2D vector ignoring Y
 {
     float dot_products[NWSE_COUNT];
@@ -331,7 +331,17 @@ debug_mini_print_facing_direction(Camera* cam)
             max_dir = i;
         }
 
-    printf("MAX VAL: %f (DIR: %d)\n", max_val, max_dir);   
+    return (Direction)max_dir; 
+}
+
+//////////
+// Utils
+static const char*
+util_get_direction_as_string(Direction dir)
+{
+    assert(dir >= NORTH && dir < NWSE_COUNT);
+    static const char* names[] = {"NORTH", "EAST", "SOUTH", "WEST"};
+    return names[dir];
 }
 
 ///////////////////////////////////////////
@@ -597,10 +607,10 @@ int main(int argc, char* argv[])
             g_window_state.resized = false;
         }
 
-        // printf("[DOT WITH POSITIVE X: %f]\n", vec3_dot(g_camera.direction, (vec3){1, 0, 0}));
-        // printf("[MAX: %f]\n", fmaxf(1.0f, 1.001f));
-        debug_mini_print_facing_direction(&g_camera);
-
+        {
+            Direction dir = camera_get_facing_direction(&g_camera);
+            printf("[FACING:%s]\n", util_get_direction_as_string(dir));
+        }
 
         /* Render */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
