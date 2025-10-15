@@ -54,7 +54,8 @@
 #define WINDOW_DEFAULT_WIDTH 1280
 #define WINDOW_DEFAULT_HEIGHT 800
 
-#define SHADER_MAX_PATH 1024
+#define MAX_SHADER_PATH 1024
+#define MAX_SHADER_PROGRAMS 10
 
 ///////////////////////////////////////////
 //
@@ -94,8 +95,8 @@ typedef struct s_window_state {
 
 typedef struct s_shader_program {
     GLuint program_handle;
-    char vertex_shader_path[SHADER_MAX_PATH];
-    char fragment_shader_path[SHADER_MAX_PATH];
+    char vertex_shader_path[MAX_SHADER_PATH];
+    char fragment_shader_path[MAX_SHADER_PATH];
 } ShaderProgram;
 
 typedef struct s_frame_counter {
@@ -172,6 +173,8 @@ static Camera g_camera = {
     .near       = 0.1f, 
     .far        = 100.0f,
 };
+
+static ShaderProgram g_shader_programs[MAX_SHADER_PROGRAMS];
 
 /////////
 // Input
@@ -423,7 +426,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-    // TODO: Add This for learingng purposes
+    // TODO: Add hot reload
     // if (key == GLFW_KEY_R && action == GLFW_PRESS)
     //     shader_program_hot_reload()
 }

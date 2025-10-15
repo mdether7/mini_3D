@@ -188,4 +188,6 @@ shader_program_hot_reload(GLuint* program,
 
     glDeleteProgram(*program);
     *program = reloaded_program;
+
+    return true;
 }
