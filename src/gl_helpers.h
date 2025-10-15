@@ -2,6 +2,7 @@
 #define GL_HELPERS_H
 
 #include <glad/glad.h>
+#include <stdbool.h>
 
 //////////////////////
 // OpenGL debugging
@@ -16,7 +17,7 @@ void APIENTRY gl_debug_output_callback(GLenum source, GLenum type, unsigned int 
 
 ///////////////////
 // Shader Loading
-
 GLuint shader_program_compile(const char* vert_path, const char* frag_path);
+bool shader_program_hot_reload(GLuint* program, const char* vert_path, const char* frag_path);
 
 #endif // GL_HELPERS_H

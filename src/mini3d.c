@@ -54,6 +54,8 @@
 #define WINDOW_DEFAULT_WIDTH 1280
 #define WINDOW_DEFAULT_HEIGHT 800
 
+#define SHADER_MAX_PATH 1024
+
 ///////////////////////////////////////////
 //
 //  Enums
@@ -89,6 +91,12 @@ typedef struct s_window_state {
     int   height;
     bool  resized;
 } WindowState;
+
+typedef struct s_shader_program {
+    GLuint program_handle;
+    char vertex_shader_path[SHADER_MAX_PATH];
+    char fragment_shader_path[SHADER_MAX_PATH];
+} ShaderProgram;
 
 typedef struct s_frame_counter {
     double ms_per_frame;
@@ -157,7 +165,7 @@ static Camera g_camera = {
     .pos        = (vec3){0.0f, 0.0f, 10.0f},
     .direction  = (vec3){0.0f, 0.0f, -1.0f},
     .up         = (vec3){0.0f, 1.0f, 0.0f},
-    .yaw        = -90.0f,
+    .yaw        = -90.0f, // start facing north.
     .pitch      = 0.0f,
     .fov        = 60.0f,
     .speed      = 5.0f,
@@ -414,6 +422,10 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     // int* my_int = (int*)glfwGetWindowUserPointer(window);
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+    // TODO: Add This for learingng purposes
+    // if (key == GLFW_KEY_R && action == GLFW_PRESS)
+    //     shader_program_hot_reload()
 }
 
 ///////////////////////////////////////////

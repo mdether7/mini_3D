@@ -7,4 +7,5 @@ in vec3 fragment_color;
 void main()
 {
     color = fragment_color;
+    color *= 3.2f;
 }

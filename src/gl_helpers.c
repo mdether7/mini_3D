@@ -1,6 +1,8 @@
 #include "gl_helpers.h"
 
 #include <stdlib.h>
+#include <stdbool.h>
+#include <assert.h>
 #include <stdio.h>
 #include <glad/glad.h>
 
@@ -120,6 +122,8 @@ shader_program_link_error(GLuint program)
 GLuint
 shader_program_compile(const char* vert_path, const char* frag_path)
 {  
+    assert(vert_path && frag_path);
+
     char*         vertex_source;
     char*         fragment_source;
 
@@ -170,4 +174,18 @@ shader_program_compile(const char* vert_path, const char* frag_path)
     }
 
     return program_id;
+}
+
+bool
+shader_program_hot_reload(GLuint* program, 
+    const char* vert_path, const char* frag_path)
+{
+    assert(program && vert_path && frag_path);
+
+    GLuint reloaded_program = shader_program_compile(vert_path, frag_path);
+    if (reloaded_program == 0) 
+        return false;
+
+    glDeleteProgram(*program);
+    *program = reloaded_program;
 }
