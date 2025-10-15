@@ -157,7 +157,7 @@ static Camera g_camera = {
     .pos        = (vec3){0.0f, 0.0f, 10.0f},
     .direction  = (vec3){0.0f, 0.0f, -1.0f},
     .up         = (vec3){0.0f, 1.0f, 0.0f},
-    .yaw        = 0.0f,
+    .yaw        = -90.0f,
     .pitch      = 0.0f,
     .fov        = 60.0f,
     .speed      = 5.0f,
@@ -277,7 +277,7 @@ mini_update_camera_movement(double dt)
         }
     }
 
-    if (vec3_len(movement_direction) <= 0.0f) 
+    if (vec3_len(movement_direction) <= FLT_EPSILON) 
         return;
 
     vec3 normalized_movement = {0};
@@ -313,7 +313,7 @@ mini_update_framecounter(FrameCounter* counter, double ms_per_frame)
 
 static Direction
 camera_get_facing_direction(Camera* cam)
-// Doting with 2D vector ignoring Y
+// Doting with 2D vector ignoring Y.
 {
     float dot_products[NWSE_COUNT];
 
@@ -323,15 +323,17 @@ camera_get_facing_direction(Camera* cam)
     dot_products[SOUTH] = vec2_dot(dir2d, (vec2){DIR_BACKWARD[0], DIR_BACKWARD[2]});
     dot_products[WEST]  = vec2_dot(dir2d, (vec2){DIR_LEFT[0], DIR_LEFT[2]}); 
 
-    float max_val = dot_products[0];
-    int max_dir = 0;
-    for (size_t i = 1; i < 4; i++)
+    // assume it's the first one.
+    Direction max_dir = NORTH;
+    float max_val = dot_products[NORTH];
+
+    for (size_t i = 1; i < NWSE_COUNT; i++)
         if (dot_products[i] > max_val) {
             max_val = dot_products[i];
-            max_dir = i;
+            max_dir = (Direction)i;
         }
 
-    return (Direction)max_dir; 
+    return max_dir; 
 }
 
 //////////
@@ -366,9 +368,17 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    //TODO: move it to polling/while loop.
+    //TODO: Move it to polling/while loop.
     static float xlast = 0;
     static float ylast = 0;
+    static bool first_mouse = true;
+    
+    if (first_mouse) {
+        xlast = xpos;
+        ylast = ypos;
+        first_mouse = false;
+        return;
+    }
 
     float xoffset = xpos - xlast; // calculate delta
     float yoffset = ylast - ypos; // same here, inverted!
@@ -579,15 +589,15 @@ int main(int argc, char* argv[])
     camera_update_projection_matrix(&g_camera);
 
     glfwSetTime(0.0);
-    double last_time = glfwGetTime();
-    double previous_time = glfwGetTime();
+    float last_time = glfwGetTime();
+    float previous_time = glfwGetTime();
     unsigned int frames = 0;
-    double delta_time = 0.0;
+    float delta_time = 0.0; // TODO: Do something else than delta time (Ticks?)
 
     while (!glfwWindowShouldClose(window))
     { /*_/LOOP*/
         /* Start frame */
-        double current_time = glfwGetTime();
+        float current_time = glfwGetTime();
         delta_time = current_time - previous_time;
         previous_time = current_time;
 
@@ -606,12 +616,12 @@ int main(int argc, char* argv[])
                                                g_window_state.height);
             g_window_state.resized = false;
         }
-
+#if 0
         {
             Direction dir = camera_get_facing_direction(&g_camera);
             printf("[FACING:%s]\n", util_get_direction_as_string(dir));
         }
-
+#endif
         /* Render */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -638,7 +648,7 @@ int main(int argc, char* argv[])
         /* Frame Counter */
         frames++;
         if ( current_time - last_time >= 1.0) {
-            mini_update_framecounter(&g_frame_counter, 1000.0/(double)frames);
+            mini_update_framecounter(&g_frame_counter, 1000.0f/(float)frames);
             mini_print_n_flush("[FPS COUNTER: %.2f ms/frame | %.2f FPS]", 
                 g_frame_counter.ms_per_frame, g_frame_counter.avg_fps);
             frames = 0;
