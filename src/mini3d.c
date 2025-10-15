@@ -190,6 +190,7 @@ static Camera g_camera = {
 // For now there's no need for multiple programs, but who knows.
 // Also someday replace GLuint with ShaderProgram struct maybeee?
 static GLuint g_shader_programs[MAX_SHADER_PROGRAMS];
+static GLuint g_uniform_locations[3];
 
 //////////
 // Input
@@ -441,9 +442,16 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-    // TODO: Add hot reload
-    // if (key == GLFW_KEY_R && action == GLFW_PRESS)
-    //     shader_program_hot_reload()
+    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+        shader_program_hot_reload(&g_shader_programs[PROGRAM_SLOT_0],
+            "shaders/default.vert", "shaders/default.frag");
+            glUseProgram(g_shader_programs[PROGRAM_SLOT_0]);
+
+            // Reacquire uniform locations
+            g_uniform_locations[0] = glGetUniformLocation(g_shader_programs[PROGRAM_SLOT_0], "u_model");
+            g_uniform_locations[1] = glGetUniformLocation(g_shader_programs[PROGRAM_SLOT_0], "u_view");
+            g_uniform_locations[2] = glGetUniformLocation(g_shader_programs[PROGRAM_SLOT_0], "u_projection");
+    }
 }
 
 ///////////////////////////////////////////
@@ -541,8 +549,8 @@ int main(int argc, char* argv[])
 #endif
     /* Load OpenGL Stuff */
 
-    GLuint default_program = shader_program_compile("shaders/default.vert",
-                                                  "shaders/default.frag"); 
+    GLuint default_program = shader_program_compile("shaders/new.vert",
+                                                  "shaders/new.frag"); 
     if (default_program == 0) {
         glfwTerminate();
         mini_die("[GL] Shader compilation failed!");
@@ -592,9 +600,13 @@ int main(int argc, char* argv[])
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     // Get locations
-    GLuint u_model_loc = glGetUniformLocation(default_program, "u_model");
-    GLuint u_view_loc = glGetUniformLocation(default_program, "u_view");
-    GLuint u_projection_loc = glGetUniformLocation(default_program, "u_projection");
+    // GLuint u_model_loc = glGetUniformLocation(g_shader_programs[PROGRAM_SLOT_0], "u_model");
+    // GLuint u_view_loc = glGetUniformLocation(g_shader_programs[PROGRAM_SLOT_0], "u_view");
+    // GLuint u_projection_loc = glGetUniformLocation(g_shader_programs[PROGRAM_SLOT_0], "u_projection");
+
+    g_uniform_locations[0] = glGetUniformLocation(g_shader_programs[PROGRAM_SLOT_0], "u_model");
+    g_uniform_locations[1] = glGetUniformLocation(g_shader_programs[PROGRAM_SLOT_0], "u_view");
+    g_uniform_locations[2] = glGetUniformLocation(g_shader_programs[PROGRAM_SLOT_0], "u_projection");
 
     /*--------------------------------------------------------------------*/
 
@@ -647,6 +659,7 @@ int main(int argc, char* argv[])
                                                g_window_state.height);
             g_window_state.resized = false;
         }
+
 #if 0
         {
             Direction dir = camera_get_facing_direction(&g_camera);
@@ -656,19 +669,19 @@ int main(int argc, char* argv[])
         /* Render */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(default_program);
+        glUseProgram(g_shader_programs[PROGRAM_SLOT_0]);
 
         // upload view and projection matrix (camera)
-        glUniformMatrix4fv(u_view_loc, 1, GL_FALSE, &g_camera.view[0][0]);
-        glUniformMatrix4fv(u_projection_loc, 1, GL_FALSE, &g_camera.projection[0][0]);
+        glUniformMatrix4fv(g_uniform_locations[1], 1, GL_FALSE, &g_camera.view[0][0]);
+        glUniformMatrix4fv(g_uniform_locations[2], 1, GL_FALSE, &g_camera.projection[0][0]);
 
         // set triangle model
-        glUniformMatrix4fv(u_model_loc, 1, GL_FALSE, &model_tri[0][0]);
+        glUniformMatrix4fv(g_uniform_locations[0], 1, GL_FALSE, &model_tri[0][0]);
         glBindVertexArray(VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // set cube model
-        glUniformMatrix4fv(u_model_loc, 1, GL_FALSE, &model_cube[0][0]);
+        glUniformMatrix4fv(g_uniform_locations[0], 1, GL_FALSE, &model_cube[0][0]);
         glBindVertexArray(cube_VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 36);
        
@@ -680,16 +693,16 @@ int main(int argc, char* argv[])
         frames++;
         if ( current_time - last_time >= 1.0) {
             mini_update_framecounter(&g_frame_counter, 1000.0f/(float)frames);
-            mini_print_n_flush("[FPS COUNTER: %.2f ms/frame | %.2f FPS]", 
-                g_frame_counter.ms_per_frame, g_frame_counter.avg_fps);
+            //mini_print_n_flush("[FPS COUNTER: %.2f ms/frame | %.2f FPS]", 
+            //    g_frame_counter.ms_per_frame, g_frame_counter.avg_fps);
             frames = 0;
             last_time += 1.0;
-            mini_print_camera(&g_camera); // DEBUG ONLY
+            //mini_print_camera(&g_camera); // DEBUG ONLY
         }
     }
 
     /* OpenGL objects cleanup */
-    glDeleteProgram(default_program);
+    glDeleteProgram(g_shader_programs[PROGRAM_SLOT_0]);
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);

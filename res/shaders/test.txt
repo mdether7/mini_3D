@@ -1,8 +1,10 @@
+cat > shaders/default.frag << 'EOF'
 #version 460 core
 out vec3 color;
 in vec3 fragment_color;
 void main()
 {
     color = fragment_color;
-    color *= 1.2f;
+    color *= 20.2f;
 }
+EOF
