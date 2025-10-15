@@ -55,13 +55,26 @@
 #define WINDOW_DEFAULT_HEIGHT 800
 
 #define MAX_SHADER_PATH 1024
-#define MAX_SHADER_PROGRAMS 10
 
 ///////////////////////////////////////////
 //
 //  Enums
 //
 ///////////////////////////////////////////
+
+typedef enum {
+    PROGRAM_SLOT_0,
+    PROGRAM_SLOT_1,
+    PROGRAM_SLOT_2,
+    PROGRAM_SLOT_3,
+    PROGRAM_SLOT_4,
+    PROGRAM_SLOT_5,
+    PROGRAM_SLOT_6,
+    PROGRAM_SLOT_7,
+    PROGRAM_SLOT_8,
+    PROGRAM_SLOT_9,
+    MAX_SHADER_PROGRAMS
+} ProgramType;
 
 typedef enum {
     ACTION_NONE = -1,
@@ -174,9 +187,11 @@ static Camera g_camera = {
     .far        = 100.0f,
 };
 
-static ShaderProgram g_shader_programs[MAX_SHADER_PROGRAMS];
+// For now there's no need for multiple programs, but who knows.
+// Also someday replace GLuint with ShaderProgram struct maybeee?
+static GLuint g_shader_programs[MAX_SHADER_PROGRAMS];
 
-/////////
+//////////
 // Input
 static InputState g_input_state = {
     .actions = {false},
@@ -531,7 +546,8 @@ int main(int argc, char* argv[])
     if (default_program == 0) {
         glfwTerminate();
         mini_die("[GL] Shader compilation failed!");
-    }
+    } 
+    g_shader_programs[PROGRAM_SLOT_0] = default_program; 
 
     // Triangle
     GLuint VAO;
@@ -610,7 +626,7 @@ int main(int argc, char* argv[])
     float delta_time = 0.0; // TODO: Do something else than delta time (Ticks?)
 
     while (!glfwWindowShouldClose(window))
-    { /*_/LOOP*/
+    { /*/.LOOP*/
         /* Start frame */
         float current_time = glfwGetTime();
         delta_time = current_time - previous_time;
