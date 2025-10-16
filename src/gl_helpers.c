@@ -6,8 +6,6 @@
 #include <stdio.h>
 #include <glad/glad.h>
 
-#include <string.h>
-
 #include "file_read.h"
 
 //////////////////////////////////////////////
@@ -143,9 +141,6 @@ shader_program_compile(const char* vert_path, const char* frag_path)
 
     glShaderSource(vertex_shader_id, 1, (const GLchar**)&vertex_source, NULL);
     glShaderSource(fragment_shader_id, 1, (const GLchar**)&fragment_source, NULL);
-
-    printf("%s", fragment_source);
-    fflush(stdout); // debug
 
     free(vertex_source);
     free(fragment_source);

@@ -17,9 +17,6 @@ char* read_file(const char* filename);
  */
 char* read_file_linux(const char* filename);
 
-char* read_file_linux_debug(const char* filename);
-char* read_file_linux_debug2(const char* filename);
-
 // TODO: read_file_windows(const char* filename);
 
 
