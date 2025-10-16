@@ -2,11 +2,11 @@
 
 out vec3 color;
 
-in vec3 fragment_color;
+in vec3 v_color;
 
 uniform float u_time;
 
 void main()
 {
-    color = fragment_color * u_time;
+    color = v_color;
 }

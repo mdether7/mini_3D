@@ -1,12 +1,10 @@
 #version 460 core
 
-out vec3 color;
-
-in vec3 fragment_color;
+out vec4 color;
 
 uniform float u_time;
 
 void main()
 {
-    color = fragment_color * u_time;
+    color = vec4(0.0f, 1.0f, 0.0f, 0.4f);
 }

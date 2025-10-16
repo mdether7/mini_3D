@@ -103,4 +103,3 @@ char* read_file_linux(const char* filename)
     close(fd);
     return contents;
 }
-

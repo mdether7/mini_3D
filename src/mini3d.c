@@ -462,10 +462,10 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_R && action == GLFW_PRESS) {
         bool result = false;
         const char* message;
-        result = shader_program_hot_reload(&g_shader_programs[PROGRAM_SLOT_0].handle,
-            "shaders/default.vert", "shaders/default.frag");
+        result = shader_program_hot_reload(&g_shader_programs[PROGRAM_SLOT_1].handle,
+            "shaders/quad.vert", "shaders/quad.frag");
         if (result)
-            shader_init_unifroms(&g_shader_programs[PROGRAM_SLOT_0]);
+            shader_init_unifroms(&g_shader_programs[PROGRAM_SLOT_1]);
         // variable = condition ? value_if_true : value_if_false;
         message = result ? "[SHADER RELOAD SUCCESS!]" : "[SHADER RELOAD FAILED!]";
         mini_print_n_flush("%s\n", message);
@@ -658,9 +658,6 @@ int main(int argc, char* argv[])
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE); // <= read on this
 
-    // Color blending or something
-    glEnable(GL_BLEND);
-
     /* Game/Engine specific initialization */
     // Projection needs to be updated at least once before start
     camera_update_projection_matrix(&g_camera);
@@ -669,7 +666,7 @@ int main(int argc, char* argv[])
     float last_time = glfwGetTime();
     float previous_time = glfwGetTime();
     unsigned int frames = 0;
-    float delta_time = 0.0; // TODO: Do something else than delta time (Ticks?) 
+    float delta_time = 0.0f; // TODO: Do something else than delta time (Ticks?) 
 
     while (!glfwWindowShouldClose(window))
     { /*/.LOOP*/
@@ -722,12 +719,25 @@ int main(int argc, char* argv[])
         glBindVertexArray(cube_VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        // Use glProgramUniform to send the data and 
-        // specified program doesnt need to be bound
+        /**
+         * NOTE: 
+         * Use glProgramUniform to send the data and 
+         * specified program doesnt need to be bound
+         */
 
         // quad shit
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+        glUseProgram(g_shader_programs[PROGRAM_SLOT_1].handle);
 
+        // upload glfw time
+        glUniform1f(g_shader_programs[PROGRAM_SLOT_1].u_locations[UNIFORM_TIME], current_time);
+
+        glBindVertexArray(quad_VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        glDisable(GL_BLEND);
        
         /* Present frame */
         glfwSwapBuffers(window);
@@ -751,10 +761,14 @@ int main(int argc, char* argv[])
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &tri_color_VBO);
 
     glDeleteVertexArrays(1, &cube_VAO);
     glDeleteBuffers(1, &cube_VBO);
     glDeleteBuffers(1, &color_VBO);
+
+    glDeleteVertexArrays(1, &quad_VAO);
+    glDeleteBuffers(1, &quad_VBO);
 
     // no need to destroy technically.
     glfwDestroyWindow(window);
