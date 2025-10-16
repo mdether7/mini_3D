@@ -640,7 +640,6 @@ int main(int argc, char* argv[])
 
     // Color blending or something
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     /* Game/Engine specific initialization */
     // Projection needs to be updated at least once before start

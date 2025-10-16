@@ -10,6 +10,5 @@ uniform float u_time;
 
 void main()
 {
-    float fcx = gl_FragCoord.x;
-    color = fragment_color;
+    color = fragment_color * u_time;
 }
