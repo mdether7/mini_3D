@@ -15,6 +15,14 @@ static const GLfloat mini_triangle_colors[] = {
     0.0f, 0.0f, 1.0f  
 };
 
+// Fullscreen quad vertices (in NDC: -1 to 1)
+static const GLfloat mini_quad[] = {
+    -1.0f, -1.0f,  // bottom-left
+     1.0f, -1.0f,  // bottom-right
+     1.0f,  1.0f,  // top-right
+    -1.0f,  1.0f   // top-left
+};
+
 static const GLfloat mini_cube[] = {
     -1.0f,-1.0f,-1.0f, // triangle 1 : begin
     -1.0f,-1.0f, 1.0f,

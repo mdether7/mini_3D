@@ -8,6 +8,9 @@
 
 #include "file_read.h"
 
+#define TERMINAL_RED "\e[1;31m"
+#define TERMINAL_RESET "\e[0m"
+
 //////////////////////////////////////////////
 // OpenGL debugging (Thanks learnopengl.com)
 
@@ -78,7 +81,7 @@ void APIENTRY gl_debug_output_callback(GLenum source, GLenum type, unsigned int 
         default: _severity = "Severity: Unknown [Default switch case!]"; break;
     }
 
-    fprintf(stdout, "Debug message (ID: %u) -> %s | %s | %s | %s\n", 
+    fprintf(stdout, TERMINAL_RED "Debug message (ID: %u) -> %s | %s | %s | %s\n" TERMINAL_RESET, 
                     id, message, _source, _type, _severity);
     // just to be sure
     fflush(stdout);
