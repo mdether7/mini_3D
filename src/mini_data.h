@@ -19,8 +19,10 @@ static const GLfloat mini_triangle_colors[] = {
 static const GLfloat mini_quad[] = {
     -1.0f, -1.0f,  // bottom-left
      1.0f, -1.0f,  // bottom-right
+    -1.0f,  1.0f,  // top-left
      1.0f,  1.0f,  // top-right
-    -1.0f,  1.0f   // top-left
+    -1.0f,  1.0f,  // top-left
+     1.0f, -1.0f,  // bottom-right
 };
 
 static const GLfloat mini_cube[] = {
