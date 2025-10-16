@@ -127,8 +127,8 @@ shader_program_compile(const char* vert_path, const char* frag_path)
     char*         vertex_source;
     char*         fragment_source;
 
-    vertex_source   = read_file_linux_debug2(vert_path);
-    fragment_source = read_file_linux_debug2(frag_path);
+    vertex_source   = read_file(vert_path);
+    fragment_source = read_file(frag_path);
 
     if (!vertex_source || !fragment_source) {
         free(vertex_source);
