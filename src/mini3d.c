@@ -576,6 +576,7 @@ int main(int argc, char* argv[])
 #endif
     /* Load OpenGL Stuff */
 
+    // shader_
     GLuint default_program = shader_program_compile("shaders/default.vert",
                                                   "shaders/default.frag"); 
     GLuint quad_program = shader_program_compile("shaders/quad.vert",
@@ -592,6 +593,29 @@ int main(int argc, char* argv[])
     shader_init_unifroms(&g_shader_programs[PROGRAM_SLOT_0]);
     shader_init_unifroms(&g_shader_programs[PROGRAM_SLOT_1]);
 
+    // texture_
+    int tex_width, tex_height, channel_number;
+    unsigned char* texture_data = stbi_load("textures/mini_dirt.png", &tex_width, 
+                                                &tex_height, &channel_number, 4);
+    if (texture_data == NULL) {                               // 4 to force RGBA
+        glfwTerminate();
+        mini_die("[STB IMAGE] Failed loading a texture! Reason: %s", stbi_failure_reason());
+    }
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width, tex_height, 0, 
+                                GL_RGBA, GL_UNSIGNED_BYTE, texture_data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    
+    
+
+    stbi_image_free(texture_data);
+
+    // geometry_
     // Triangle
     GLuint VAO;
     glGenVertexArrays(1, &VAO);

@@ -8,7 +8,7 @@ void mini_die(char* fmt, ...);
 void mini_print_n_flush(char* fmt, ...);
 
 ////////////////////////////////
-// BMP image loader
+// BMP image loader TODO?
 // (For learning purposes only)
 
 
