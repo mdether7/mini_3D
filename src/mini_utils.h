@@ -7,5 +7,10 @@
 void mini_die(char* fmt, ...);
 void mini_print_n_flush(char* fmt, ...);
 
+////////////////////////////////
+// BMP image loader
+// (For learning purposes only)
+
+
 
 #endif

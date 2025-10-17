@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -47,6 +48,64 @@ char* read_file(const char* filename)
 
     fclose(file);
     return contents;
+}
+
+unsigned char* read_file_binary(const char* filename, size_t* file_size)
+{
+    unsigned char* data;
+
+    FILE* file = fopen(filename, "rb");
+    if (file == NULL) {
+        perror("fopen");
+        fprintf(stderr, "Failed while opening a file: %s\n", filename);
+        return NULL;
+    }
+
+    fseek(file, 0L, SEEK_END);
+    long internal_file_size = ftell(file);
+    if (internal_file_size == 0) {
+        fclose(file);
+        return NULL;
+    }
+    fseek(file, 0L, SEEK_SET);
+
+    data = malloc((size_t)internal_file_size);
+    if (data == NULL) {
+        fprintf(stderr, "Failed when allocating memory: %s\n", filename);
+        fclose(file);
+        return NULL;
+    }
+
+    size_t bytes_read = fread(data, 1, internal_file_size, file);
+    if (bytes_read != (size_t)internal_file_size) {
+        fprintf(stderr, "Failed to read whole file: %s\n", filename);
+        free(data);
+        fclose(file);
+        return NULL;
+    }
+
+    fclose(file);
+
+    *file_size = internal_file_size;
+    return data;
+}
+
+bool write_data_to_file_binary(void* data, size_t size, const char* filename)
+{
+    FILE* file = fopen(filename, "wb");
+    if (file == NULL) {
+        perror("fopen");
+        fprintf(stderr, "Failed while opening a file: %s\n", filename);
+        return false;
+    }
+
+    size_t bytes_wrote = fwrite(data, size, 1, file);
+    
+
+
+
+
+    return true;
 }
 
 char* read_file_linux(const char* filename)
