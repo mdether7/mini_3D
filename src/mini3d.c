@@ -509,6 +509,9 @@ int main(int argc, char* argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  
+#ifdef __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
 
     if (g_user_config.should_start_maximized) {
         glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
@@ -573,7 +576,10 @@ int main(int argc, char* argv[])
             mini_print_n_flush("[GL] Debug output enabled");
         }
     }
+
+    misc_gl_display_information();
 #endif
+
     /* Load OpenGL Stuff */
 
     // shader_
@@ -594,7 +600,14 @@ int main(int argc, char* argv[])
     shader_init_unifroms(&g_shader_programs[PROGRAM_SLOT_1]);
 
     // texture_
+    /**
+     * Texture coordinates UVs
+     * (0,1)    (1,1)      U = x-axis
+     *                     V = y-axis
+     * (0,0)    (1,0)
+     */
     int tex_width, tex_height, channel_number;
+    //stbi_set_flip_vertically_on_load(true); for now comment out
     unsigned char* texture_data = stbi_load("textures/mini_dirt.png", &tex_width, 
                                                 &tex_height, &channel_number, 4);
     if (texture_data == NULL) {                               // 4 to force RGBA
@@ -793,9 +806,14 @@ int main(int argc, char* argv[])
     }
 
     /* OpenGL objects cleanup */
+    // shader programs
     glDeleteProgram(g_shader_programs[PROGRAM_SLOT_0].handle);
     glDeleteProgram(g_shader_programs[PROGRAM_SLOT_1].handle);
 
+    // textures
+    glDeleteTextures(1, &texture);
+
+    //geometry
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &tri_color_VBO);

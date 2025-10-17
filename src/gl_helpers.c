@@ -7,9 +7,7 @@
 #include <glad/glad.h>
 
 #include "file_read.h"
-
-#define TERMINAL_RED "\e[1;31m"
-#define TERMINAL_RESET "\e[0m"
+#include "mini_utils.h"
 
 //////////////////////////////////////////////
 // OpenGL debugging (Thanks learnopengl.com)
@@ -84,6 +82,34 @@ void APIENTRY gl_debug_output_callback(GLenum source, GLenum type, unsigned int 
     fprintf(stdout, TERMINAL_RED "Debug message (ID: %u) -> %s | %s | %s | %s\n" TERMINAL_RESET, 
                     id, message, _source, _type, _severity);
     // just to be sure
+    fflush(stdout);
+}
+
+////////////////
+// OpenGL misc
+void misc_gl_display_information(void)
+{
+    GLint i1, i2, i3;
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &i1);
+    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &i2);
+    glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &i3);
+
+    fprintf(stdout, TERMINAL_GREEN);
+    fprintf(stdout, "[OPENGL INFORMATION]\n");
+    fprintf(stdout, 
+        "OpenGL Version: %s\n"
+        "GLSL Version  : %s\n"
+        "Renderer      : %s\n"
+        "Vendor        : %s\n", 
+        glGetString(GL_VERSION),
+        glGetString(GL_SHADING_LANGUAGE_VERSION),
+        glGetString(GL_RENDERER),
+        glGetString(GL_VENDOR));
+    fprintf(stdout, 
+        "MAX_TEXTURE_IMAGE_UNITS: %d\n"
+        "MAX_COMBINED_TEXTURE_IMAGE_UNITS: %d\n" 
+        "MAX_VERTEX_TEXTURE_IMAGE_UNITS: %d\n", i1, i2, i3);
+    fprintf(stdout, TERMINAL_RESET);
     fflush(stdout);
 }
 

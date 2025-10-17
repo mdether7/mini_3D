@@ -15,6 +15,12 @@ void APIENTRY gl_debug_output_callback(GLenum source, GLenum type, unsigned int 
 #define glCheckError() gl_check_error_(__FILE__, __LINE__)
 #endif
 
+////////////////
+// OpenGL misc
+
+// Mega function for quick information display.
+void misc_gl_display_information(void);
+
 ///////////////////
 // Shader Loading
 GLuint shader_program_compile(const char* vert_path, const char* frag_path);
