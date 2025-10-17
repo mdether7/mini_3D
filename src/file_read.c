@@ -99,13 +99,20 @@ bool write_data_to_file_binary(void* data, size_t size, const char* filename)
         return false;
     }
 
-    size_t bytes_wrote = fwrite(data, size, 1, file);
-    
+    size_t elements_wrote = fwrite(data, size, 1, file);
+    if (elements_wrote != 1) {
+        fprintf(stderr, "Failed to write whole data!\n");
+        fclose(file);
+        return false;
+    }
 
-
-
-
+    fclose(file);
     return true;
+}
+
+bool read_data_from_file_binary(void* data, const char* filename)
+{
+
 }
 
 char* read_file_linux(const char* filename)

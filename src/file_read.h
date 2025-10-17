@@ -31,6 +31,14 @@ unsigned char* read_file_binary(const char* filename, size_t* file_size);
 bool write_data_to_file_binary(void* data, size_t size, const char* filename);
 
 /**
+ * @brief Read file into some data buffer.
+ * @param data pointer to data.
+ * @param filename Path to file.
+ * @return True on success, else false.
+ */
+bool read_data_from_file_binary(void* data, const char* filename);
+
+/**
  * @brief Reads entire file contents into memory (Linux system calls)
  * @param filename Path to file to read
  * @return Dynamically allocated null-terminated string, or NULL on error
