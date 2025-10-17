@@ -629,6 +629,9 @@ int main(int argc, char* argv[])
                                 GL_RGBA, GL_UNSIGNED_BYTE, texture_data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
+    // finish texture work
+    // Unbinding in the render loop is usually pointless.
+    glBindTexture(GL_TEXTURE_2D, 0); // here it's fine.
     stbi_image_free(texture_data);
 
     // geometry_

@@ -64,6 +64,18 @@ static const GLfloat mini_cube[] = {
     1.0f,-1.0f, 1.0f
 };
 
+/**
+ * Texture coordinates UVs
+ * (0,1)    (1,1)      U = x-axis
+ *                     V = y-axis
+ * (0,0)    (1,0)
+ */
+
+static const GLfloat mini_cube_uvs[] = {
+
+};
+
+
 static const GLfloat mini_cube_colors[] = {
     0.583f,  0.771f,  0.014f,
     0.609f,  0.115f,  0.436f,
