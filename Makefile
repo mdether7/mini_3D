@@ -26,7 +26,9 @@ mini3d:
 generate_bin:
 	#@mkdir -p bin
 	@mkdir -p bin/shaders
+	@mkdir -p bin/textures
 	@cp res/shaders/* bin/shaders/
+	@cp res/textures/* bin/textures/
 
 clean:
 	@rm -rf bin
