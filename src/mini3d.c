@@ -617,7 +617,8 @@ int main(int argc, char* argv[])
 
     GLuint texture;
     glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glActiveTexture(GL_TEXTURE0); // Select slot 0
+    glBindTexture(GL_TEXTURE_2D, texture); // Plug texture into slot 0
 
     // set the texture wrapping/filtering options 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
@@ -633,6 +634,13 @@ int main(int argc, char* argv[])
     // Unbinding in the render loop is usually pointless.
     glBindTexture(GL_TEXTURE_2D, 0); // here it's fine.
     stbi_image_free(texture_data);
+
+    // plug in the texture locations (TODO: maybe do it in the init)
+    glUseProgram(g_shader_programs[PROGRAM_SLOT_0].handle);
+    GLint dirt_loc = glGetUniformLocation(g_shader_programs[PROGRAM_SLOT_0].handle, "dirt_texture");
+    if (dirt_loc == -1)
+        mini_print_n_flush("Warning location not found!");
+    glUniform1i(dirt_loc, 0); 
 
     // geometry_
     // Triangle
@@ -676,6 +684,14 @@ int main(int argc, char* argv[])
 
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    GLuint tex_VBO;
+    glGenBuffers(1, &tex_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, tex_VBO);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(mini_cube_uvs), mini_cube_uvs, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     // Fullscreen Quad
     GLuint quad_VAO;
@@ -767,8 +783,12 @@ int main(int argc, char* argv[])
 
         // set cube model
         glUniformMatrix4fv(g_shader_programs[PROGRAM_SLOT_0].u_locations[UNIFORM_MODEL], 1, GL_FALSE, &model_cube[0][0]);
+        // bind Texture
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(cube_VAO); 
         glDrawArrays(GL_TRIANGLES, 0, 36);
+        // unbind
+        glBindTexture(GL_TEXTURE_2D, 0);
 
         /**
          * NOTE: 
@@ -824,6 +844,7 @@ int main(int argc, char* argv[])
     glDeleteVertexArrays(1, &cube_VAO);
     glDeleteBuffers(1, &cube_VBO);
     glDeleteBuffers(1, &color_VBO);
+    glDeleteBuffers(1, &tex_VBO);
 
     glDeleteVertexArrays(1, &quad_VAO);
     glDeleteBuffers(1, &quad_VBO);

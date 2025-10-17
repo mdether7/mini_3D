@@ -7,6 +7,12 @@ MATRIX CHEAT SHEET
 [02 12 22 32]
 [03 13 23 33]
 
+Model -> Right-handed
+World -> Right-handed
+View/Camera -> Right-handed
+Clip -> Left-handed 
+NDC ->Left-handed
+
 Scale into a new matrix: mat4x4_scale_aniso(result, original, 2, 3, 4)
 Scale in-place:          mat4x4_scale_aniso(myMatrix, myMatrix, 2, 3, 4)
 
