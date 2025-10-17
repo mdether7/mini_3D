@@ -127,8 +127,8 @@ shader_program_compile(const char* vert_path, const char* frag_path)
 {  
     assert(vert_path && frag_path);
 
-    char*         vertex_source;
-    char*         fragment_source;
+    char*         vertex_source   = NULL;
+    char*         fragment_source = NULL;
 
     vertex_source   = read_file(vert_path);
     fragment_source = read_file(frag_path);
@@ -147,6 +147,8 @@ shader_program_compile(const char* vert_path, const char* frag_path)
 
     free(vertex_source);
     free(fragment_source);
+    vertex_source   = NULL;
+    fragment_source = NULL;
 
     glCompileShader(vertex_shader_id);
     glCompileShader(fragment_shader_id);

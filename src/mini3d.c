@@ -81,6 +81,7 @@ typedef enum {
     UNIFORM_VIEW,
     UNIFORM_PROJECTION,
     UNIFORM_TIME,
+    UNIFORM_RESOLUTION,
     UNIFORM_TOTAL
 } UniformLocation;
 
@@ -195,7 +196,7 @@ static Camera g_camera = {
 };
 
 //////////////
-// g_shaders
+// g_shaders TODO: add path strings to ShaderProgram struct
 static ShaderProgram g_shader_programs[MAX_SHADER_PROGRAMS];
 
 //////////
@@ -378,6 +379,7 @@ shader_init_unifroms(ShaderProgram* program)
     program->u_locations[UNIFORM_VIEW]       = glGetUniformLocation(program->handle, "u_view");
     program->u_locations[UNIFORM_PROJECTION] = glGetUniformLocation(program->handle, "u_projection");
     program->u_locations[UNIFORM_TIME]       = glGetUniformLocation(program->handle, "u_time");
+    program->u_locations[UNIFORM_RESOLUTION] = glGetUniformLocation(program->handle, "u_resolution");
 }
 
 //////////
@@ -456,8 +458,13 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
     // Thats crazy useful! // 
     // int* my_int = (int*)glfwGetWindowUserPointer(window);
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    if (key == GLFW_KEY_Q && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+#if 0
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+#endif
 
     if (key == GLFW_KEY_R && action == GLFW_PRESS) {
         bool result = false;
@@ -731,8 +738,10 @@ int main(int argc, char* argv[])
 
         glUseProgram(g_shader_programs[PROGRAM_SLOT_1].handle);
 
-        // upload glfw time
+        // upload uniforms
         glUniform1f(g_shader_programs[PROGRAM_SLOT_1].u_locations[UNIFORM_TIME], current_time);
+        glUniform2i(g_shader_programs[PROGRAM_SLOT_1].u_locations[UNIFORM_RESOLUTION], 
+                (GLint)g_window_state.width, (GLint)g_window_state.height);
 
         glBindVertexArray(quad_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);

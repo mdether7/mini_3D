@@ -3,8 +3,10 @@
 out vec4 color;
 
 uniform float u_time;
+uniform ivec2 u_resolution;
 
 void main()
 {
-    color = vec4(0.0f, 1.0f, 0.0f, 0.4f);
+    vec2 coords_normalized = gl_FragCoord.xy / vec2(u_resolution);
+    color = vec4(vec2(coords_normalized.xy), 0.0f, 0.4f);
 }
