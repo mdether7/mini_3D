@@ -23,7 +23,7 @@ char* read_file(const char* filename)
 
     fseek(file, 0L, SEEK_END);
     long file_size = ftell(file);
-    if (file_size == 0) {
+    if (file_size <= 0) { // -1 means error, 0 empty file
         fclose(file);
         return NULL;
     }
@@ -112,7 +112,30 @@ bool write_data_to_file_binary(void* data, size_t size, const char* filename)
 
 bool read_data_from_file_binary(void* data, const char* filename)
 {
+    FILE* file = fopen(filename, "rb");
+    if (file == NULL) {
+        perror("fopen");
+        fprintf(stderr, "Failed while opening a file: %s\n", filename);
+        return false;
+    }
 
+    fseek(file, 0L, SEEK_END);
+    long file_size = ftell(file);
+    if (file_size <= 0) {
+        fclose(file);
+        return false;
+    }
+    fseek(file, 0L, SEEK_SET);
+
+    size_t elements_read = fread(data, file_size, 1, file);
+    if (elements_read != 1) {
+        fprintf(stderr, "Failed to read whole data!\n");
+        fclose(file);
+        return false;
+    }
+
+    fclose(file);
+    return true;
 }
 
 char* read_file_linux(const char* filename)
