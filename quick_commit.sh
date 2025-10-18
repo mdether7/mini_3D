@@ -2,6 +2,10 @@
 
 #TODO: automation for branches.
 
+# [REMEMBER]
+#git push = local → remote ✓
+#git pull = remote → local ✓
+
 if [ $# -ge 1 ]; then
     mess=$1
 else 
