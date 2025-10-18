@@ -40,7 +40,8 @@
 #include "mini_utils.h"
 #include "gl_helpers.h"
 #include "math_helpers.h"
-#include "mini_data.h"
+#include "geometry_data.h"
+#include "mini_data.h" // soon deprecated
 
 ///////////////////////////////////////////
 //

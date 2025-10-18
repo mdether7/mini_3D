@@ -9,4 +9,6 @@ fi
 git add .
 git commit -m "$mess"
 git push origin main
-git status #sanity check!
+
+# verify
+git status

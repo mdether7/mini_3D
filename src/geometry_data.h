@@ -1,5 +1,5 @@
-#ifndef CUBE_DATA_H
-#define CUBE_DATA_H
+#ifndef GEOMETRY_DATA_H
+#define GEOMETRY_DATA_H
 
 #include "glad/glad.h"
 
@@ -12,6 +12,8 @@
  * (0,0)    (1,0)
  */
 
+/////////
+// Cube
 static const Vertex cube_vertices[] = {
 //   Position               Normal              UV
     {{-1.0f, -1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}}, // front face
