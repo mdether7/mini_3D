@@ -3,7 +3,7 @@
 if [ $# -ge 1 ]; then
     mess=$1
 else 
-    mess="quick commit"
+    mess="Quick commit on $(date '+%Y-%m-%d %H:%M:%S')"
 fi
 
 git add .
