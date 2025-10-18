@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#TODO: automation for branches.
+
 if [ $# -ge 1 ]; then
     mess=$1
 else 
