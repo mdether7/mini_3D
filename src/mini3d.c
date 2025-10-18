@@ -718,7 +718,7 @@ int main(int argc, char* argv[])
 
     mat4x4_translate_in_place(model_cube, 1.0f, 0.0f, 0.0f);
     mat4x4_rotate_Y(model_cube, model_cube, mini_degrees_to_radians(45.0f));
-    mat4x4_scale_aniso(model_cube, model_cube, 0.75f, 0.75f, 0.75f);
+    mat4x4_scale_aniso(model_cube, model_cube, 1.0f, 1.0f, 1.0f);
 
     /* OpenGL initial options setup */
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
