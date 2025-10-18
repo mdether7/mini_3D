@@ -9,7 +9,7 @@
 current_branch=$(git branch --show-current)
 
 if [ "$current_branch" != "main" ]; then
-    echo "You're not on main branch, script not updated to handle this yet!"
+    echo "You're not on main branch! Script not updated to handle this yet!"
     exit 1
 fi
 
