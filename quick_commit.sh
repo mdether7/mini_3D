@@ -6,6 +6,13 @@
 #git push = local → remote ✓
 #git pull = remote → local ✓
 
+current_branch=$(git branch --show-current)
+
+if [ "$current_branch" != "main" ]; then
+    echo "You're not on main branch, script not updated to handle this yet!"
+    exit 1
+fi
+
 if [ $# -ge 1 ]; then
     mess=$1
 else 
