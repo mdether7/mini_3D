@@ -665,7 +665,7 @@ int main(int argc, char* argv[])
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-    // Cube
+    // Cube (new branch!)
     GLuint cube_VAO;
     glGenVertexArrays(1, &cube_VAO);
     glBindVertexArray(cube_VAO);
