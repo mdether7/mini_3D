@@ -41,7 +41,6 @@
 #include "gl_helpers.h"
 #include "math_helpers.h"
 #include "geometry_data.h"
-#include "mini_data.h" // soon deprecated
 
 ///////////////////////////////////////////
 //
@@ -708,11 +707,8 @@ int main(int argc, char* argv[])
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
+    glLineWidth(5.0f); // for wireframe
 
-#if 1
-    glLineWidth(5.0f);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-#endif
     /* Game/Engine specific initialization */
     // Projection needs to be updated at least once before start
     camera_update_projection_matrix(&g_camera);
@@ -745,7 +741,6 @@ int main(int argc, char* argv[])
                                                g_window_state.height);
             g_window_state.resized = false;
         }
-
 #if 0
         {
             Direction dir = camera_get_facing_direction(&g_camera);
