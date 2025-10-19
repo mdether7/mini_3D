@@ -644,27 +644,6 @@ int main(int argc, char* argv[])
     glUniform1i(dirt_loc, 0); 
 
     // geometry_
-    // Triangle
-    GLuint VAO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    GLuint VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(mini_triangle), mini_triangle, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    GLuint tri_color_VBO;
-    glGenBuffers(1, &tri_color_VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, tri_color_VBO);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(mini_triangle_colors), mini_triangle_colors, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
     // Cube (EBO approach)
     GLuint cube_VAO;
     glGenVertexArrays(1, &cube_VAO);
@@ -703,28 +682,23 @@ int main(int argc, char* argv[])
 
     /*--------------------------------------------------------------------*/
 
-    mat4x4 model_tri, model_cube;
-    mat4x4_identity(model_tri);
+    mat4x4 model_cube;
     mat4x4_identity(model_cube);
-
-    mat4x4_translate_in_place(model_tri, 0.0f, 0.5f, 0.0f);
-    mat4x4_rotate_Y(model_tri, model_tri, mini_degrees_to_radians(120.0f));
-    mat4x4_scale_aniso(model_tri, model_tri, 0.75f, 0.75f, 0.75f);
 
     mat4x4_translate_in_place(model_cube, 1.0f, 0.0f, 0.0f);
     mat4x4_rotate_Y(model_cube, model_cube, mini_degrees_to_radians(45.0f));
     mat4x4_scale_aniso(model_cube, model_cube, 1.0f, 1.0f, 1.0f);
 
     /* OpenGL initial options setup */
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
 #if 1
-   glLineWidth(7.0f);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glLineWidth(7.0f);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 #endif
     /* Game/Engine specific initialization */
     // Projection needs to be updated at least once before start
@@ -776,11 +750,6 @@ int main(int argc, char* argv[])
         // upload view and projection matrix (camera)
         glUniformMatrix4fv(g_shader_programs[PROGRAM_SLOT_0].u_locations[UNIFORM_VIEW], 1, GL_FALSE, &g_camera.view[0][0]);
         glUniformMatrix4fv(g_shader_programs[PROGRAM_SLOT_0].u_locations[UNIFORM_PROJECTION], 1, GL_FALSE, &g_camera.projection[0][0]);
-
-        // set triangle model
-        glUniformMatrix4fv(g_shader_programs[PROGRAM_SLOT_0].u_locations[UNIFORM_MODEL], 1, GL_FALSE, &model_tri[0][0]);
-        glBindVertexArray(VAO); 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // set cube model
         glUniformMatrix4fv(g_shader_programs[PROGRAM_SLOT_0].u_locations[UNIFORM_MODEL], 1, GL_FALSE, &model_cube[0][0]);
@@ -838,10 +807,6 @@ int main(int argc, char* argv[])
     glDeleteTextures(1, &texture);
 
     //geometry
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &tri_color_VBO);
-
     glDeleteVertexArrays(1, &cube_VAO);
     glDeleteBuffers(1, &cube_VBO);
     glDeleteBuffers(1, &cube_EBO);
