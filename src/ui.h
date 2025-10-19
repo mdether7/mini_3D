@@ -19,7 +19,9 @@ typedef struct {
 
 } ui_element_data;
 
-int ui_initialize(unsigned int count, ui_element_data* elements);
+int  ui_initialize(unsigned int count, ui_element_data* elements);
 void ui_draw_quad(ui_element_data data);
+void ui_begin_frame(float current_time, int width, int height);
+void ui_end_frame(void);
 
 #endif

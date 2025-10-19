@@ -9,5 +9,9 @@ typedef struct s_vertex {
     GLfloat uv[2];
 } Vertex;
 
+typedef struct s_uivertex {
+    GLfloat position[3]; // Z for depth.
+    GLfloat uv[2];
+} UIVertex;
 
 #endif

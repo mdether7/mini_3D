@@ -58,11 +58,11 @@ static const GLuint geo_cube_indices[] = {
 
 //////////
 // Quad
-static const Vertex geo_quad_vertices[] = {
-    {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-    {{-1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-    {{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-    {{1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
+static const UIVertex geo_quad_vertices[] = {
+    {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}},
+    {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+    {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
+    {{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f}},
 };
 
 static const GLuint geo_quad_indices[] = {
