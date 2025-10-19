@@ -462,6 +462,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_Q && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
+    if (key == GLFW_KEY_F2 && action == GLFW_PRESS) {
+        static bool wireframe = false;
+        wireframe = !wireframe;
+        glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+    }
+
     // TODO: Add somekind of menu after pressing escape.
 #if 0
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -624,8 +630,10 @@ int main(int argc, char* argv[])
     // set the texture wrapping/filtering options 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+//   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width, tex_height, 0, 
                                 GL_RGBA, GL_UNSIGNED_BYTE, texture_data);
@@ -667,7 +675,7 @@ int main(int argc, char* argv[])
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)sizeof(geo_cube_indices), geo_cube_indices, GL_STATIC_DRAW);
 
-    // Fullscreen Quad
+    // Fullscreen EboQuad
     GLuint quad_VAO;
     glGenVertexArrays(1, &quad_VAO);
     glBindVertexArray(quad_VAO);
@@ -675,10 +683,15 @@ int main(int argc, char* argv[])
     GLuint quad_VBO;
     glGenBuffers(1, &quad_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, quad_VBO);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(mini_quad), mini_quad, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(geo_cube_vertices), geo_quad_vertices, GL_STATIC_DRAW);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(0); // only enable position.
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+
+    GLuint quad_EBO;
+    glGenBuffers(1, &quad_EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad_EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)sizeof(geo_quad_indices), geo_quad_indices, GL_STATIC_DRAW);
 
     /*--------------------------------------------------------------------*/
 
@@ -690,14 +703,14 @@ int main(int argc, char* argv[])
     mat4x4_scale_aniso(model_cube, model_cube, 1.0f, 1.0f, 1.0f);
 
     /* OpenGL initial options setup */
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.5f, 1.0f, 1.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
 #if 1
-    glLineWidth(7.0f);
+    glLineWidth(5.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 #endif
     /* Game/Engine specific initialization */
@@ -778,7 +791,7 @@ int main(int argc, char* argv[])
                 (GLint)g_window_state.width, (GLint)g_window_state.height);
 
         glBindVertexArray(quad_VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glDisable(GL_BLEND);
        
@@ -813,6 +826,7 @@ int main(int argc, char* argv[])
 
     glDeleteVertexArrays(1, &quad_VAO);
     glDeleteBuffers(1, &quad_VBO);
+    glDeleteBuffers(1, &quad_EBO);
 
     // no need to destroy technically.
     glfwDestroyWindow(window);
