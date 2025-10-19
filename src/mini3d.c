@@ -756,7 +756,7 @@ int main(int argc, char* argv[])
 
         glDisable(GL_BLEND);
 
-        ui_draw_quad(quad);
+        //ui_draw_quad(quad);
        
         /* Present frame */
         glfwSwapBuffers(window);

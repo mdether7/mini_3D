@@ -9,7 +9,6 @@
 #include "data_geometry.h"
 
 ProgramType ui_g_selected_shader;
-bool        ui_g_blending_enabled;
 
 GLuint      ui_g_quad_VAO;
 GLuint      ui_g_quad_VBO;
