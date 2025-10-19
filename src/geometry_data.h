@@ -56,4 +56,18 @@ static const GLuint geo_cube_indices[] = {
     20, 23, 22, 22, 21, 20  // bottom (vertices 20-23)
 };
 
+//////////
+// Quad
+static const Vertex geo_quad_vertices[] = {
+    {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+    {{-1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+    {{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+    {{1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
+};
+
+static const GLuint geo_quad_indices[] = {
+    0, 3, 1,
+    2, 1, 3,
+};
+
 #endif
