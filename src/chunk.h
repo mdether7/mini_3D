@@ -1,0 +1,23 @@
+#ifndef MINI_CHUNK_H
+#define MINI_CHUNK_H
+
+// TODO
+// much testing, much clueless //
+
+/**
+ *  The only thing you need for a mesh is a set
+ *  of points, and how they connect to form faces
+ *  (usually we form quads or triangles for ease of representation).
+ */
+
+float* generate_position_plane(unsigned int rows, unsigned int columns);
+
+
+
+
+
+
+
+
+
+#endif

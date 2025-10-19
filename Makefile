@@ -21,7 +21,7 @@ endif
 all: generate_bin mini3d
 
 mini3d:
-	${CC} ${CPPFLAGS} ${LDFLAGS} ${CFLAGS} -o bin/${PROGRAM_NAME} src/mini3d.c src/mini_utils.c src/math_helpers.c src/gl_helpers.c src/file_read.c src/glad.c ${LDLIBS}
+	${CC} ${CPPFLAGS} ${LDFLAGS} ${CFLAGS} -o bin/${PROGRAM_NAME} src/mini3d.c src/mini_utils.c src/math_helpers.c src/gl_helpers.c src/shader.c src/ui.c src/file_read.c src/glad.c ${LDLIBS}
 
 generate_bin:
 	#@mkdir -p bin

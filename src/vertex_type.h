@@ -9,4 +9,5 @@ typedef struct s_vertex {
     GLfloat uv[2];
 } Vertex;
 
+
 #endif

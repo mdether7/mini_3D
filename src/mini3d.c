@@ -37,10 +37,12 @@
 #warning "Leaving this for the memorization :D"
 #endif
 
+#include "shader.h"
+#include "ui.h"
 #include "mini_utils.h"
 #include "gl_helpers.h"
 #include "math_helpers.h"
-#include "geometry_data.h"
+#include "data_geometry.h"
 
 ///////////////////////////////////////////
 //
@@ -62,29 +64,8 @@
 //
 ///////////////////////////////////////////
 
-typedef enum {
-    PROGRAM_SLOT_0,
-    PROGRAM_SLOT_1,
-    PROGRAM_SLOT_2,
-    PROGRAM_SLOT_3,
-    PROGRAM_SLOT_4,
-    PROGRAM_SLOT_5,
-    PROGRAM_SLOT_6,
-    PROGRAM_SLOT_7,
-    PROGRAM_SLOT_8,
-    PROGRAM_SLOT_9,
-    MAX_SHADER_PROGRAMS
-} ProgramType;
-
-typedef enum {
-    UNIFORM_MODEL,
-    UNIFORM_VIEW,
-    UNIFORM_PROJECTION,
-    UNIFORM_TIME,
-    UNIFORM_RESOLUTION,
-    UNIFORM_TOTAL
-} UniformLocation;
-
+/////////
+// Game
 typedef enum {
     ACTION_NONE = -1,
     ACTION_MOVE_FORWARD,
@@ -108,17 +89,15 @@ typedef enum {
 //
 ///////////////////////////////////////////
 
+///////////
+// Engine
 typedef struct s_window_state {
     char  name[WINDOW_MAX_NAME_LEN];
     int   width;
     int   height;
     bool  resized;
+    bool  is_fullscreen;
 } WindowState;
-
-typedef struct s_shader_program {
-    GLuint handle;
-    GLuint u_locations[UNIFORM_TOTAL];
-} ShaderProgram;
 
 typedef struct s_frame_counter {
     double ms_per_frame;
@@ -126,7 +105,6 @@ typedef struct s_frame_counter {
 } FrameCounter;
 
 typedef struct s_user_config {
-    bool   should_start_maximized;
     bool   should_start_vsync;
     bool   should_start_focused;
 } UserConfig;
@@ -163,11 +141,11 @@ static WindowState g_window_state = {
     .width   = WINDOW_DEFAULT_WIDTH,
     .height  = WINDOW_DEFAULT_HEIGHT,
     .name    = "mini 3D",
-    .resized = false,
+    .resized = false, //
+    .is_fullscreen = true,
 };
 
 static UserConfig g_user_config = {
-    .should_start_maximized     = false,
     .should_start_vsync         = true,
     .should_start_focused       = true,
 };
@@ -194,10 +172,6 @@ static Camera g_camera = {
     .near       = 0.1f, 
     .far        = 100.0f,
 };
-
-//////////////
-// g_shaders TODO: add path strings to ShaderProgram struct
-static ShaderProgram g_shader_programs[MAX_SHADER_PROGRAMS];
 
 //////////
 // Input
@@ -370,18 +344,6 @@ camera_get_facing_direction(Camera* cam)
     return max_dir; 
 }
 
-///////////
-// Shaders
-static void
-shader_init_unifroms(ShaderProgram* program)
-{
-    program->u_locations[UNIFORM_MODEL]      = glGetUniformLocation(program->handle, "u_model");
-    program->u_locations[UNIFORM_VIEW]       = glGetUniformLocation(program->handle, "u_view");
-    program->u_locations[UNIFORM_PROJECTION] = glGetUniformLocation(program->handle, "u_projection");
-    program->u_locations[UNIFORM_TIME]       = glGetUniformLocation(program->handle, "u_time");
-    program->u_locations[UNIFORM_RESOLUTION] = glGetUniformLocation(program->handle, "u_resolution");
-}
-
 //////////
 // Utils
 static const char*
@@ -519,7 +481,7 @@ int main(int argc, char* argv[])
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    if (g_user_config.should_start_maximized) {
+    if (g_window_state.is_fullscreen) {
         glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
     }
     if (g_user_config.should_start_focused) {
@@ -648,7 +610,7 @@ int main(int argc, char* argv[])
     GLint dirt_loc = glGetUniformLocation(g_shader_programs[PROGRAM_SLOT_0].handle, "dirt_texture");
     if (dirt_loc == -1)
         mini_print_n_flush("Warning location not found!");
-    glUniform1i(dirt_loc, 0); 
+    glUniform1i(dirt_loc, 0); // <= It's mapping shader samplers to OpenGL texture units.
 
     // geometry_
     // Cube (EBO approach)
@@ -698,7 +660,7 @@ int main(int argc, char* argv[])
     mat4x4_identity(model_cube);
 
     mat4x4_translate_in_place(model_cube, 1.0f, 0.0f, 0.0f);
-    mat4x4_rotate_Y(model_cube, model_cube, mini_degrees_to_radians(45.0f));
+    //mat4x4_rotate_Y(model_cube, model_cube, mini_degrees_to_radians(45.0f));
     mat4x4_scale_aniso(model_cube, model_cube, 1.0f, 1.0f, 1.0f);
 
     /* OpenGL initial options setup */
@@ -710,6 +672,10 @@ int main(int argc, char* argv[])
     glLineWidth(5.0f); // for wireframe
 
     /* Game/Engine specific initialization */
+
+    ui_element_data quad;
+    ui_initialize(1, &quad);
+
     // Projection needs to be updated at least once before start
     camera_update_projection_matrix(&g_camera);
 
@@ -789,6 +755,8 @@ int main(int argc, char* argv[])
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glDisable(GL_BLEND);
+
+        ui_draw_quad(quad);
        
         /* Present frame */
         glfwSwapBuffers(window);
