@@ -665,10 +665,7 @@ int main(int argc, char* argv[])
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-    // Cube EBO (new branch!)
-    
-
-    // Cube (old branch!)
+    // Cube (EBO approach)
     GLuint cube_VAO;
     glGenVertexArrays(1, &cube_VAO);
     glBindVertexArray(cube_VAO);
@@ -676,26 +673,20 @@ int main(int argc, char* argv[])
     GLuint cube_VBO;
     glGenBuffers(1, &cube_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, cube_VBO);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(mini_cube), mini_cube, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(geo_cube_vertices), geo_cube_vertices, GL_STATIC_DRAW);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(0); // Position
+    glEnableVertexAttribArray(1); // Normals
+    glEnableVertexAttribArray(2); // UVs
 
-    GLuint color_VBO;
-    glGenBuffers(1, &color_VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, color_VBO);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(mini_cube_colors), mini_cube_colors, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0); // IN BYTES!
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(3 * sizeof(GLfloat)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(6 * sizeof(GLfloat)));
 
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    GLuint tex_VBO;
-    glGenBuffers(1, &tex_VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, tex_VBO);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(mini_cube_uvs), mini_cube_uvs, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    GLuint cube_EBO;
+    glGenBuffers(1, &cube_EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cube_EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)sizeof(geo_cube_indices), geo_cube_indices, GL_STATIC_DRAW);
 
     // Fullscreen Quad
     GLuint quad_VAO;
@@ -727,8 +718,14 @@ int main(int argc, char* argv[])
     /* OpenGL initial options setup */
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE); // <= read on this
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
 
+#if 1
+   glLineWidth(7.0f);
+   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+#endif
     /* Game/Engine specific initialization */
     // Projection needs to be updated at least once before start
     camera_update_projection_matrix(&g_camera);
@@ -790,7 +787,7 @@ int main(int argc, char* argv[])
         // bind Texture
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(cube_VAO); 
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         // unbind
         glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -847,8 +844,7 @@ int main(int argc, char* argv[])
 
     glDeleteVertexArrays(1, &cube_VAO);
     glDeleteBuffers(1, &cube_VBO);
-    glDeleteBuffers(1, &color_VBO);
-    glDeleteBuffers(1, &tex_VBO);
+    glDeleteBuffers(1, &cube_EBO);
 
     glDeleteVertexArrays(1, &quad_VAO);
     glDeleteBuffers(1, &quad_VBO);

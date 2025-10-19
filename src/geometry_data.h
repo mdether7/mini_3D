@@ -14,7 +14,7 @@
 
 /////////
 // Cube
-static const Vertex cube_vertices[] = {
+static const Vertex geo_cube_vertices[] = {
 //   Position               Normal              UV
     {{-1.0f, -1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}}, // front face
     {{-1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
@@ -47,13 +47,13 @@ static const Vertex cube_vertices[] = {
     {{1.0f, -1.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f}},
 };
 
-static const GLuint cube_indices[] = {
-    0,  1,  2,  2,  3,  0,  // front (vertices 0-3)
-    4,  5,  6,  6,  7,  4,  // back (vertices 4-7)
-    8,  9,  10, 10, 11, 8,  // left (vertices 8-11)
-    12, 13, 14, 14, 15, 12, // right (vertices 12-15)
-    16, 17, 18, 18, 19, 16, // top (vertices 16-19)
-    20, 21, 22, 22, 23, 20  // bottom (vertices 20-23)
+static const GLuint geo_cube_indices[] = {
+    0, 3, 2, 2, 1, 0,       // front (vertices 0-3)
+    4, 7, 6, 6, 5, 4,       // back (vertices 4-7)
+    8, 11, 10, 10, 9, 8,    // left (vertices 8-11)
+    12, 15, 14, 14, 13, 12, // right (vertices 12-15)
+    16, 19, 18, 18, 17, 16, // top (vertices 16-19)
+    20, 23, 22, 22, 21, 20  // bottom (vertices 20-23)
 };
 
 #endif
