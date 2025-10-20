@@ -2,9 +2,11 @@
 
 #include <glad/glad.h>
 
+#include "mini_utils.h"
+
 ShaderProgram g_shader_programs[MAX_SHADER_PROGRAMS];
 
-static void shader_print_debug_init_information(ShaderProgram* program);
+static const char* shader_uniform_to_string(UniformLocation loc);
 
 void
 shader_init_uniforms(ShaderProgram* program)
@@ -17,6 +19,18 @@ shader_init_uniforms(ShaderProgram* program)
     program->u_locations[UNIFORM_POS_2D]     = glGetUniformLocation(program->handle, "u_pos");
     program->u_locations[UNIFORM_SIZE_2D]    = glGetUniformLocation(program->handle, "u_size");
     program->u_locations[UNIFORM_COLOR]      = glGetUniformLocation(program->handle, "u_color");
+
+#ifdef DEBUG
+    util_print(TERMINAL_CYAN "[Shader program name: %s] (handle=%u)\n", program->name, program->handle);
+
+    for (int loc = 0; loc < UNIFORM_TOTAL; loc++) {
+        const char* info;
+        info = (program->u_locations[loc] == -1) ? "NOT SET" : "SET";
+        util_print("%s: %s\n", shader_uniform_to_string(loc), info);
+    }
+
+    util_print_n_flush(TERMINAL_RESET);
+#endif
 }
 
 void 
@@ -25,11 +39,25 @@ shader_use_program(ProgramSlot slot)
     glUseProgram(g_shader_programs[slot].handle);
 }
 
-static void
-shader_print_debug_init_information(ShaderProgram* program)
+static const char*
+shader_uniform_to_string(UniformLocation loc)
 {
-    for (int i = 0; i < UNIFORM_TOTAL; i++) {
-        
+    switch (loc)
+    {
+        case UNIFORM_MODEL:       return "u_model";
+        case UNIFORM_VIEW:        return "u_view";
+        case UNIFORM_PROJECTION:  return "u_projection";
+        case UNIFORM_TIME:        return "u_time";
+        case UNIFORM_RESOLUTION:  return "u_resolution";
+
+        case UNIFORM_POS_2D:      return "u_pos";
+        case UNIFORM_SIZE_2D:     return "u_size";
+        case UNIFORM_COLOR:       return "u_color";
+
+        case UNIFORM_TOTAL:       break; // fallthrough to default
     }
+
+    return "<invalid_uniform>";
 }
+
 

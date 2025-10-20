@@ -32,8 +32,9 @@ typedef enum {
 } UniformLocation;
 
 typedef struct s_shader_program {
+    char*  name;
     GLuint handle;
-    GLint u_locations[UNIFORM_TOTAL];
+    GLint  u_locations[UNIFORM_TOTAL];
 } ShaderProgram;
 
 extern ShaderProgram g_shader_programs[MAX_SHADER_PROGRAMS];

@@ -442,7 +442,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
             shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_1]);
         // variable = condition ? value_if_true : value_if_false;
         message = result ? "[SHADER RELOAD SUCCESS!]" : "[SHADER RELOAD FAILED!]";
-        mini_print_n_flush("%s\n", message);
+        util_print_n_flush("%s\n", message);
     }
     
 }
@@ -539,7 +539,7 @@ int main(int argc, char* argv[])
             glDebugMessageCallback(gl_debug_output_callback, NULL);
             glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE,
                  GL_DONT_CARE, 0, NULL, GL_TRUE);
-            mini_print_n_flush("[GL] Debug output enabled");
+            util_print_n_flush("[GL] Debug output enabled");
         }
     }
 
@@ -554,16 +554,26 @@ int main(int argc, char* argv[])
     GLuint quad_program = shader_program_compile("shaders/quad.vert",
                                                 "shaders/quad.frag");
 
-    if (default_program == 0 || quad_program == 0) {
+    GLuint draw2d_program = shader_program_compile("shaders/draw2d.vert",
+                                                "shaders/draw2d.frag");                                           
+
+    if (default_program == 0 || quad_program == 0 || draw2d_program == 0) {
         glfwTerminate();
         mini_die("[GL] Shader compilation failed!");
     } 
 
     g_shader_programs[PROGRAM_SLOT_0].handle = default_program; 
+    g_shader_programs[PROGRAM_SLOT_0].name   = "default";
+
     g_shader_programs[PROGRAM_SLOT_1].handle = quad_program;
+    g_shader_programs[PROGRAM_SLOT_1].name   = "quad";
+
+    g_shader_programs[PROGRAM_SLOT_2].handle = draw2d_program;
+    g_shader_programs[PROGRAM_SLOT_2].name   = "draw2d";
 
     shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_0]);
     shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_1]);
+    shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_2]);
 
     // texture_
     /**
@@ -603,11 +613,11 @@ int main(int argc, char* argv[])
     glBindTexture(GL_TEXTURE_2D, 0); // here it's fine.
     stbi_image_free(texture_data);
 
-    // plug in the texture locations (TODO: maybe do it in the init)
+    // plug in the texture locations (TODO: maybe do it in the init YES)
     glUseProgram(g_shader_programs[PROGRAM_SLOT_0].handle);
     GLint dirt_loc = glGetUniformLocation(g_shader_programs[PROGRAM_SLOT_0].handle, "dirt_texture");
     if (dirt_loc == -1)
-        mini_print_n_flush("Warning location not found!");
+        util_print_n_flush("Warning location not found!");
     glUniform1i(dirt_loc, 0); // <= It's mapping shader samplers to OpenGL texture units.
 
     // geometry_
@@ -670,6 +680,8 @@ int main(int argc, char* argv[])
     glLineWidth(5.0f); // for wireframe
 
     /* Game/Engine specific initialization */
+    draw2d_init();
+    draw2d_set_program(PROGRAM_SLOT_2);
 
     // Projection needs to be updated at least once before start
     camera_update_projection_matrix(&g_camera);
@@ -698,7 +710,7 @@ int main(int argc, char* argv[])
 
         if (g_window_state.resized) {
             camera_update_projection_matrix(&g_camera);
-            mini_print_n_flush("W: %d, H: %d", g_window_state.width,
+            util_print_n_flush("W: %d, H: %d", g_window_state.width,
                                                g_window_state.height);
             g_window_state.resized = false;
         }
@@ -751,6 +763,13 @@ int main(int argc, char* argv[])
 
         glDisable(GL_BLEND);
 
+        float color[4];
+        color[0] = 1.0f;
+        color[1] = 1.0f;
+        color[2] = 0.2f;
+        color[4] = 1.0f;
+        draw2d_quad(20.0f, 20.0f, 20.0f, 20.0f, color);
+
        
         /* Present frame */
         glfwSwapBuffers(window);
@@ -760,7 +779,7 @@ int main(int argc, char* argv[])
         frames++;
         if ( current_time - last_time >= 1.0) {
             mini_update_framecounter(&g_frame_counter, 1000.0f/(float)frames);
-            mini_print_n_flush("[FPS COUNTER: %.2f ms/frame | %.2f FPS]", 
+            util_print_n_flush("[FPS COUNTER: %.2f ms/frame | %.2f FPS]", 
                g_frame_counter.ms_per_frame, g_frame_counter.avg_fps);
             frames = 0;
             last_time += 1.0;
