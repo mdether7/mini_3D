@@ -680,6 +680,9 @@ int main(int argc, char* argv[])
     glLineWidth(5.0f); // for wireframe
 
     /* Game/Engine specific initialization */
+
+
+
     draw2d_init();
     draw2d_set_program(PROGRAM_SLOT_2);
 
@@ -723,7 +726,7 @@ int main(int argc, char* argv[])
         /* Render */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(g_shader_programs[PROGRAM_SLOT_0].handle);
+        shader_use_program(PROGRAM_SLOT_0);
 
         // upload glfw time
         glUniform1f(g_shader_programs[PROGRAM_SLOT_0].u_locations[UNIFORM_TIME], current_time);
@@ -747,7 +750,7 @@ int main(int argc, char* argv[])
          * specified program doesnt need to be bound
          */
 
-        // quad shit
+#if 0 /* DRAW FULL SCREEN QUAD */
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -762,13 +765,16 @@ int main(int argc, char* argv[])
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glDisable(GL_BLEND);
-
+#endif
         float color[4];
         color[0] = 1.0f;
         color[1] = 1.0f;
         color[2] = 0.2f;
-        color[4] = 1.0f;
-        draw2d_quad(20.0f, 20.0f, 20.0f, 20.0f, color);
+        color[3] = 1.0f;
+        shader_use_program(PROGRAM_SLOT_2);
+        glUniform2i(g_shader_programs[PROGRAM_SLOT_2].u_locations[UNIFORM_RESOLUTION], 
+            (GLint)g_window_state.width, (GLint)g_window_state.height);
+        draw2d_quad(10.0f, 10.0f, 1000.0f, 20.0f, color);
 
        
         /* Present frame */

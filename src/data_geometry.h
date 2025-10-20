@@ -58,11 +58,18 @@ static const GLuint geo_cube_indices[] = {
 
 //////////
 // Quad
+// static const Vertex2D geo_quad_vertices[] = { COVER FULL NDC
+//     {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}},
+//     {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+//     {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
+//     {{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f}},
+// };
+
 static const Vertex2D geo_quad_vertices[] = {
-    {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}},
-    {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
-    {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
-    {{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f}},
+    {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}}, // bottom-left
+    {{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}}, // top-left
+    {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}}, // top-right
+    {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}, // bottom-right
 };
 
 static const GLuint geo_quad_indices[] = {
