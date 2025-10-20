@@ -3,15 +3,15 @@
 
 #include <glad/glad.h>
 
-typedef struct s_vertex {
+typedef struct s_vertex_3d {
     GLfloat position[3];
     GLfloat normal[3];
     GLfloat uv[2];
-} Vertex;
+} Vertex3D;
 
-typedef struct s_uivertex {
+typedef struct s_uivertex_2d {
     GLfloat position[3]; // Z for depth.
     GLfloat uv[2];
-} UIVertex;
+} Vertex2D;
 
 #endif

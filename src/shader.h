@@ -15,7 +15,7 @@ typedef enum {
     PROGRAM_SLOT_8,
     PROGRAM_SLOT_9,
     MAX_SHADER_PROGRAMS
-} ProgramType;
+} ProgramSlot;
 
 typedef enum {
     UNIFORM_MODEL,
@@ -23,17 +23,22 @@ typedef enum {
     UNIFORM_PROJECTION,
     UNIFORM_TIME,
     UNIFORM_RESOLUTION,
+
+    UNIFORM_POS_2D,
+    UNIFORM_SIZE_2D,
+    UNIFORM_COLOR,
+
     UNIFORM_TOTAL
 } UniformLocation;
 
 typedef struct s_shader_program {
     GLuint handle;
-    GLuint u_locations[UNIFORM_TOTAL];
+    GLint u_locations[UNIFORM_TOTAL];
 } ShaderProgram;
 
 extern ShaderProgram g_shader_programs[MAX_SHADER_PROGRAMS];
 
-void shader_init_unifroms(ShaderProgram* program);
-void shader_use_program(ProgramType slot); 
+void shader_init_uniforms(ShaderProgram* program);
+void shader_use_program(ProgramSlot slot); 
 
 #endif

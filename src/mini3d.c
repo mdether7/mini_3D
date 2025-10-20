@@ -38,7 +38,7 @@
 #endif
 
 #include "shader.h"
-#include "ui.h"
+#include "draw2d.h"
 #include "mini_utils.h"
 #include "gl_helpers.h"
 #include "math_helpers.h"
@@ -55,8 +55,6 @@
 #define WINDOW_MAX_NAME_LEN 64
 #define WINDOW_DEFAULT_WIDTH 1280
 #define WINDOW_DEFAULT_HEIGHT 800
-
-#define MAX_SHADER_PATH 1024
 
 ///////////////////////////////////////////
 //
@@ -441,7 +439,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         result = shader_program_hot_reload(&g_shader_programs[PROGRAM_SLOT_1].handle,
             "shaders/quad.vert", "shaders/quad.frag");
         if (result)
-            shader_init_unifroms(&g_shader_programs[PROGRAM_SLOT_1]);
+            shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_1]);
         // variable = condition ? value_if_true : value_if_false;
         message = result ? "[SHADER RELOAD SUCCESS!]" : "[SHADER RELOAD FAILED!]";
         mini_print_n_flush("%s\n", message);
@@ -564,8 +562,8 @@ int main(int argc, char* argv[])
     g_shader_programs[PROGRAM_SLOT_0].handle = default_program; 
     g_shader_programs[PROGRAM_SLOT_1].handle = quad_program;
 
-    shader_init_unifroms(&g_shader_programs[PROGRAM_SLOT_0]);
-    shader_init_unifroms(&g_shader_programs[PROGRAM_SLOT_1]);
+    shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_0]);
+    shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_1]);
 
     // texture_
     /**
@@ -627,9 +625,9 @@ int main(int argc, char* argv[])
     glEnableVertexAttribArray(1); // Normals
     glEnableVertexAttribArray(2); // UVs
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0); // IN BYTES!
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(3 * sizeof(GLfloat)));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(6 * sizeof(GLfloat)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)0); // IN BYTES!
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)(3 * sizeof(GLfloat)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)(6 * sizeof(GLfloat)));
 
     GLuint cube_EBO;
     glGenBuffers(1, &cube_EBO);
@@ -644,10 +642,10 @@ int main(int argc, char* argv[])
     GLuint quad_VBO;
     glGenBuffers(1, &quad_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, quad_VBO);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(geo_cube_vertices), geo_quad_vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(geo_quad_vertices), geo_quad_vertices, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0); // only enable position.
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex2D), (void*)0);
 
     GLuint quad_EBO;
     glGenBuffers(1, &quad_EBO);
@@ -672,9 +670,6 @@ int main(int argc, char* argv[])
     glLineWidth(5.0f); // for wireframe
 
     /* Game/Engine specific initialization */
-
-    ui_element_data quad;
-    ui_initialize(1, &quad);
 
     // Projection needs to be updated at least once before start
     camera_update_projection_matrix(&g_camera);
@@ -756,7 +751,6 @@ int main(int argc, char* argv[])
 
         glDisable(GL_BLEND);
 
-        //ui_draw_quad(quad);
        
         /* Present frame */
         glfwSwapBuffers(window);

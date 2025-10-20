@@ -14,7 +14,7 @@
 
 /////////
 // Cube
-static const Vertex geo_cube_vertices[] = {
+static const Vertex3D geo_cube_vertices[] = {
 //   Position               Normal              UV
     {{-0.5f, -0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}}, // front face
     {{-0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
@@ -58,7 +58,7 @@ static const GLuint geo_cube_indices[] = {
 
 //////////
 // Quad
-static const UIVertex geo_quad_vertices[] = {
+static const Vertex2D geo_quad_vertices[] = {
     {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}},
     {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
     {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
