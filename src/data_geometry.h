@@ -73,8 +73,8 @@ static const Vertex2D geo_quad_vertices[] = {
 };
 
 static const GLuint geo_quad_indices[] = {
-    0, 3, 1,
-    2, 1, 3,
+    0, 1, 3, // Winding order flipped, cus draw2d y flipped.
+    2, 3, 1,
 };
 
 #endif

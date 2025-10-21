@@ -41,5 +41,6 @@ extern ShaderProgram g_shader_programs[MAX_SHADER_PROGRAMS];
 
 void shader_init_uniforms(ShaderProgram* program);
 void shader_use_program(ProgramSlot slot); 
+void shader_delete_program(ProgramSlot slot);
 
 #endif

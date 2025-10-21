@@ -39,6 +39,12 @@ shader_use_program(ProgramSlot slot)
     glUseProgram(g_shader_programs[slot].handle);
 }
 
+void
+shader_delete_program(ProgramSlot slot)
+{
+    glDeleteProgram(g_shader_programs[slot].handle);
+}
+
 static const char*
 shader_uniform_to_string(UniformLocation loc)
 {

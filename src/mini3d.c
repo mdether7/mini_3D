@@ -672,7 +672,7 @@ int main(int argc, char* argv[])
     mat4x4_scale_aniso(model_cube, model_cube, 1.0f, 1.0f, 1.0f);
 
     /* OpenGL initial options setup */
-    glClearColor(0.5f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.21f, 0.72f, 0.43f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
@@ -680,7 +680,6 @@ int main(int argc, char* argv[])
     glLineWidth(5.0f); // for wireframe
 
     /* Game/Engine specific initialization */
-
 
 
     draw2d_init();
@@ -724,6 +723,7 @@ int main(int argc, char* argv[])
         }
 #endif
         /* Render */
+        //glEnable(GL_CULL_FACE);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader_use_program(PROGRAM_SLOT_0);
@@ -766,16 +766,22 @@ int main(int argc, char* argv[])
 
         glDisable(GL_BLEND);
 #endif
-        float color[4];
-        color[0] = 1.0f;
-        color[1] = 1.0f;
-        color[2] = 0.2f;
-        color[3] = 1.0f;
         shader_use_program(PROGRAM_SLOT_2);
-        glUniform2i(g_shader_programs[PROGRAM_SLOT_2].u_locations[UNIFORM_RESOLUTION], 
-            (GLint)g_window_state.width, (GLint)g_window_state.height);
-        draw2d_quad(10.0f, 10.0f, 1000.0f, 20.0f, color);
+        glUniform2f(g_shader_programs[PROGRAM_SLOT_2].u_locations[UNIFORM_RESOLUTION], 
+            (GLfloat)g_window_state.width, (GLfloat)g_window_state.height);
+        float color[4];
+        color[0] = 0.0f;
+        color[1] = 1.0f;
+        color[2] = 0.0f;
+        color[3] = 1.0f;
 
+        float color2[4];
+        color2[0] = 1.0f;
+        color2[1] = 0.0f;
+        color2[2] = 0.0f;
+        color2[3] = 1.0f;
+        draw2d_quad(10.0f / 2, 10.0f / 2, 10.0f, 10.0f, color2);
+        draw2d_quad(10.0f, 10.0f, 1000.0f, 20.0f, color);
        
         /* Present frame */
         glfwSwapBuffers(window);
@@ -786,7 +792,9 @@ int main(int argc, char* argv[])
         if ( current_time - last_time >= 1.0) {
             mini_update_framecounter(&g_frame_counter, 1000.0f/(float)frames);
             util_print_n_flush("[FPS COUNTER: %.2f ms/frame | %.2f FPS]", 
-               g_frame_counter.ms_per_frame, g_frame_counter.avg_fps);
+                g_frame_counter.ms_per_frame, g_frame_counter.avg_fps);
+            util_print_n_flush("[WINDOW SIZE: W = %d | H = %d]",
+                g_window_state.width, g_window_state.height);
             frames = 0;
             last_time += 1.0;
             mini_print_camera(&g_camera); // DEBUG ONLY
@@ -795,8 +803,11 @@ int main(int argc, char* argv[])
 
     /* OpenGL objects cleanup */
     // shader programs
-    glDeleteProgram(g_shader_programs[PROGRAM_SLOT_0].handle);
-    glDeleteProgram(g_shader_programs[PROGRAM_SLOT_1].handle);
+    shader_delete_program(PROGRAM_SLOT_0);
+    shader_delete_program(PROGRAM_SLOT_1);
+    shader_delete_program(PROGRAM_SLOT_2);
+
+    // TODO: Add draw2d buffers cleanup.
 
     // textures
     glDeleteTextures(1, &texture);
