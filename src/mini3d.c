@@ -741,7 +741,7 @@ int main(int argc, char* argv[])
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(cube_VAO); 
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-        // unbind
+        // unbind Texture
         glBindTexture(GL_TEXTURE_2D, 0);
 
         /**
@@ -750,7 +750,7 @@ int main(int argc, char* argv[])
          * specified program doesnt need to be bound
          */
 
-#if 0 /* DRAW FULL SCREEN QUAD */
+#if 1 /* DRAW FULL SCREEN QUAD */
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
