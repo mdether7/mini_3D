@@ -55,7 +55,7 @@ void main()
     //     gl_Position = vec4(0.0f, -0.500, -1.0f, 1.0f);
     // else 
     ndc.y = -ndc.y;
-    gl_Position = vec4(ndc.x, ndc.y, 0.0f, 1.0f);
+    gl_Position = vec4(ndc.x, ndc.y, -0.80f, 1.0f);
 
     if (gl_VertexID == 0 || gl_VertexID == 3)
         v_color  = vec4(0.0f, 0.0f, 0.0f, 1.0f);

@@ -750,22 +750,6 @@ int main(int argc, char* argv[])
          * specified program doesnt need to be bound
          */
 
-#if 1 /* DRAW FULL SCREEN QUAD */
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        glUseProgram(g_shader_programs[PROGRAM_SLOT_1].handle);
-
-        // upload uniforms
-        glUniform1f(g_shader_programs[PROGRAM_SLOT_1].u_locations[UNIFORM_TIME], current_time);
-        glUniform2i(g_shader_programs[PROGRAM_SLOT_1].u_locations[UNIFORM_RESOLUTION], 
-                (GLint)g_window_state.width, (GLint)g_window_state.height);
-
-        glBindVertexArray(quad_VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-        glDisable(GL_BLEND);
-#endif
         shader_use_program(PROGRAM_SLOT_2);
         glUniform2f(g_shader_programs[PROGRAM_SLOT_2].u_locations[UNIFORM_RESOLUTION], 
             (GLfloat)g_window_state.width, (GLfloat)g_window_state.height);
@@ -782,6 +766,23 @@ int main(int argc, char* argv[])
         color2[3] = 1.0f;
         draw2d_quad(10.0f / 2, 10.0f / 2, 10.0f, 10.0f, color2);
         draw2d_quad(10.0f, 10.0f, 1000.0f, 20.0f, color);
+
+#if 1 /* DRAW FULL SCREEN QUAD */
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glUseProgram(g_shader_programs[PROGRAM_SLOT_1].handle);
+
+        // upload uniforms
+        glUniform1f(g_shader_programs[PROGRAM_SLOT_1].u_locations[UNIFORM_TIME], current_time);
+        glUniform2i(g_shader_programs[PROGRAM_SLOT_1].u_locations[UNIFORM_RESOLUTION], 
+                (GLint)g_window_state.width, (GLint)g_window_state.height);
+
+        glBindVertexArray(quad_VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        glDisable(GL_BLEND);
+#endif
        
         /* Present frame */
         glfwSwapBuffers(window);
