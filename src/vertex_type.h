@@ -9,7 +9,7 @@ typedef struct s_vertex_3d {
     GLfloat uv[2];
 } Vertex3D;
 
-typedef struct s_uivertex_2d {
+typedef struct s_vertex_2d {
     GLfloat position[3]; // Z for depth.
     GLfloat uv[2];
 } Vertex2D;

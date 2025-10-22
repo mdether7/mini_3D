@@ -680,8 +680,6 @@ int main(int argc, char* argv[])
     glLineWidth(5.0f); // for wireframe
 
     /* Game/Engine specific initialization */
-
-
     draw2d_init();
     draw2d_set_program(PROGRAM_SLOT_2);
 
@@ -767,11 +765,11 @@ int main(int argc, char* argv[])
         draw2d_quad(10.0f / 2, 10.0f / 2, 10.0f, 10.0f, color2);
         draw2d_quad(10.0f, 10.0f, 1000.0f, 20.0f, color);
 
-#if 1 /* DRAW FULL SCREEN QUAD */
+#if 0 /* DRAW FULL SCREEN QUAD */
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glUseProgram(g_shader_programs[PROGRAM_SLOT_1].handle);
+        shader_use_program(PROGRAM_SLOT_1);
 
         // upload uniforms
         glUniform1f(g_shader_programs[PROGRAM_SLOT_1].u_locations[UNIFORM_TIME], current_time);
