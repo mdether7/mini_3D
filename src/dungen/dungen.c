@@ -1,5 +1,6 @@
 #include "dungen.h"
 
+#include <stdlib.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <assert.h>   
@@ -10,16 +11,6 @@
 //////////////////
 // Final dungeon
 tile_type dungeon[DUN_SIZE][DUN_SIZE];
-
-static void fill_map_tiles(tile_type type);
-static void reset_room_cells(void);
-static void connect_rooms(const RoomCell* room_first, const RoomCell* room_second);
-static inline void draw_line(int start, int end, int fixed, bool axis_x);
-static inline RoomCell* get_cell_at(int x_pos, int y_pos);
-static RoomCell* get_neighbouring_room_cell(const RoomCell* room, dun_direction dir);
-static void get_random_room_center(int room_x, int room_y, int* target_x, int* target_y);
-
-static int comp_qsort(const void* x, const void* y);
 
 typedef struct {
     int x, y;
@@ -40,7 +31,18 @@ typedef enum {
 static RoomCell room_cells[DUN_TOTAL_CELLS];
 extern Room     room_templates[ROOM_TOTAL];
 
-int dungeon_generate(unsigned int min_rooms, unsigned int max_rooms)
+static void fill_map_tiles(tile_type type);
+static void reset_room_cells(void);
+static void connect_rooms(const RoomCell* room_first, const RoomCell* room_second);
+static inline void draw_line(int start, int end, int fixed, bool axis_x);
+static inline RoomCell* get_cell_at(int x_pos, int y_pos);
+static RoomCell* get_neighbouring_room_cell(const RoomCell* room, dun_direction dir);
+static void place_doors(RoomCell* room);
+static void get_random_room_center(int room_x, int room_y, int* target_x, int* target_y);
+
+static int comp_qsort(const void* x, const void* y);
+
+int dungeon_generate(void)
 {
     fill_map_tiles(WALL);
     reset_room_cells();
@@ -120,6 +122,17 @@ int dungeon_generate(unsigned int min_rooms, unsigned int max_rooms)
         place_doors(&room_cells[room]);
 
     return 0;
+}
+
+int get_terrain_char(tile_type tile)
+{
+    switch (tile)
+    {
+        case FLOOR: return '.';
+        case WALL: return '#';
+        case DOOR: return '+';
+        default: return '?';
+    }
 }
 
 static void fill_map_tiles(tile_type type)

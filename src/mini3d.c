@@ -44,6 +44,8 @@
 #include "math_helpers.h"
 #include "data_geometry.h"
 
+#include "dungen/dungen.h"
+
 ///////////////////////////////////////////
 //
 //  My macros
@@ -682,6 +684,15 @@ int main(int argc, char* argv[])
     /* Game/Engine specific initialization */
     draw2d_init();
     draw2d_set_program(PROGRAM_SLOT_2);
+
+    dungeon_generate();
+    for (int i = 0; i < DUN_SIZE; i++) {
+        for (int j = 0; j <DUN_SIZE; j++) {
+            printf("%c", get_terrain_char(dungeon[i][j]));
+        }
+        putchar('\n');
+    }
+    fflush(stdout);
 
     // Projection needs to be updated at least once before start
     camera_update_projection_matrix(&g_camera);

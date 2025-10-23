@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #include "dice.h"
 
 #include <stdlib.h>

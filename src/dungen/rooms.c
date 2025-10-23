@@ -1,9 +1,5 @@
 #include "dungen.h"
 
-typedef struct {
-    tile_type layout[DUN_ROOM_SIZE][DUN_ROOM_SIZE];
-} Room;
-
 Room room_templates[ROOM_TOTAL] = {
   [ROOM_START] =
   {

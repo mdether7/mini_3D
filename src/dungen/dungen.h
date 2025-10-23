@@ -28,6 +28,8 @@ typedef struct {
 } Room;
 
 extern tile_type dungeon[DUN_SIZE][DUN_SIZE];
-int dungeon_generate(unsigned int min_rooms, unsigned int max_rooms);
+
+int dungeon_generate(void);
+int get_terrain_char(tile_type tile);
 
 #endif
