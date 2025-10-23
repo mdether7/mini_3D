@@ -25,6 +25,6 @@ typedef struct {
 } DungeonMesh;
 
 DungeonMesh* dungeon_generate_mesh(tile_type dungeon[DUN_SIZE][DUN_SIZE]);
-DungeonMesh* dungeon_test_mesh(tile_type dun_test[10][10]);
+void         dungeon_free_mesh(DungeonMesh* dungeon);
 
 #endif
