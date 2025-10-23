@@ -688,7 +688,7 @@ int main(int argc, char* argv[])
     draw2d_set_program(PROGRAM_SLOT_2);
 
     // Dungen test.
-#if 0
+#if 1
     char state[256];
     dice_init_state(state);
 #endif
@@ -704,16 +704,6 @@ int main(int argc, char* argv[])
     DungeonMesh* mesh = dungeon_generate_mesh(g_dungeon);
     if (!mesh)
         mini_die("NO MESH!");
-        
-    util_print_n_flush("TOTAL VERTS: %d", mesh->vert_count);
-
-    for (size_t i = 0; i < (mesh->vert_count / 4); i++) {
-        util_print_vertex3d(mesh->vertices[i]);
-    }
-
-    for (size_t i = 0; i < (mesh->indices_count / 6); i++) {
-        printf("%d\n", mesh->indices[i]);
-    }
 
     GLuint floor_VAO, floor_VBO, floor_EBO;
     glGenVertexArrays(1, &floor_VAO);
@@ -735,7 +725,7 @@ int main(int argc, char* argv[])
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, floor_EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(unsigned int) * mesh->indices_count), mesh->indices, GL_STATIC_DRAW);
 
-    dungeon_free_mesh(mesh);
+    //dungeon_free_mesh(mesh);
     // Dungeon test end.
 
 
@@ -795,6 +785,9 @@ int main(int argc, char* argv[])
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(cube_VAO); 
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+        glBindVertexArray(floor_VAO); // <- Dungeon
+        glDrawElements(GL_TRIANGLES, mesh->indices_count, GL_UNSIGNED_INT, 0);
         // unbind Texture
         glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -862,6 +855,11 @@ int main(int argc, char* argv[])
     glDeleteTextures(1, &texture);
 
     //geometry
+
+    glDeleteVertexArrays(1, &floor_VAO);
+    glDeleteBuffers(1, &floor_VBO);
+    glDeleteBuffers(1, &floor_EBO);
+
     glDeleteVertexArrays(1, &cube_VAO);
     glDeleteBuffers(1, &cube_VBO);
     glDeleteBuffers(1, &cube_EBO);
