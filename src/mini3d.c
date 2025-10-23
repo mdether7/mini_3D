@@ -45,6 +45,8 @@
 #include "data_geometry.h"
 
 #include "dungen/dungen.h"
+#include "dungen/dice.h"
+#include "dun_mesh.h"
 
 ///////////////////////////////////////////
 //
@@ -686,14 +688,48 @@ int main(int argc, char* argv[])
     draw2d_set_program(PROGRAM_SLOT_2);
 
     // Dungen test.
+    char state[256];
+    dice_init_state(state);
     dungeon_generate();
     for (int i = 0; i < DUN_SIZE; i++) {
         for (int j = 0; j <DUN_SIZE; j++) {
-            printf("%c", get_terrain_char(dungeon[i][j]));
+            printf("%c", get_terrain_char(g_dungeon[i][j]));
         }
         putchar('\n');
     }
     fflush(stdout);
+
+    DungeonMesh* mesh = dungeon_generate_mesh(g_dungeon);
+    if (!mesh)
+        mini_die("NO MESH!");
+        
+    util_print_n_flush("%d", mesh->vert_count);
+    free(mesh);
+
+    static const int TEST_SIZE = 10;
+    tile_type dun_test[TEST_SIZE][TEST_SIZE];
+
+    for (int i = 0; i < TEST_SIZE; i++)
+        for (int j = 0; j < TEST_SIZE; j++)
+            dun_test[i][j] = FLOOR;
+
+    for (int i = 0; i < TEST_SIZE; i++) {
+        for (int j = 0; j < TEST_SIZE; j++) {
+            printf("%c", get_terrain_char(dun_test[i][j]));
+        }
+        putchar('\n');
+    }
+
+    DungeonMesh* test_mesh = dungeon_test_mesh(dun_test);
+    if (test_mesh == NULL)
+        mini_die("NOMESH");
+    
+    for (int i = 0; i < test_mesh->vert_count; i++) {
+        util_print_vertex3d(test_mesh->vertices[i]);
+    }
+
+    free(test_mesh); // <- it leaks...
+    // Dungeon test end
 
     // Projection needs to be updated at least once before start
     camera_update_projection_matrix(&g_camera);

@@ -10,7 +10,7 @@
 
 //////////////////
 // Final dungeon
-tile_type dungeon[DUN_SIZE][DUN_SIZE];
+tile_type g_dungeon[DUN_SIZE][DUN_SIZE];
 
 typedef struct {
     int x, y;
@@ -60,7 +60,7 @@ int dungeon_generate(void)
 
     for (int room_x = 0 ;room_x < DUN_ROOM_SIZE; room_x++) {
         for (int room_y = 0 ;room_y < DUN_ROOM_SIZE; room_y++) {
-            dungeon[room_x + room_cells[random_cell].x]
+            g_dungeon[room_x + room_cells[random_cell].x]
                    [room_y + room_cells[random_cell].y] =
             room_templates[ROOM_START].layout[room_x][room_y];
         }
@@ -82,7 +82,7 @@ int dungeon_generate(void)
 
         for (int room_x = 0; room_x < DUN_ROOM_SIZE; room_x++) {
             for (int room_y = 0; room_y < DUN_ROOM_SIZE; room_y++) {
-            dungeon[room_x + room_cells[random_cell].x]
+            g_dungeon[room_x + room_cells[random_cell].x]
                    [room_y + room_cells[random_cell].y] = 
             room_templates[random_room].layout[room_x][room_y];
             }
@@ -139,7 +139,7 @@ static void fill_map_tiles(tile_type type)
 {
     for (int x = 0; x < DUN_SIZE; x++) {
         for (int y = 0; y < DUN_SIZE; y++) {
-            dungeon[x][y] = type;
+            g_dungeon[x][y] = type;
         } 
     }
 }
@@ -181,9 +181,9 @@ static inline void draw_line(int start, int end, int fixed, bool axis_x)
     for (int i = 0; i <= abs(end - start); i++) {
         int pos = start < end ? start + i : start - i;
         if (axis_x)
-            dungeon[pos][fixed] = FLOOR;
+            g_dungeon[pos][fixed] = FLOOR;
         else
-            dungeon[fixed][pos] = FLOOR;
+            g_dungeon[fixed][pos] = FLOOR;
     }
 }
 
@@ -256,38 +256,38 @@ static void place_doors(RoomCell* room)
    */
   for (int nwse = 0; nwse < DUN_ROOM_SIZE; nwse++) {    
 
-    if (!dungeon[room->x][room->y+nwse]) { /* north wall */
+    if (!g_dungeon[room->x][room->y+nwse]) { /* north wall */
       RoomCell* north_room = get_neighbouring_room_cell(room, DUN_NORTH);
       if (north_room && !north_room->placed_doors[DUN_SOUTH])
       { /* if north room generated and south wall doesnt yet have walls */
-        dungeon[room->x][room->y+nwse] = DOOR;
+        g_dungeon[room->x][room->y+nwse] = DOOR;
         room->placed_doors[DUN_NORTH] = true;
       }
     } 
 
-    if (!dungeon[room->x+DUN_ROOM_SIZE - 1][room->y+nwse]) { /* south wall */
+    if (!g_dungeon[room->x+DUN_ROOM_SIZE - 1][room->y+nwse]) { /* south wall */
       RoomCell* south_room = get_neighbouring_room_cell(room, DUN_SOUTH);
       if (south_room && !south_room->placed_doors[DUN_NORTH]) 
       {
-        dungeon[room->x+DUN_ROOM_SIZE - 1][room->y+nwse] = DOOR;
+        g_dungeon[room->x+DUN_ROOM_SIZE - 1][room->y+nwse] = DOOR;
         room->placed_doors[DUN_SOUTH] = true;
       }
     }
 
-    if (!dungeon[room->x+nwse][room->y]) { /* west wall */
+    if (!g_dungeon[room->x+nwse][room->y]) { /* west wall */
       RoomCell* west_room = get_neighbouring_room_cell(room, DUN_WEST);
       if (west_room && !west_room->placed_doors[DUN_EAST])
       {
-        dungeon[room->x+nwse][room->y] = DOOR;
+        g_dungeon[room->x+nwse][room->y] = DOOR;
         room->placed_doors[DUN_WEST] = true;
       }
     }
 
-    if (!dungeon[room->x+nwse][room->y+DUN_ROOM_SIZE - 1]) { /* east wall */
+    if (!g_dungeon[room->x+nwse][room->y+DUN_ROOM_SIZE - 1]) { /* east wall */
       RoomCell* east_room = get_neighbouring_room_cell(room, DUN_EAST);
       if (east_room && !east_room->placed_doors[DUN_WEST])
       {
-        dungeon[room->x+nwse][room->y+DUN_ROOM_SIZE - 1] = DOOR;
+        g_dungeon[room->x+nwse][room->y+DUN_ROOM_SIZE - 1] = DOOR;
         room->placed_doors[DUN_EAST] = true;
       } 
     }

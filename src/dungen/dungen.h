@@ -8,6 +8,8 @@
 #define DUN_ROOM_SIZE 8
 #define DUN_TOTAL_CELLS ((DUN_SIZE / DUN_ROOM_SIZE) * (DUN_SIZE / DUN_ROOM_SIZE))
 
+// TODO: Add struct Dungeon so that it will not relay on global.
+
 typedef enum {
     FLOOR = 0,
     WALL,
@@ -27,7 +29,7 @@ typedef struct {
     tile_type layout[DUN_ROOM_SIZE][DUN_ROOM_SIZE];
 } Room;
 
-extern tile_type dungeon[DUN_SIZE][DUN_SIZE];
+extern tile_type g_dungeon[DUN_SIZE][DUN_SIZE];
 
 int dungeon_generate(void);
 int get_terrain_char(tile_type tile);

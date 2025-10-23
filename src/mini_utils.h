@@ -16,6 +16,9 @@ void mini_die(char* fmt, ...); // <- TODO: move this to mini_3D.c
 void util_print_n_flush(char* fmt, ...);
 void util_print(char* fmt, ...);
 
+#include "vertex_type.h"
+void util_print_vertex3d(Vertex3D vert);
+
 ////////////////////////////////
 // BMP image loader TODO?
 // (For learning purposes only)

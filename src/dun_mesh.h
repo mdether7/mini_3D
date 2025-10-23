@@ -1,8 +1,9 @@
-#ifndef MINI_DUNGEN_H
-#define MINI_DUNGEN_H
+#ifndef MINI_DUNMESH_H
+#define MINI_DUNMESH_H
 
 #include <stddef.h>
 
+#include "dungen/dungen.h"
 #include "vertex_type.h"
 
 /**
@@ -11,7 +12,10 @@
  *  (usually we form quads or triangles for ease of representation).
  */
 
-#define DUN_SIZE 32 // 32x32
+/**
+ * TODO: Read on greedy meshing.
+ * Right now it's brute force approach XD.
+ */
 
 typedef struct {
     Vertex3D*     vertices;
@@ -20,6 +24,7 @@ typedef struct {
     size_t        indices_count;
 } DungeonMesh;
 
-DungeonMesh* generate_dungeon_floor(void);
+DungeonMesh* dungeon_generate_mesh(tile_type dungeon[DUN_SIZE][DUN_SIZE]);
+DungeonMesh* dungeon_test_mesh(tile_type dun_test[10][10]);
 
 #endif

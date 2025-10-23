@@ -57,14 +57,17 @@ static const GLuint geo_cube_indices[] = {
 };
 
 //////////
-// Quad
-// static const Vertex2D geo_quad_vertices[] = { COVER FULL NDC
-//     {{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}},
-//     {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
-//     {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
-//     {{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f}},
-// };
+// Quad3D
+static const Vertex3D geo_3d_quad_vertices[] = {
+    {{0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+    {{0.0f, 0.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+    {{1.0f, 0.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
+    {{1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
+};
 
+
+//////////
+// Quad2D
 static const Vertex2D geo_quad_vertices[] = {
     {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}}, // bottom-left
     {{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}}, // top-left
