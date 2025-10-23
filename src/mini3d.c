@@ -685,6 +685,7 @@ int main(int argc, char* argv[])
     draw2d_init();
     draw2d_set_program(PROGRAM_SLOT_2);
 
+    // Dungen test.
     dungeon_generate();
     for (int i = 0; i < DUN_SIZE; i++) {
         for (int j = 0; j <DUN_SIZE; j++) {
