@@ -86,8 +86,8 @@ DungeonMesh* dungeon_generate_mesh(tile_type dungeon[DUN_SIZE][DUN_SIZE])
                 mesh->indices[count_indices+5] = count_vert + 3;
 
                 pos[0]        += 1.0f; // jump one to right on X.
-                count_vert    += 4;    // tile tracking
-                count_indices += 6;
+                count_vert    += 4; // 4 vertices per tile
+                count_indices += 6; // 6 indices per tile
                 
             }
         }

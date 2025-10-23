@@ -170,7 +170,7 @@ static Camera g_camera = {
     .yaw        = -90.0f, // start facing north.
     .pitch      = 0.0f,
     .fov        = 60.0f,
-    .speed      = 5.0f,
+    .speed      = 10.0f,
     .near       = 0.1f, 
     .far        = 100.0f,
 };
