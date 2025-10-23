@@ -715,8 +715,25 @@ int main(int argc, char* argv[])
         printf("%d\n", mesh->indices[i]);
     }
 
-    // 
+    GLuint floor_VAO, floor_VBO, floor_EBO;
+    glGenVertexArrays(1, &floor_VAO);
+    glBindVertexArray(floor_VAO);
 
+    glGenBuffers(1, &floor_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, floor_VBO);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(sizeof(Vertex3D) * mesh->vert_count), mesh->vertices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0); // Position
+    glEnableVertexAttribArray(1); // Normals
+    glEnableVertexAttribArray(2); // UVs
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)offsetof(Vertex3D, position)); // IN BYTES!
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)offsetof(Vertex3D, normal));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)offsetof(Vertex3D, uv));
+    
+    glGenBuffers(1, &floor_EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, floor_EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(unsigned int) * mesh->indices_count), mesh->indices, GL_STATIC_DRAW);
 
     dungeon_free_mesh(mesh);
     // Dungeon test end.
@@ -796,6 +813,7 @@ int main(int argc, char* argv[])
         color[2] = 0.0f;
         color[3] = 1.0f;
         draw2d_quad(10.0f, 10.0f, 1000.0f, 20.0f, color);
+
 
 #if 0 /* DRAW FULL SCREEN QUAD */
         glEnable(GL_BLEND);
