@@ -8,6 +8,7 @@
 
 #define GLFW_INCLUDE_NONE // <- glad/GLFW can be included in any order
 #define NK_IMPLEMENTATION
+#define NK_INCLUDE_FONT_BAKING
 #define STB_IMAGE_IMPLEMENTATION
 
 #define MINI_MATH_TYPE_LIN
@@ -25,6 +26,8 @@
 
 #include "Nuklear/nuklear.h"
 #include "stb/stb_image.h"
+// wanted to include stb_true_type.h but 
+// appratently Nuklear already does it.
 
 ///////////////
 // My headers
@@ -60,7 +63,7 @@
 #define WINDOW_DEFAULT_WIDTH 1280
 #define WINDOW_DEFAULT_HEIGHT 800
 
-#define NK_MAX_MEMORY 1024 * 1024
+#define GUI_MAX_MEMORY 1024 * 1024 * 8 // (1024 * 1024) == 1 MiB => 8 MiBs
 
 ///////////////////////////////////////////
 //
@@ -730,15 +733,28 @@ int main(int argc, char* argv[])
     //dungeon_free_mesh(mesh);
     // Dungeon test end.
 
-    // UI initializtion.
-    
-    enum {TEST_1, TEST_2};
+    // UI initializtion. 
 
-    int ui_option  = TEST_1;
-    float ui_value = 0.6f;
+    // stbtt_pack_context ctx;
+    // stbtt_PackBegin()
 
-    
+    // Font stuff.
 
+    // struct nk_user_font font;
+    // font.userdata.ptr = &your_font_class_or_struct;
+    // font.height = your_font_height;
+    // font.width = your_text_width_calculation;
+
+
+    // enum {TEST_1, TEST_2};
+
+    // int ui_option  = TEST_1;
+    // float ui_value = 0.6f;
+    // int i =  20;
+    // static int x = 20;
+    // struct nk_context ctx;
+
+    // nk_init_fixed(&ctx, calloc(1, GUI_MAX_MEMORY), GUI_MAX_MEMORY, 
 
     // End UI stuff.
 
@@ -856,6 +872,7 @@ int main(int argc, char* argv[])
             mini_print_camera(&g_camera); // DEBUG ONLY
         }
     }
+    dungeon_free_mesh(mesh);
 
     /* OpenGL objects cleanup */
     // shader programs
