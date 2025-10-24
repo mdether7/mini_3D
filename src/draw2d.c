@@ -57,3 +57,13 @@ int draw2d_init(void)
     draw2d_g_initialized = true;
     return 0;
 }
+
+void draw2d_cleanup(void)
+{
+    if (draw2d_g_initialized) {
+        glDeleteVertexArrays(1, &draw2d_g_quad_VAO);
+        glDeleteBuffers(1, &draw2d_g_quad_VBO);
+        glDeleteBuffers(1, &draw2d_g_quad_EBO);
+        draw2d_g_initialized = false;
+    }
+}

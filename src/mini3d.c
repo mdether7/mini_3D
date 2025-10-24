@@ -60,6 +60,8 @@
 #define WINDOW_DEFAULT_WIDTH 1280
 #define WINDOW_DEFAULT_HEIGHT 800
 
+#define NK_MAX_MEMORY 1024 * 1024
+
 ///////////////////////////////////////////
 //
 //  Enums
@@ -728,7 +730,19 @@ int main(int argc, char* argv[])
     //dungeon_free_mesh(mesh);
     // Dungeon test end.
 
+    // UI initializtion.
+    
+    enum {TEST_1, TEST_2};
 
+    int ui_option  = TEST_1;
+    float ui_value = 0.6f;
+
+    
+
+
+    // End UI stuff.
+
+    // IMPORTANT!
     // Projection needs to be updated at least once before start
     camera_update_projection_matrix(&g_camera);
 
@@ -850,12 +864,12 @@ int main(int argc, char* argv[])
     shader_delete_program(PROGRAM_SLOT_2);
 
     // TODO: Add draw2d buffers cleanup.
+    draw2d_cleanup();
 
     // textures
     glDeleteTextures(1, &texture);
 
     //geometry
-
     glDeleteVertexArrays(1, &floor_VAO);
     glDeleteBuffers(1, &floor_VBO);
     glDeleteBuffers(1, &floor_EBO);
