@@ -90,9 +90,11 @@ void APIENTRY gl_debug_output_callback(GLenum source, GLenum type, unsigned int 
 void misc_gl_display_information(void)
 {
     GLint i1, i2, i3;
+    GLint dims[2];
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &i1);
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &i2);
     glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &i3);
+    glGetIntegerv(GL_MAX_VIEWPORT_DIMS, dims);
 
     fprintf(stdout, TERMINAL_GREEN);
     fprintf(stdout, "[OPENGL INFORMATION]\n");
@@ -108,7 +110,8 @@ void misc_gl_display_information(void)
     fprintf(stdout, 
         "MAX_TEXTURE_IMAGE_UNITS: %d\n"
         "MAX_COMBINED_TEXTURE_IMAGE_UNITS: %d\n" 
-        "MAX_VERTEX_TEXTURE_IMAGE_UNITS: %d\n", i1, i2, i3);
+        "MAX_VERTEX_TEXTURE_IMAGE_UNITS: %d\n"
+        "MAX_VIEWPORT_DIMS: W: %d, H: %d\n", i1, i2, i3, dims[0], dims[1]);
     fprintf(stdout, TERMINAL_RESET);
     fflush(stdout);
 }

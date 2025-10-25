@@ -75,6 +75,9 @@
 
 #define GUI_MAX_MEMORY 1024 * 1024 * 8 // (1024 * 1024) == 1 MiB => 8 MiBs
 
+#define MAX_VERTEX_BUFFER 512 * 1024
+#define MAX_ELEMENT_BUFFER 128 * 1024
+
 ///////////////////////////////////////////
 //
 //  Enums
@@ -437,6 +440,10 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
     // Thats crazy useful! // 
     // int* my_int = (int*)glfwGetWindowUserPointer(window);
+    nk_glfw3_key_callback(window, key, scancode, action, mods);
+
+   // if (nk_item_is_any_active())
+
     if (key == GLFW_KEY_Q && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
@@ -447,8 +454,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     }
 
     // TODO: Add somekind of menu after pressing escape.
-#if 0
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+#if 1
+    if (key == GLFW_KEY_U && action == GLFW_PRESS)
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 #endif
 
@@ -567,6 +574,8 @@ int main(int argc, char* argv[])
 
     /* Load OpenGL Stuff */
 
+    // Nuklear UI.
+
     // shader_
     GLuint default_program = shader_program_compile("shaders/default.vert",
                                                   "shaders/default.frag"); 
@@ -683,13 +692,15 @@ int main(int argc, char* argv[])
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)sizeof(geo_quad_indices), geo_quad_indices, GL_STATIC_DRAW);
 
     /*--------------------------------------------------------------------*/
+    /* NK UI SETUP */
+    struct nk_glfw ui_render_ctx = {0};
+    struct nk_context *ui_ctx;
 
-    mat4x4 model_cube;
-    mat4x4_identity(model_cube);
-
-    mat4x4_translate_in_place(model_cube, 1.0f, 0.0f, 0.0f);
-    //mat4x4_rotate_Y(model_cube, model_cube, mini_degrees_to_radians(45.0f));
-    mat4x4_scale_aniso(model_cube, model_cube, 1.0f, 1.0f, 1.0f);
+    ui_ctx = nk_glfw3_init(&ui_render_ctx, window, NK_GLFW3_DEFAULT);
+    {struct nk_font_atlas *atlas;
+        nk_glfw3_font_stash_begin(&ui_render_ctx, &atlas);
+        nk_glfw3_font_stash_end(&ui_render_ctx);}
+    /*--------------------------------------------------------------------*/
 
     /* OpenGL initial options setup */
     glClearColor(0.21f, 0.72f, 0.43f, 1.0f);
@@ -702,6 +713,13 @@ int main(int argc, char* argv[])
     /* Game/Engine specific initialization */
     draw2d_init();
     draw2d_set_program(PROGRAM_SLOT_2);
+
+    // some cube test movement.
+    mat4x4 model_cube;
+    mat4x4_identity(model_cube);
+
+    mat4x4_translate_in_place(model_cube, 0.0f, 0.0f, 0.0f);
+    mat4x4_scale_aniso(model_cube, model_cube, 1.0f, 1.0f, 1.0f);
 
     // Dungen test.
 #if 1
@@ -741,34 +759,6 @@ int main(int argc, char* argv[])
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, floor_EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(unsigned int) * mesh->indices_count), mesh->indices, GL_STATIC_DRAW);
 
-    //dungeon_free_mesh(mesh);
-    // Dungeon test end.
-
-    // UI initializtion. 
-
-    // stbtt_pack_context ctx;
-    // stbtt_PackBegin()
-
-    // Font stuff.
-
-    // struct nk_user_font font;
-    // font.userdata.ptr = &your_font_class_or_struct;
-    // font.height = your_font_height;
-    // font.width = your_text_width_calculation;
-
-
-    // enum {TEST_1, TEST_2};
-
-    // int ui_option  = TEST_1;
-    // float ui_value = 0.6f;
-    // int i =  20;
-    // static int x = 20;
-    // struct nk_context ctx;
-
-    // nk_init_fixed(&ctx, calloc(1, GUI_MAX_MEMORY), GUI_MAX_MEMORY, 
-
-    // End UI stuff.
-
     // IMPORTANT!
     // Projection needs to be updated at least once before start
     camera_update_projection_matrix(&g_camera);
@@ -788,13 +778,35 @@ int main(int argc, char* argv[])
 
         /* Input */
         input_process(window);
+        nk_glfw3_new_frame(&ui_render_ctx); // new
 
-        /* Update */
+        /* Update Game logic kinda? */
         mini_update_camera_movement(delta_time);
-
         // Update Matrices
         camera_update_view_matrix(&g_camera);
 
+        // Update UI logic
+        if (nk_begin(ui_ctx, "Demo", nk_rect(50, 50, 230, 250),
+            NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
+            NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
+        {
+            enum {EASY, HARD};
+            static int op = EASY;
+            static int property = 20;
+            nk_layout_row_static(ui_ctx, 30, 80, 1);
+            if (nk_button_label(ui_ctx, "button"))
+                fprintf(stdout, "button pressed\n");
+
+            nk_layout_row_dynamic(ui_ctx, 30, 2);
+            if (nk_option_label(ui_ctx, "easy", op == EASY)) op = EASY;
+            if (nk_option_label(ui_ctx, "hard", op == HARD)) op = HARD;
+
+            nk_layout_row_dynamic(ui_ctx, 25, 1);
+            nk_property_int(ui_ctx, "Compression:", 0, &property, 100, 10, 1);
+        }
+        nk_end(ui_ctx);
+
+        // check for resizes
         if (g_window_state.resized) {
             camera_update_projection_matrix(&g_camera);
             util_print_n_flush("W: %d, H: %d", g_window_state.width,
@@ -865,6 +877,8 @@ int main(int argc, char* argv[])
 
         glDisable(GL_BLEND);
 #endif
+        // on top of everything render UI.
+        nk_glfw3_render(&ui_render_ctx, NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
        
         /* Present frame */
         glfwSwapBuffers(window);
@@ -910,6 +924,7 @@ int main(int argc, char* argv[])
     glDeleteBuffers(1, &quad_VBO);
     glDeleteBuffers(1, &quad_EBO);
 
+    nk_glfw3_shutdown(&ui_render_ctx);
     // no need to destroy technically.
     glfwDestroyWindow(window);
 
