@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include <glad/glad.h>
+
 #include "dungen/dungen.h"
 #include "data_geometry.h"
 #include "vertex_type.h"
@@ -23,6 +25,10 @@ DungeonMesh* dungeon_generate_mesh(tile_type dungeon[DUN_SIZE][DUN_SIZE])
     mesh->indices       = NULL;
     mesh->vert_count    = 0;
     mesh->indices_count = 0;
+
+    mesh->VAO = 0;
+    mesh->VBO = 0;
+    mesh->EBO = 0;
 
     int non_walls = 0;
     for (int row = 0; row < DUN_SIZE; row++) {
@@ -95,12 +101,34 @@ DungeonMesh* dungeon_generate_mesh(tile_type dungeon[DUN_SIZE][DUN_SIZE])
         pos[2] += 1.0f; // jump in Z
     }
 
+    glGenVertexArrays(1, &mesh->VAO);
+    glBindVertexArray(mesh->VAO);
+
+    glGenBuffers(1, &mesh->VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(sizeof(Vertex3D) * mesh->vert_count), mesh->vertices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0); // Position
+    glEnableVertexAttribArray(1); // Normals
+    glEnableVertexAttribArray(2); // UVs
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)offsetof(Vertex3D, position)); // IN BYTES!
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)offsetof(Vertex3D, normal));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)offsetof(Vertex3D, uv));
+    
+    glGenBuffers(1, &mesh->EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(unsigned int) * mesh->indices_count), mesh->indices, GL_STATIC_DRAW);
+
     return mesh;
 }
 
 void dungeon_free_mesh(DungeonMesh* dungeon)
 {
     if (dungeon) {
+        glDeleteVertexArrays(1, &dungeon->VAO);
+        glDeleteBuffers(1, &dungeon->VBO);
+        glDeleteBuffers(1, &dungeon->EBO);
         free(dungeon->vertices);
         free(dungeon->indices);
         free(dungeon);

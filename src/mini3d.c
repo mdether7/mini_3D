@@ -36,6 +36,11 @@
 // STB
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
+
+// Fonts
+#include <ft2build.h>
+#include FT_FREETYPE_H  
+
 // wanted to include stb_true_type.h but 
 // appratently Nuklear already does it.
 
@@ -615,7 +620,6 @@ int main(int argc, char* argv[])
     shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_1]);
     shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_2]);
 
-
     // texture_
     /**
      * Texture coordinates UVs
@@ -710,7 +714,7 @@ int main(int argc, char* argv[])
 
     ui_ctx = nk_glfw3_init(&ui_render_ctx, window, NK_GLFW3_DEFAULT);
     {struct nk_font_atlas *atlas;
-        nk_glfw3_font_stash_begin(&ui_render_ctx, &atlas);
+        nk_glfw3_font_stash_begin(&ui_render_ctx, &atlas); // add custom font here maybe?
         nk_glfw3_font_stash_end(&ui_render_ctx);}
     /*--------------------------------------------------------------------*/
 
@@ -726,7 +730,7 @@ int main(int argc, char* argv[])
     mat4x4_scale_aniso(model_cube, model_cube, 1.0f, 1.0f, 1.0f);
 
     // Dungen test.
-#if 1
+#if 0
     char state[256];
     dice_init_state(state);
 #endif
@@ -740,28 +744,9 @@ int main(int argc, char* argv[])
     fflush(stdout);
 
     DungeonMesh* mesh = dungeon_generate_mesh(g_dungeon);
-    if (!mesh)
-        mini_die("NO MESH!");
-
-    GLuint floor_VAO, floor_VBO, floor_EBO;
-    glGenVertexArrays(1, &floor_VAO);
-    glBindVertexArray(floor_VAO);
-
-    glGenBuffers(1, &floor_VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, floor_VBO);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(sizeof(Vertex3D) * mesh->vert_count), mesh->vertices, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0); // Position
-    glEnableVertexAttribArray(1); // Normals
-    glEnableVertexAttribArray(2); // UVs
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)offsetof(Vertex3D, position)); // IN BYTES!
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)offsetof(Vertex3D, normal));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)offsetof(Vertex3D, uv));
-    
-    glGenBuffers(1, &floor_EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, floor_EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(unsigned int) * mesh->indices_count), mesh->indices, GL_STATIC_DRAW);
+    if (mesh == NULL) {
+        mini_die("Dungeon mesh creation failed!");
+    }
 
     // IMPORTANT!
     // Projection needs to be updated at least once before start
@@ -773,7 +758,7 @@ int main(int argc, char* argv[])
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    glLineWidth(5.0f); // for wireframe
+    glLineWidth(2.0f); // for wireframe
 
     glfwSetTime(0.0);
     float last_time = glfwGetTime();
@@ -834,8 +819,8 @@ int main(int argc, char* argv[])
         }
 #endif
         /* Render */
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
+        glEnable(GL_DEPTH_TEST); //Nuklear render modifies this
+        glEnable(GL_CULL_FACE);  //thats why i set this up again.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader_use_program(PROGRAM_SLOT_0);
@@ -854,7 +839,7 @@ int main(int argc, char* argv[])
         glBindVertexArray(cube_VAO); 
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-        glBindVertexArray(floor_VAO); // <- Dungeon
+        glBindVertexArray(mesh->VAO); // <- Dungeon
         glDrawElements(GL_TRIANGLES, mesh->indices_count, GL_UNSIGNED_INT, 0);
         // unbind Texture
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -913,7 +898,10 @@ int main(int argc, char* argv[])
             mini_print_camera(&g_camera); // DEBUG ONLY
         }
     }
+
+    draw2d_cleanup();
     dungeon_free_mesh(mesh);
+    mesh = NULL;
 
     /* OpenGL objects cleanup */
     // shader programs
@@ -921,16 +909,8 @@ int main(int argc, char* argv[])
     shader_delete_program(PROGRAM_SLOT_1);
     shader_delete_program(PROGRAM_SLOT_2);
 
-    // TODO: Add draw2d buffers cleanup.
-    draw2d_cleanup();
-
     // textures
     glDeleteTextures(1, &texture);
-
-    //geometry
-    glDeleteVertexArrays(1, &floor_VAO);
-    glDeleteBuffers(1, &floor_VBO);
-    glDeleteBuffers(1, &floor_EBO);
 
     glDeleteVertexArrays(1, &cube_VAO);
     glDeleteBuffers(1, &cube_VBO);

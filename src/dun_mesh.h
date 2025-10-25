@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+#include <glad/glad.h>
+
 #include "dungen/dungen.h"
 #include "vertex_type.h"
 
@@ -22,6 +24,9 @@ typedef struct {
     unsigned int* indices;
     size_t        vert_count;
     size_t        indices_count;
+    GLuint        VAO;
+    GLuint        VBO;
+    GLuint        EBO;
 } DungeonMesh;
 
 DungeonMesh* dungeon_generate_mesh(tile_type dungeon[DUN_SIZE][DUN_SIZE]);
