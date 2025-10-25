@@ -591,9 +591,7 @@ int main(int argc, char* argv[])
 
     /* Load OpenGL Stuff */
 
-    // Nuklear UI.
-
-    // shader_
+    // ------------------------- SHADERS ------------------------- //
     GLuint default_program = shader_program_compile("shaders/default.vert",
                                                   "shaders/default.frag"); 
     GLuint quad_program = shader_program_compile("shaders/quad.vert",
@@ -620,7 +618,24 @@ int main(int argc, char* argv[])
     shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_1]);
     shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_2]);
 
-    // texture_
+    // -------------------------FONT------------------------------ //
+    FT_Library ft; // initialize free type.
+    if (FT_Init_FreeType(&ft)) {
+        glfwTerminate();
+        mini_die("[FT] Could not initialize free type!");
+    }
+
+    // load font.
+    FT_Face face; {
+        const char* path = "fonts/ligurino.ttf";
+        if (FT_New_Face(ft, path, 0, &face)) {
+            glfwTerminate();
+            mini_die("[FT] Failed loading font form: %s", path);
+        } }
+    
+
+
+    // -------------------------TEXTURE-------------------------- //
     /**
      * Texture coordinates UVs
      * (0,1)    (1,1)      U = x-axis
@@ -665,7 +680,7 @@ int main(int argc, char* argv[])
         util_print_n_flush("Warning location not found!");
     glUniform1i(dirt_loc, 0); // <= It's mapping shader samplers to OpenGL texture units.
 
-    // geometry_
+    //--------------------------GEOMETRY-------------------------------------//
     // Cube (EBO approach)
     GLuint cube_VAO;
     glGenVertexArrays(1, &cube_VAO);
@@ -707,8 +722,7 @@ int main(int argc, char* argv[])
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad_EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)sizeof(geo_quad_indices), geo_quad_indices, GL_STATIC_DRAW);
 
-    /*--------------------------------------------------------------------*/
-    /* NK UI SETUP */
+    /*----------------------------NK UI SETUP--------------------------------*/
     struct nk_glfw ui_render_ctx = {0};
     struct nk_context *ui_ctx;
 
@@ -745,6 +759,7 @@ int main(int argc, char* argv[])
 
     DungeonMesh* mesh = dungeon_generate_mesh(g_dungeon);
     if (mesh == NULL) {
+        glfwTerminate();
         mini_die("Dungeon mesh creation failed!");
     }
 

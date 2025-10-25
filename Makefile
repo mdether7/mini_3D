@@ -3,7 +3,7 @@ CC:= gcc
 CPPFLAGS:= -Iinclude
 LDFLAGS:= -Llib
 CFLAGS+= -std=c99 -Wall -Wextra -Wno-unused-function -Wno-unused-parameter #-pedantic
-LDLIBS:= -lglfw3 -lcglm -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm
+LDLIBS:= -lglfw3 -lcglm -lGL -lfreetype -lz -lX11 -lpthread -lXrandr -lXi -ldl -lm
 BUILD?= debug
 
 ifeq ($(OS),Windows_NT)
