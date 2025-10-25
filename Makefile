@@ -21,14 +21,29 @@ endif
 all: generate_bin mini3d
 
 mini3d:
-	${CC} ${CPPFLAGS} ${LDFLAGS} ${CFLAGS} -o bin/${PROGRAM_NAME} src/mini3d.c src/mini_utils.c src/math_helpers.c src/gl_helpers.c src/shader.c src/draw2d.c src/file_read.c src/glad.c src/dun_mesh.c src/dungen/dice.c src/dungen/dungen.c src/dungen/rooms.c ${LDLIBS}
+	${CC} ${CPPFLAGS} ${LDFLAGS} ${CFLAGS} -o bin/${PROGRAM_NAME} \
+	src/mini3d.c \
+	src/mini_utils.c \
+	src/math_helpers.c \
+	src/gl_helpers.c \
+	src/shader.c \
+	src/draw2d.c \
+	src/file_read.c \
+	src/glad.c \
+	src/dun_mesh.c \
+	src/dungen/dice.c \
+	src/dungen/dungen.c \
+	src/dungen/rooms.c \
+	${LDLIBS}
 
 generate_bin:
 	#@mkdir -p bin
 	@mkdir -p bin/shaders
 	@mkdir -p bin/textures
+	@mkdir -p bin/fonts
 	@cp res/shaders/* bin/shaders/
 	@cp res/textures/* bin/textures/
+	@cp res/fonts/* bin/fonts/
 
 clean:
 	@rm -rf bin

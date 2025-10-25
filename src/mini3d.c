@@ -6,25 +6,35 @@
 #include <assert.h>
 #include <float.h>
 
-#define GLFW_INCLUDE_NONE // <- glad/GLFW can be included in any order
-#define NK_IMPLEMENTATION
-#define NK_INCLUDE_FONT_BAKING
-#define STB_IMAGE_IMPLEMENTATION
-
-#define MINI_MATH_TYPE_LIN
-
 //////////////////
 // External libs
+#define GLFW_INCLUDE_NONE // <- glad/GLFW can be included in any order
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
+#define MINI_MATH_TYPE_LIN
 #ifdef MINI_MATH_TYPE_LIN
 #include "linmath/linmath.h"
 #else
 #include "cglm/call.h"
 #endif
 
+// UI
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
+#define NK_IMPLEMENTATION
 #include "Nuklear/nuklear.h"
+
+#define NK_GLFW_GL3_IMPLEMENTATION
+#include "Nuklear/nuklear_glfw_gl3.h"
+
+// STB
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 // wanted to include stb_true_type.h but 
 // appratently Nuklear already does it.
@@ -583,6 +593,7 @@ int main(int argc, char* argv[])
     shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_0]);
     shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_1]);
     shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_2]);
+
 
     // texture_
     /**
