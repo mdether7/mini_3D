@@ -73,8 +73,6 @@
 #define WINDOW_DEFAULT_WIDTH 1280
 #define WINDOW_DEFAULT_HEIGHT 800
 
-#define GUI_MAX_MEMORY 1024 * 1024 * 8 // (1024 * 1024) == 1 MiB => 8 MiBs
-
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 
@@ -133,6 +131,10 @@ typedef struct s_settings {
     float mouse_sensitivity;
 } Settings;
 
+typedef struct s_ui_state {
+    bool ui_active;
+} UiState;
+
 typedef struct s_input_state {
     bool actions[ACTION_COUNT];
 } InputState;
@@ -178,6 +180,11 @@ static FrameCounter g_frame_counter = {
 static Settings g_settings = {
     .mouse_sensitivity = 0.05f,
 };
+
+static UiState g_ui_state = {
+    .ui_active = false,
+};
+
 
 static Camera g_camera = {
     .view       = MAT4x4_IDENTITY,
@@ -440,7 +447,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
     // Thats crazy useful! // 
     // int* my_int = (int*)glfwGetWindowUserPointer(window);
-    nk_glfw3_key_callback(window, key, scancode, action, mods);
+    if (g_ui_state.ui_active)
+        nk_glfw3_key_callback(window, key, scancode, action, mods);
 
    // if (nk_item_is_any_active())
 
@@ -453,11 +461,15 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
     }
 
+    if (key == GLFW_KEY_F1 && action == GLFW_PRESS) {
+        g_ui_state.ui_active = !g_ui_state.ui_active;
+    }
+
     // TODO: Add somekind of menu after pressing escape.
-#if 1
-    if (key == GLFW_KEY_U && action == GLFW_PRESS)
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-#endif
+// #if 1
+//     if (key == GLFW_KEY_U && action == GLFW_PRESS)
+//         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+// #endif
 
     if (key == GLFW_KEY_R && action == GLFW_PRESS) {
         bool result = false;
@@ -702,14 +714,6 @@ int main(int argc, char* argv[])
         nk_glfw3_font_stash_end(&ui_render_ctx);}
     /*--------------------------------------------------------------------*/
 
-    /* OpenGL initial options setup */
-    glClearColor(0.21f, 0.72f, 0.43f, 1.0f);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
-    glLineWidth(5.0f); // for wireframe
-
     /* Game/Engine specific initialization */
     draw2d_init();
     draw2d_set_program(PROGRAM_SLOT_2);
@@ -763,6 +767,14 @@ int main(int argc, char* argv[])
     // Projection needs to be updated at least once before start
     camera_update_projection_matrix(&g_camera);
 
+    /* OpenGL initial options setup */
+    glClearColor(0.21f, 0.72f, 0.43f, 1.0f);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
+    glLineWidth(5.0f); // for wireframe
+
     glfwSetTime(0.0);
     float last_time = glfwGetTime();
     float previous_time = glfwGetTime();
@@ -786,25 +798,27 @@ int main(int argc, char* argv[])
         camera_update_view_matrix(&g_camera);
 
         // Update UI logic
-        if (nk_begin(ui_ctx, "Demo", nk_rect(50, 50, 230, 250),
-            NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
-            NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
-        {
-            enum {EASY, HARD};
-            static int op = EASY;
-            static int property = 20;
-            nk_layout_row_static(ui_ctx, 30, 80, 1);
-            if (nk_button_label(ui_ctx, "button"))
-                fprintf(stdout, "button pressed\n");
+        if (g_ui_state.ui_active) {
+            if (nk_begin(ui_ctx, "Demo", nk_rect(50, 50, 230, 250),
+                NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
+                NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
+            {
+                enum {EASY, HARD};
+                static int op = EASY;
+                static int property = 20;
+                nk_layout_row_static(ui_ctx, 30, 80, 1);
+                if (nk_button_label(ui_ctx, "button"))
+                    mini_die("DIE!");
 
-            nk_layout_row_dynamic(ui_ctx, 30, 2);
-            if (nk_option_label(ui_ctx, "easy", op == EASY)) op = EASY;
-            if (nk_option_label(ui_ctx, "hard", op == HARD)) op = HARD;
+                nk_layout_row_dynamic(ui_ctx, 30, 2);
+                if (nk_option_label(ui_ctx, "easy", op == EASY)) op = EASY;
+                if (nk_option_label(ui_ctx, "hard", op == HARD)) op = HARD;
 
-            nk_layout_row_dynamic(ui_ctx, 25, 1);
-            nk_property_int(ui_ctx, "Compression:", 0, &property, 100, 10, 1);
+                nk_layout_row_dynamic(ui_ctx, 25, 1);
+                nk_property_int(ui_ctx, "Compression:", 0, &property, 100, 10, 1);
+            }
+            nk_end(ui_ctx);
         }
-        nk_end(ui_ctx);
 
         // check for resizes
         if (g_window_state.resized) {
@@ -820,7 +834,8 @@ int main(int argc, char* argv[])
         }
 #endif
         /* Render */
-        //glEnable(GL_CULL_FACE);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader_use_program(PROGRAM_SLOT_0);
@@ -878,7 +893,8 @@ int main(int argc, char* argv[])
         glDisable(GL_BLEND);
 #endif
         // on top of everything render UI.
-        nk_glfw3_render(&ui_render_ctx, NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
+        if (g_ui_state.ui_active)
+            nk_glfw3_render(&ui_render_ctx, NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
        
         /* Present frame */
         glfwSwapBuffers(window);
