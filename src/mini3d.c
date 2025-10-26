@@ -73,6 +73,7 @@
 ///////////////////////////////////////////
 
 #define UNUSED(var) (void)var
+#define MINI_MAX(a,b)  (((a) > (b)) ? (a) : (b))
 
 #define WINDOW_MAX_NAME_LEN 64
 #define WINDOW_DEFAULT_WIDTH 1280
@@ -632,6 +633,68 @@ int main(int argc, char* argv[])
             glfwTerminate();
             mini_die("[FT] Failed loading font form: %s", path);
         } }
+
+    FT_Set_Pixel_Sizes(face, 0, 48);
+
+    // calculate max width/height for font texture atlas.
+    unsigned int font_tex_h = 0;
+    unsigned int font_tex_w = 0;
+    for (unsigned char c = 32; c < 128; c++) {
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
+            util_print_n_flush("Failed to load glyph!");
+            continue;
+        }
+        font_tex_w += face->glyph->bitmap.width;
+        font_tex_h = MINI_MAX(font_tex_h, face->glyph->bitmap.rows);
+    }
+
+    // generate font atlas texutre;
+    GLuint font_atlas;
+    glGenTextures(1, &font_atlas);
+    glActiveTexture(GL_TEXTURE0); // Select slot 0
+    glBindTexture(GL_TEXTURE_2D, font_atlas); // Plug texture into slot 0
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, font_tex_w, font_tex_h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);  
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
+    for (unsigned char c = 32; c < 128; c++) {
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
+            util_print_n_flush("Failed to load glyph!");
+            continue;
+        } 
+        int current_x_offset = 0;
+        glTexSubImage2D(GL_TEXTURE_2D,
+                        0,
+                        current_x_offset,
+                        0,
+                        face->glyph->bitmap.width,
+                        face->glyph->bitmap.rows,
+                        GL_RED,
+                        GL_UNSIGNED_BYTE,
+                        face->glyph->bitmap.buffer);
+        current_x_offset += face->glyph->advance.x;
+    }
+
+
+ 
+
+
+    // for (int y = 0; y < bitmap.rows; y++) {
+//     for (int x = 0; x < bitmap.width; x++) {
+//         unsigned char pixel = bitmap.buffer[y * bitmap.pitch + x];
+//         printf("%3d ", pixel);  // You'll see values like: 0, 45, 120, 200, 255
+//     }
+//     printf("\n");
+// }
+
+
+    
+    
     
 
 
