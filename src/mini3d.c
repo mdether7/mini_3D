@@ -912,7 +912,7 @@ int main(int argc, char* argv[])
 
         // set cube model
         glUniformMatrix4fv(g_shader_programs[PROGRAM_SLOT_0].u_locations[UNIFORM_MODEL], 1, GL_FALSE, &model_cube[0][0]);
-        // bind Texture
+        // bind Texture              //texture
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(cube_VAO); 
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
