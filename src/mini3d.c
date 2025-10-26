@@ -36,6 +36,8 @@
 // STB
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb/stb_image_write.h"
 
 // Fonts
 #include <ft2build.h>
@@ -633,12 +635,12 @@ int main(int argc, char* argv[])
             glfwTerminate();
             mini_die("[FT] Failed loading font form: %s", path);
         } }
-
+        
     FT_Set_Pixel_Sizes(face, 0, 48);
 
     // calculate max width/height for font texture atlas.
-    unsigned int font_tex_h = 0;
     unsigned int font_tex_w = 0;
+    unsigned int font_tex_h = 0;
     for (unsigned char c = 32; c < 128; c++) {
         if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
             util_print_n_flush("Failed to load glyph!");
@@ -647,42 +649,94 @@ int main(int argc, char* argv[])
         font_tex_w += face->glyph->bitmap.width;
         font_tex_h = MINI_MAX(font_tex_h, face->glyph->bitmap.rows);
     }
+    //////////////// FROM NOW ON ITS BULLSHIT!
 
-    // generate font atlas texutre;
-    GLuint font_atlas;
-    glGenTextures(1, &font_atlas);
-    glActiveTexture(GL_TEXTURE0); // Select slot 0
-    glBindTexture(GL_TEXTURE_2D, font_atlas); // Plug texture into slot 0
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, font_tex_w, font_tex_h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);  
-
+    // create empty texture to store all the glyphs
+    GLuint font_atlas_texture;
+    glGenTextures(1, &font_atlas_texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, font_atlas_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, font_tex_w, font_tex_h, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    // How OpenGL interprets YOUR buffer when uploading TO GPU
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    for (unsigned char c = 32; c < 128; c++) {
+    // populate the atlass with letters.
+    int x_pos = 0;
+    for (unsigned char c = 33; c < 128; c++) {
         if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
             util_print_n_flush("Failed to load glyph!");
             continue;
-        } 
-        int current_x_offset = 0;
+        }
+
         glTexSubImage2D(GL_TEXTURE_2D,
                         0,
-                        current_x_offset,
+                        x_pos,
                         0,
                         face->glyph->bitmap.width,
                         face->glyph->bitmap.rows,
                         GL_RED,
                         GL_UNSIGNED_BYTE,
                         face->glyph->bitmap.buffer);
-        current_x_offset += face->glyph->advance.x;
+        x_pos += face->glyph->bitmap.width;
     }
 
+    {GLint width, height;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+    printf("TEX: %d, %d\n", width, height);}
 
- 
+    //How OpenGL writes to YOUR buffer when downloading FROM GPU
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
+    GLubyte* pixels = malloc(font_tex_w * font_tex_h);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, (void*)pixels);
+
+    stbi_write_png("tex.png",font_tex_w, font_tex_h, 1, pixels, font_tex_w);
+
+
+#if 0
+    FT_Load_Char(face, 'a', FT_LOAD_RENDER);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    GLuint single;
+    glGenTextures(1, &single);
+    glActiveTexture(GL_TEXTURE0); // Select slot 0
+    glBindTexture(GL_TEXTURE_2D, single); // Plug texture into slot 0
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);  
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexSubImage2D(GL_TEXTURE_2D,
+                        0,
+                        0,
+                        0,
+                        face->glyph->bitmap.width,
+                        face->glyph->bitmap.rows,
+                        GL_RED,
+                        GL_UNSIGNED_BYTE,
+                        face->glyph->bitmap.buffer);
+
+    {GLint width, height;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+    printf("GLYPH :%d, %d\n", face->glyph->bitmap.width, face->glyph->bitmap.rows);
+    printf("TEX: %d, %d\n", width, height);}
+
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    GLubyte* pixels = malloc(face->glyph->bitmap.width * face->glyph->bitmap.rows);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, (void*)pixels);
+
+    stbi_write_png("tex.png",face->glyph->bitmap.width, face->glyph->bitmap.rows, 1, pixels, face->glyph->bitmap.width);
+#endif
 
     // for (int y = 0; y < bitmap.rows; y++) {
 //     for (int x = 0; x < bitmap.width; x++) {
