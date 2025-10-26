@@ -63,6 +63,7 @@
 #include "gl_helpers.h"
 #include "math_helpers.h"
 #include "data_geometry.h"
+#include "mini_types.h"
 
 #include "dungen/dungen.h"
 #include "dungen/dice.h"
@@ -380,6 +381,38 @@ camera_get_facing_direction(Camera* cam)
 
 //////////
 // Utils
+    // TODO: Add save to folder, assure folder is
+    // created, maybe linux/windows compability.
+    // NOTES: unbinds currently bound texture, 
+int // caller need's to rebind if is using it.
+util_texture_save_to_disk_as_png(TextureID texture, const char* name)
+{
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    GLint width, height, internal_format;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &internal_format);
+
+    unsigned char* pixels = malloc(width * height);
+    if (!pixels) 
+        return 1;
+
+    // How OpenGL writes to YOUR buffer when downloading FROM GPU
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glGetTexImage(GL_TEXTURE_2D, 0, internal_format, GL_UNSIGNED_BYTE, (void*)pixels);
+
+    if (stbi_write_png(name ,width, height, internal_format, pixels, height))
+        return 1;                              //stride bytes assumed as height.
+
+    
+    glPixelStorei(GL_PACK_ALIGNMENT, 4); // <= restore to OpenGL default.
+    glBindTexture(GL_TEXTURE_2D, 0);
+    free(pixels);
+}
+
+
+
 static const char*
 util_get_direction_as_string(Direction dir)
 {

@@ -7,11 +7,11 @@ MATRIX CHEAT SHEET
 [02 12 22 32]
 [03 13 23 33]
 
-Model -> Right-handed
-World -> Right-handed
+Model ->       Right-handed
+World ->       Right-handed
 View/Camera -> Right-handed
-Clip -> Left-handed 
-NDC ->Left-handed
+Clip ->        Left-handed 
+NDC ->         Left-handed
 
 Scale into a new matrix: mat4x4_scale_aniso(result, original, 2, 3, 4)
 Scale in-place:          mat4x4_scale_aniso(myMatrix, myMatrix, 2, 3, 4)
@@ -26,6 +26,21 @@ MVP = Projection * View * Model
 mat4x4 temp;
 mat4x4_mul(temp, view, model);
 mat4x4_mul(mvp, projection, temp);
+
+////////////////////////////////////////////////////////
+// UNDERSTANDING RGB AND PIXEL DATA IN GENERAL BETTER //
+////////////////////////////////////////////////////////
+unsigned char pixels[4] = {0, 128, 255, 64}; // This is how pixel data looks.
+stbi_write_png("test.png", 2, 2, 1, pixels, 2); // greyscale (1 channel)
+
+unsigned char pixels[12] = {  // RGB (3 channels):
+    255, 0, 0,    // Red
+    0, 255, 0,    // Green
+    0, 0, 255,    // Blue
+    255, 255, 0   // Yellow
+};
+stbi_write_png("test.png", 2, 2, 3, pixels, 2 * 3);
+/////////////////////////////////////////////////////////
 
 "..." makes sure your project-local version is found even if a system-wide one exists.
 <...> avoids accidental shadowing and says “this is a system or library header.”

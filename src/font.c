@@ -75,19 +75,6 @@ Font* font_create(const char* path, unsigned int size)
     assert(atlas_w == width && atlas_h == height);}
 
 
-    
-    
-
-
-
-    
-
-
-
-
-
-
-
 
 
 
