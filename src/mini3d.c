@@ -75,7 +75,6 @@
 ///////////////////////////////////////////
 
 #define UNUSED(var) (void)var
-#define MINI_MAX(a,b)  (((a) > (b)) ? (a) : (b))
 
 #define WINDOW_MAX_NAME_LEN 64
 #define WINDOW_DEFAULT_WIDTH 1280

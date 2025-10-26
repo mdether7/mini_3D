@@ -9,5 +9,6 @@ uniform sampler2D dirt_texture;
 
 void main()
 {
+    
     color = texture(dirt_texture, v_uv);
 }
