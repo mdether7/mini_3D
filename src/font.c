@@ -74,10 +74,6 @@ Font* font_create(const char* path, unsigned int size)
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
     assert(atlas_w == width && atlas_h == height);}
 
-
-
-
-
     Font* font = malloc(sizeof(*font));
     if (!font) {
         return NULL;
