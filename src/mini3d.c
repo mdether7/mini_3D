@@ -872,6 +872,16 @@ int main(int argc, char* argv[])
     // Projection needs to be updated at least once before start
     camera_update_projection_matrix(&g_camera);
 
+    // Fucking testing here, nothing to look at /////
+    /////////////////////////////////////////////////
+
+    // some ortographic magic.
+    float aspect = (float)g_window_state.width / g_window_state.height;
+    float half_height = g_window_state.height / 2.0f;
+    float half_width  = half_height * aspect;   
+
+    util_print_n_flush("%f", aspect);
+
     /* OpenGL initial options setup */
     glClearColor(0.21f, 0.72f, 0.43f, 1.0f);
     glEnable(GL_DEPTH_TEST);
@@ -979,6 +989,9 @@ int main(int argc, char* argv[])
         color[2] = 0.0f;
         color[3] = 1.0f;
         draw2d_quad(10.0f, 10.0f, 1000.0f, 20.0f, color);
+
+
+        draw2d_quad_textured(draw2d_program2, texture, 100, 200, 200, 200, g_window_state.width, g_window_state.height);
 
 
 #if 0 /* DRAW FULL SCREEN QUAD */

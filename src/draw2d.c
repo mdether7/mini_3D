@@ -4,8 +4,10 @@
 #include <assert.h>
 
 #include <glad/glad.h>
+#include <linmath/linmath.h>
 
 #include "shader.h"
+#include "math_helpers.h"
 #include "data_geometry.h"
 
 ProgramSlot     draw2d_g_selected_shader;
@@ -35,16 +37,33 @@ void draw2d_quad(float x, float y, float w, float h, float* color)
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
-void draw2d_quad_textured(GLuint shader, GLuint texture, float x, float y, float w, float h)
-{
+// TODO THIS SHADER IMPLEMENTATION NEED TO GO TO HELLLL
+void draw2d_quad_textured(GLuint shader, GLuint texture, float x, float y, float w, float h, int w_width, int w_height) {
+    glDisable(GL_DEPTH_TEST); 
+    glDisable(GL_CULL_FACE);
     glUseProgram(shader);
+
+    GLint tex_loc = glGetUniformLocation(shader, "draw2d_texture");
+    glUniform1i(tex_loc, 0);  // Tell shader to use GL_TEXTURE0
+
+    mat4x4 model = MAT4x4_IDENTITY;
+    mat4x4_translate(model, x, y, 0);
+    mat4x4_scale_aniso(model, model, w, h, 1);
+
+    mat4x4 ortho = MAT4x4_IDENTITY;
+    mat4x4_ortho(ortho, 0, w_width, 0, w_height, -1, 1);
+
+    glUniformMatrix4fv(g_shader_programs[PROGRAM_SLOT_3].u_locations[UNIFORM_PROJECTION], 1, GL_FALSE, &ortho[0][0]);
+    glUniformMatrix4fv(g_shader_programs[PROGRAM_SLOT_3].u_locations[UNIFORM_MODEL], 1, GL_FALSE, &model[0][0]);
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    
+    glBindVertexArray(draw2d_g_quad_VAO); // this is just plain wrong....
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-
-
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 }
 
 int draw2d_init(void)
