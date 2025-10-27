@@ -12,7 +12,7 @@ ProgramSlot     draw2d_g_selected_shader;
 
 static GLuint   draw2d_g_quad_VAO;
 static GLuint   draw2d_g_quad_VBO;
-static GLuint   draw2d_g_quad_EBO; 
+static GLuint   draw2d_g_quad_EBO;
 
 static bool     draw2d_g_initialized = false;
 
@@ -33,6 +33,18 @@ void draw2d_quad(float x, float y, float w, float h, float* color)
 
     glBindVertexArray(draw2d_g_quad_VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
+void draw2d_quad_textured(GLuint shader, GLuint texture, float x, float y, float w, float h)
+{
+    glUseProgram(shader);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    
+
+
+
 }
 
 int draw2d_init(void)

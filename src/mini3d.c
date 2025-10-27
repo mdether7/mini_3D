@@ -142,6 +142,18 @@ typedef struct s_ui_state {
     bool ui_active;
 } UiState;
 
+typedef struct s_font_character {
+    vec2 size;
+    vec2 bearing;
+    unsigned int advance;
+} Character;
+
+typedef struct s_font {
+    TextureID atlas;
+    char*     name;
+    Character glyphs[128];
+} Font;
+
 typedef struct s_input_state {
     bool actions[ACTION_COUNT];
 } InputState;
@@ -192,6 +204,11 @@ static UiState g_ui_state = {
     .ui_active = false,
 };
 
+static Font g_default_font = {
+    .atlas  = 0,
+    .name   = "",
+    .glyphs = {0},
+};
 
 static Camera g_camera = {
     .view       = MAT4x4_IDENTITY,
@@ -377,6 +394,9 @@ camera_get_facing_direction(Camera* cam)
 
     return max_dir; 
 }
+
+static void
+render_text(Font* font, ProgramSlot slot, const char* text, float x, float y);
 
 //////////
 // Utils
@@ -601,9 +621,12 @@ int main(int argc, char* argv[])
                                                 "shaders/quad.frag");
 
     GLuint draw2d_program = shader_program_compile("shaders/draw2d.vert",
-                                                "shaders/draw2d.frag");                                           
+                                                "shaders/draw2d.frag");
+                                                
+    GLuint draw2d_program2 = shader_program_compile("shaders/draw2dtexture.vert",
+                                                "shaders/draw2dtexture.frag");
 
-    if (default_program == 0 || quad_program == 0 || draw2d_program == 0) {
+    if (default_program == 0 || quad_program == 0 || draw2d_program == 0 || draw2d_program2 == 0) {
         glfwTerminate();
         mini_die("[GL] Shader compilation failed!");
     } 
@@ -617,9 +640,13 @@ int main(int argc, char* argv[])
     g_shader_programs[PROGRAM_SLOT_2].handle = draw2d_program;
     g_shader_programs[PROGRAM_SLOT_2].name   = "draw2d";
 
+    g_shader_programs[PROGRAM_SLOT_3].handle = draw2d_program2;
+    g_shader_programs[PROGRAM_SLOT_3].name   = "draw2dtexture";
+
     shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_0]);
     shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_1]);
     shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_2]);
+    shader_init_uniforms(&g_shader_programs[PROGRAM_SLOT_3]);
 
     // -------------------------FONT------------------------------ //
     FT_Library ft; // initialize free type.
@@ -638,15 +665,16 @@ int main(int argc, char* argv[])
         
     FT_Set_Pixel_Sizes(face, 0, 48);
 
+    int font_spacing = 2;
     // calculate max width/height for font texture atlas.
     unsigned int font_atlas_w = 0;
     unsigned int font_atlas_h = 0;
-    for (unsigned char c = 32; c < 128; c++) {
+    for (unsigned char c = 0; c < 128; c++) {
         if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
-            util_print_n_flush("Failed to load glyph!");
+            util_print_n_flush("Failed to load glyph! %c", c);
             continue;
         }
-        font_atlas_w += face->glyph->bitmap.width;
+        font_atlas_w += face->glyph->bitmap.width + font_spacing;
         font_atlas_h = MINI_MAX(font_atlas_h, face->glyph->bitmap.rows);
     }
 
@@ -661,27 +689,41 @@ int main(int argc, char* argv[])
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    g_default_font.atlas = font_atlas;
+    g_default_font.name  = face->family_name;
+
     // How OpenGL interprets YOUR buffer when uploading TO GPU
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    // populate the atlass with letters.
-    int x_pos = 0;
-    for (unsigned char c = 33; c < 128; c++) {
-        if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
-            util_print_n_flush("Failed to load glyph! %c", c);
-            continue;
-        }
+   // Character glyphs[128]; 
 
-        glTexSubImage2D(GL_TEXTURE_2D,
-                        0,
-                        x_pos,
-                        0,
-                        face->glyph->bitmap.width,
-                        face->glyph->bitmap.rows,
-                        GL_RED,
-                        GL_UNSIGNED_BYTE,
-                        face->glyph->bitmap.buffer);
-        x_pos += face->glyph->bitmap.width;
+    // populate the atlass with letters.
+    {
+        int x_pos = 0;
+        for (unsigned char c = 0; c < 128; c++) {
+            if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
+                util_print_n_flush("Failed to load glyph! %c", c);
+                continue;
+            }
+
+            glTexSubImage2D(GL_TEXTURE_2D,
+                            0,
+                            x_pos,
+                            0,
+                            face->glyph->bitmap.width,
+                            face->glyph->bitmap.rows,
+                            GL_RED,
+                            GL_UNSIGNED_BYTE,
+                            face->glyph->bitmap.buffer);
+            x_pos += face->glyph->bitmap.width + font_spacing;
+
+            g_default_font.glyphs[c].size[0] =    face->glyph->bitmap.width;
+            g_default_font.glyphs[c].size[1] =    face->glyph->bitmap.rows;
+            g_default_font.glyphs[c].bearing[0] = face->glyph->bitmap_left;
+            g_default_font.glyphs[c].bearing[1] = face->glyph->bitmap_top;
+            g_default_font.glyphs[c].advance =    face->glyph->advance.x;
+        }
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // restore to openGL default.   
     }
 
     // Just to be sure theres no mismatch.
@@ -693,63 +735,9 @@ int main(int argc, char* argv[])
     FT_Done_Face(face);
     FT_Done_FreeType(ft);  
     
-    //////////////// FONT ATLAS CREATION END ///////////////////
-    ////////////////////////////////////////////////////////////
+
     if (util_texture_save_to_disk_as_png(font_atlas, "hehefile.png"))
         util_print_n_flush(TERMINAL_RED "Failed when saving texuture to disk!\n" TERMINAL_RESET);
-
-
-#if 0
-    FT_Load_Char(face, 'a', FT_LOAD_RENDER);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    GLuint single;
-    glGenTextures(1, &single);
-    glActiveTexture(GL_TEXTURE0); // Select slot 0
-    glBindTexture(GL_TEXTURE_2D, single); // Plug texture into slot 0
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);  
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glTexSubImage2D(GL_TEXTURE_2D,
-                        0,
-                        0,
-                        0,
-                        face->glyph->bitmap.width,
-                        face->glyph->bitmap.rows,
-                        GL_RED,
-                        GL_UNSIGNED_BYTE,
-                        face->glyph->bitmap.buffer);
-
-    {GLint width, height;
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
-    printf("GLYPH :%d, %d\n", face->glyph->bitmap.width, face->glyph->bitmap.rows);
-    printf("TEX: %d, %d\n", width, height);}
-
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    GLubyte* pixels = malloc(face->glyph->bitmap.width * face->glyph->bitmap.rows);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, (void*)pixels);
-
-    stbi_write_png("tex.png",face->glyph->bitmap.width, face->glyph->bitmap.rows, 1, pixels, face->glyph->bitmap.width);
-#endif
-
-    // for (int y = 0; y < bitmap.rows; y++) {
-//     for (int x = 0; x < bitmap.width; x++) {
-//         unsigned char pixel = bitmap.buffer[y * bitmap.pitch + x];
-//         printf("%3d ", pixel);  // You'll see values like: 0, 45, 120, 200, 255
-//     }
-//     printf("\n");
-// }
-
-
-    
-    
-    
 
 
     // -------------------------TEXTURE-------------------------- //
