@@ -36,8 +36,6 @@
 // STB
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb/stb_image_write.h"
 
 // Fonts
 #include <ft2build.h>
@@ -76,6 +74,7 @@
 ///////////////////////////////////////////
 
 #define UNUSED(var) (void)var
+#define MINI_MAX(a,b)  (((a) > (b)) ? (a) : (b))
 
 #define WINDOW_MAX_NAME_LEN 64
 #define WINDOW_DEFAULT_WIDTH 1280
@@ -381,37 +380,6 @@ camera_get_facing_direction(Camera* cam)
 
 //////////
 // Utils
-    // TODO: Add save to folder, assure folder is
-    // created, maybe linux/windows compability.
-    // NOTES: unbinds currently bound texture, 
-int // caller need's to rebind if is using it.
-util_texture_save_to_disk_as_png(TextureID texture, const char* name)
-{
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    GLint width, height, internal_format;
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &internal_format);
-
-    unsigned char* pixels = malloc(width * height);
-    if (!pixels) 
-        return 1;
-
-    // How OpenGL writes to YOUR buffer when downloading FROM GPU
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glGetTexImage(GL_TEXTURE_2D, 0, internal_format, GL_UNSIGNED_BYTE, (void*)pixels);
-
-    if (stbi_write_png(name ,width, height, internal_format, pixels, height))
-        return 1;                              //stride bytes assumed as height.
-
-    
-    glPixelStorei(GL_PACK_ALIGNMENT, 4); // <= restore to OpenGL default.
-    glBindTexture(GL_TEXTURE_2D, 0);
-    free(pixels);
-}
-
-
 
 static const char*
 util_get_direction_as_string(Direction dir)
@@ -671,24 +639,23 @@ int main(int argc, char* argv[])
     FT_Set_Pixel_Sizes(face, 0, 48);
 
     // calculate max width/height for font texture atlas.
-    unsigned int font_tex_w = 0;
-    unsigned int font_tex_h = 0;
+    unsigned int font_atlas_w = 0;
+    unsigned int font_atlas_h = 0;
     for (unsigned char c = 32; c < 128; c++) {
         if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
             util_print_n_flush("Failed to load glyph!");
             continue;
         }
-        font_tex_w += face->glyph->bitmap.width;
-        font_tex_h = MINI_MAX(font_tex_h, face->glyph->bitmap.rows);
+        font_atlas_w += face->glyph->bitmap.width;
+        font_atlas_h = MINI_MAX(font_atlas_h, face->glyph->bitmap.rows);
     }
-    //////////////// FROM NOW ON ITS BULLSHIT!
 
-    // create empty texture to store all the glyphs
-    GLuint font_atlas_texture;
-    glGenTextures(1, &font_atlas_texture);
+    // create empty texture(NULL) to store all the glyphs
+    GLuint font_atlas;
+    glGenTextures(1, &font_atlas);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, font_atlas_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, font_tex_w, font_tex_h, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
+    glBindTexture(GL_TEXTURE_2D, font_atlas);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, font_atlas_w, font_atlas_h, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -701,7 +668,7 @@ int main(int argc, char* argv[])
     int x_pos = 0;
     for (unsigned char c = 33; c < 128; c++) {
         if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
-            util_print_n_flush("Failed to load glyph!");
+            util_print_n_flush("Failed to load glyph! %c", c);
             continue;
         }
 
@@ -717,18 +684,19 @@ int main(int argc, char* argv[])
         x_pos += face->glyph->bitmap.width;
     }
 
-    {GLint width, height;
+    // Just to be sure theres no mismatch.
+    {GLint width, height; // Dunno there might.
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
-    printf("TEX: %d, %d\n", width, height);}
+    assert((GLint)font_atlas_w == width && (GLint)font_atlas_h == height);}
 
-    //How OpenGL writes to YOUR buffer when downloading FROM GPU
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-
-    GLubyte* pixels = malloc(font_tex_w * font_tex_h);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_BYTE, (void*)pixels);
-
-    stbi_write_png("tex.png",font_tex_w, font_tex_h, 1, pixels, font_tex_w);
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);  
+    
+    //////////////// FONT ATLAS CREATION END ///////////////////
+    ////////////////////////////////////////////////////////////
+    if (util_texture_save_to_disk_as_png(font_atlas, "hehefile.png"))
+        util_print_n_flush(TERMINAL_RED "Failed when saving texuture to disk!\n" TERMINAL_RESET);
 
 
 #if 0
