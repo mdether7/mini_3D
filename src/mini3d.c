@@ -839,7 +839,7 @@ int main(int argc, char* argv[])
 
     /* Game/Engine specific initialization */
     draw2d_init();
-    draw2d_set_program(PROGRAM_SLOT_2);
+    draw2d_set_program(PROGRAM_SLOT_3);
 
     // some cube test movement.
     mat4x4 model_cube;
@@ -991,7 +991,7 @@ int main(int argc, char* argv[])
         draw2d_quad(10.0f, 10.0f, 1000.0f, 20.0f, color);
 
 
-        draw2d_quad_textured(draw2d_program2, texture, 100, 200, 200, 200, g_window_state.width, g_window_state.height);
+        draw2d_quad_textured(draw2d_program2, font_atlas, 100, 200, 50, 1000, g_window_state.width, g_window_state.height);
 
 
 #if 0 /* DRAW FULL SCREEN QUAD */

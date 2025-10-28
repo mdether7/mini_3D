@@ -10,6 +10,7 @@
 #include "math_helpers.h"
 #include "data_geometry.h"
 
+
 ProgramSlot     draw2d_g_selected_shader;
 
 static GLuint   draw2d_g_quad_VAO;
@@ -18,10 +19,32 @@ static GLuint   draw2d_g_quad_EBO;
 
 static bool     draw2d_g_initialized = false;
 
+// // my_renderer.h
+// extern struct {
+//     int shader_id;
+//     float exposure;
+// } myShader;  // ← Just DECLARE it
+
+// // my_renderer.c
+// #include "my_renderer.h"
+
+// struct {
+//     int shader_id;
+//     float exposure;
+// } myShader = {0};  // ← DEFINE it once
+
+// // Anywhere in the codebase:
+// defaultShader.shader.use();
+// glUniform1f(defaultShader.u_exposure, 1.5f);
+
+// ssrShader.shader.bind();
+// // etc...
+
 void draw2d_set_program(ProgramSlot slot)
 {
     draw2d_g_selected_shader = slot;
 }
+
 
 void draw2d_quad(float x, float y, float w, float h, float* color)
 {
@@ -37,14 +60,24 @@ void draw2d_quad(float x, float y, float w, float h, float* color)
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
+// void draw2d_initialize(GLuint shader)
+// {
+
+// }
+
+// void draw2d_start_frame(int window_width, int window_height)
+// {
+//     mat4x4_ortho(renderer2d.ortho, 0, window_width, 0, window_height, -1, 1);
+//     glDisable(GL_CULL_FACE);
+//     glDisable(GL_DEPTH_TEST);
+//     glUseProgram(renderer2d.shader);
+//     glUniformMatrix4fv(renderer2d.u_projection, 1, GL_FALSE, &renderer2d.ortho[0][0]);
+// }
+
 // TODO THIS SHADER IMPLEMENTATION NEED TO GO TO HELLLL
 void draw2d_quad_textured(GLuint shader, GLuint texture, float x, float y, float w, float h, int w_width, int w_height) {
     glDisable(GL_DEPTH_TEST); 
     glDisable(GL_CULL_FACE);
-    glUseProgram(shader);
-
-    GLint tex_loc = glGetUniformLocation(shader, "draw2d_texture");
-    glUniform1i(tex_loc, 0);  // Tell shader to use GL_TEXTURE0
 
     mat4x4 model = MAT4x4_IDENTITY;
     mat4x4_translate(model, x, y, 0);
