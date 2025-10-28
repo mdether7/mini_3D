@@ -7,10 +7,18 @@ uniform mat4 u_model;
 uniform vec4 u_color;
 uniform int  u_use_texture;
 
-out vec2 v_uv;
+out vec4 color;
+out vec2 uv;
+out int  tex_flag;
 
 void main()
 {
     gl_Position = u_projection * u_model * vec4(in_position, 0.0f, 1.0f);
-    v_uv = vec2(in_position.xy); 
+    tex_flag = u_use_texture;
+    
+    if (u_use_texture == 1)
+        uv = in_position;
+    else
+        color = u_color;
 }
+

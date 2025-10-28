@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include <linmath/linmath.h>
 
-#include "math_helpers.h"
+#include "../math_helpers.h"
 
 typedef GLint uniform;
 
@@ -22,16 +22,12 @@ typedef struct {
     uniform u_color;
 } Render2DContext;
 
-Render2DContext renderer2d = {
-    .program   = 0, // cus UNSIGNED INT!!! TODO: get your hands dirty with
-    .ortho    = MAT4x4_IDENTITY,             // debugging on linux.
-    .quad_vao = 0,                           // glfwGetWindowSize;                           
-    .quad_vbo = 0,                           // glfwGetFramebufferSize;
-    .quad_ebo = 0,
-    .u_use_texture = -1,
-    .u_projection  = -1,
-    .u_model       = -1,
-    .u_color       = -1,
-};
+extern Render2DContext renderer2d;
+
+int  renderer2d_init(GLuint program, int window_width, int window_height);
+void renderer2d_update_ortho(int window_width, int window_height);
+void renderer2d_draw_quad(float x, float y, float w, float h, float color[4]);
+void renderer2d_draw_quad_textured(GLuint texture, float x, float y, float w, float h);
+void renderer2d_cleanup();
 
 #endif

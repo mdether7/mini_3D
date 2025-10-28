@@ -63,6 +63,8 @@
 #include "data_geometry.h"
 #include "mini_types.h"
 
+#include "render/renderer2d.h"
+
 #include "dungen/dungen.h"
 #include "dungen/dice.h"
 #include "dun_mesh.h"
@@ -425,6 +427,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
     g_window_state.width   = width;
     g_window_state.height  = height;
+    renderer2d_update_ortho(width, height);
     g_window_state.resized = true;
     // those width and height are the framebuffer sizes not window ones
 }
@@ -626,7 +629,16 @@ int main(int argc, char* argv[])
     GLuint draw2d_program2 = shader_program_compile("shaders/draw2dtexture.vert",
                                                 "shaders/draw2dtexture.frag");
 
-    if (default_program == 0 || quad_program == 0 || draw2d_program == 0 || draw2d_program2 == 0) {
+    GLuint renderer2d_program = shader_program_compile("shaders/renderer2d.vert",
+                                                "shaders/renderer2d.frag");
+
+
+    if (default_program == 0 ||
+        quad_program == 0 ||
+        draw2d_program == 0 ||
+        draw2d_program2 == 0 ||
+        renderer2d_program == 0) 
+    {
         glfwTerminate();
         mini_die("[GL] Shader compilation failed!");
     } 
@@ -838,6 +850,7 @@ int main(int argc, char* argv[])
     /*--------------------------------------------------------------------*/
 
     /* Game/Engine specific initialization */
+    renderer2d_init(renderer2d_program, g_window_state.width, g_window_state.height);
     draw2d_init();
     draw2d_set_program(PROGRAM_SLOT_3);
 
@@ -879,7 +892,6 @@ int main(int argc, char* argv[])
     float aspect = (float)g_window_state.width / g_window_state.height;
     float half_height = g_window_state.height / 2.0f;
     float half_width  = half_height * aspect;   
-
     util_print_n_flush("%f", aspect);
 
     /* OpenGL initial options setup */
@@ -989,9 +1001,11 @@ int main(int argc, char* argv[])
         color[2] = 0.0f;
         color[3] = 1.0f;
         draw2d_quad(10.0f, 10.0f, 1000.0f, 20.0f, color);
-
-
+        
         draw2d_quad_textured(draw2d_program2, font_atlas, 100, 200, 50, 1000, g_window_state.width, g_window_state.height);
+
+        renderer2d_draw_quad(400, 400, 500, 500, (float[]){1.0f, 1.0f, 0.0f, 1.0f});
+        renderer2d_draw_quad_textured(texture, 200, 200, 400, 400);
 
 
 #if 0 /* DRAW FULL SCREEN QUAD */
@@ -1033,6 +1047,7 @@ int main(int argc, char* argv[])
     }
 
     draw2d_cleanup();
+    renderer2d_cleanup();
     dungeon_free_mesh(mesh);
     mesh = NULL;
 

@@ -31,6 +31,7 @@ mini3d:
 	src/file_read.c \
 	src/glad.c \
 	src/dun_mesh.c \
+	src/render/renderer2d.c \
 	src/dungen/dice.c \
 	src/dungen/dungen.c \
 	src/dungen/rooms.c \

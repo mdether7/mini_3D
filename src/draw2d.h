@@ -6,20 +6,6 @@
 #include "shader.h"
 #include "math_helpers.h"
 
-typedef GLint uniform;
-
-typedef struct {
-    GLuint  shader;
-    mat4x4  ortho;
-
-    GLuint  quad_vao;
-    GLuint  quad_vbo;
-    GLuint  quad_ebo;
-    
-    uniform u_projection;
-    uniform u_texture;
-    uniform u_model;
-} Render2DContext;
 
 // Render2DContext renderer2d = {
 //     .shader   = 0, // cus UNSIGNED INT!!! TODO: get your hands dirty with

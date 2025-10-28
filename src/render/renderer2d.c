@@ -1,6 +1,19 @@
 #include "renderer2d.h"
 
 #include <glad/glad.h>
+#include "../math_helpers.h"
+
+Render2DContext renderer2d = {
+    .program   = 0, // cus UNSIGNED INT!!! TODO: get your hands dirty with
+    .ortho    = MAT4x4_IDENTITY,             // debugging on linux.
+    .quad_vao = 0,                           // glfwGetWindowSize;                           
+    .quad_vbo = 0,                           // glfwGetFramebufferSize;
+    .quad_ebo = 0,
+    .u_use_texture = -1,
+    .u_projection  = -1,
+    .u_model       = -1,
+    .u_color       = -1,
+};
 
 int renderer2d_init(GLuint program, int window_width, int window_height)
 {
@@ -34,6 +47,7 @@ int renderer2d_init(GLuint program, int window_width, int window_height)
     renderer2d.u_use_texture = glGetUniformLocation(renderer2d.program, "u_use_texture");
     renderer2d.u_model = glGetUniformLocation(renderer2d.program, "u_model");
     renderer2d.u_projection = glGetUniformLocation(renderer2d.program, "u_projection");
+    renderer2d.u_color = glGetUniformLocation(renderer2d.program, "u_color");
 
     renderer2d_update_ortho(window_width, window_height);
 
@@ -45,9 +59,9 @@ void renderer2d_update_ortho(int window_width, int window_height)
     mat4x4_ortho(renderer2d.ortho, 0, window_width, 0, window_height, -1, 1);
 }
 
-void renderer2d_draw_quad(float x, float y, float w, float h, float* color)
+void renderer2d_draw_quad(float x, float y, float w, float h, float color[4])
 {
-    mat4x4 model;
+    mat4x4 model = MAT4x4_IDENTITY;
     mat4x4_translate(model, x, y, 0);
     mat4x4_scale_aniso(model, model, w, h, 1);
 
@@ -64,7 +78,7 @@ void renderer2d_draw_quad(float x, float y, float w, float h, float* color)
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
-void draw2d_quad_textured(GLuint texture, float x, float y, float w, float h)
+void renderer2d_draw_quad_textured(GLuint texture, float x, float y, float w, float h)
 {
     mat4x4 model = MAT4x4_IDENTITY;
     mat4x4_translate(model, x, y, 0);
@@ -83,6 +97,13 @@ void draw2d_quad_textured(GLuint texture, float x, float y, float w, float h)
 
     glBindVertexArray(renderer2d.quad_vao);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
+void renderer2d_cleanup()
+{
+    glDeleteBuffers(1, &renderer2d.quad_vbo);
+    glDeleteBuffers(1, &renderer2d.quad_ebo);
+    glDeleteVertexArrays(1, &renderer2d.quad_vao);
 }
 
 
