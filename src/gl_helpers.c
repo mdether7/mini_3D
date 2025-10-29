@@ -200,6 +200,8 @@ shader_program_compile(const char* vert_path, const char* frag_path)
     glAttachShader(program_id, fragment_shader_id);
     glLinkProgram(program_id);
 
+    // glDetachShader(program_id, vertex_shader_id); some legacy stuff.
+    // glDetachShader(program_id, fragment_shader_id);
     glDeleteShader(vertex_shader_id);  
     glDeleteShader(fragment_shader_id);
 

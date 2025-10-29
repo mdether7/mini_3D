@@ -1001,11 +1001,8 @@ int main(int argc, char* argv[])
         color[2] = 0.0f;
         color[3] = 1.0f;
         draw2d_quad(10.0f, 10.0f, 1000.0f, 20.0f, color);
-        
-        draw2d_quad_textured(draw2d_program2, font_atlas, 100, 200, 50, 1000, g_window_state.width, g_window_state.height);
 
-        renderer2d_draw_quad(400, 400, 500, 500, (float[]){1.0f, 1.0f, 0.0f, 1.0f});
-        renderer2d_draw_quad_textured(texture, 200, 200, 400, 400);
+        renderer2d_draw_quad_textured(font_atlas, 0, 0, g_window_state.width, 200);
 
 
 #if 0 /* DRAW FULL SCREEN QUAD */

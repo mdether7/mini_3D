@@ -17,7 +17,6 @@ void APIENTRY gl_debug_output_callback(GLenum source, GLenum type, unsigned int 
 
 ////////////////
 // OpenGL misc
-
 // Mega function for quick information display.
 void misc_gl_display_information(void);
 

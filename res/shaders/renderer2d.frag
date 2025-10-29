@@ -10,8 +10,23 @@ in flat int tex_flag;
 
 void main()
 {
-    if (tex_flag == 1)
-        Frag_Color = texture(renderer2d_texture, uv);
-    else
-        Frag_Color = color;
+    vec2 uv_flip = vec2(uv.x, 1.0 - uv.y);
+    
+    /**
+     * Texture coordinates UVs
+     * (0,1)    (1,1)      U = x-axis
+     *                     V = y-axis
+     * (0,0)    (1,0)
+     */
+
+    vec4 finalColor = (tex_flag == 1) ? texture(renderer2d_texture, uv_flip) : color;
+    
+    // Make pixels with red turn black
+    if (finalColor.r > 0.01) {
+        finalColor = vec4(1.0, 1.0, 1.0, 1.0);
+    }
+
+    // Reduce red by 50%
+    //finalColor.r *= 0.5;
+    Frag_Color = finalColor;
 }

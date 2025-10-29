@@ -5,13 +5,6 @@
 
 #include "vertex_type.h"
 
-/**
- * Texture coordinates UVs
- * (0,1)    (1,1)      U = x-axis
- *                     V = y-axis
- * (0,0)    (1,0)
- */
-
 /////////
 // Cube
 static const Vertex3D geo_cube_vertices[] = {
