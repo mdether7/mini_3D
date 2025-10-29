@@ -556,7 +556,7 @@ int main(int argc, char* argv[])
     } 
 
 #ifdef ENABLE_GL_DEBUG_OUTPUT
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE); 
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
 
     /* create window */
