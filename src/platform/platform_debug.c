@@ -19,7 +19,7 @@ void debug_gl_enable(void)
     }
     else
     {
-        platform_log_error("[GL] Debug output coudl not be enabled!");
+        platform_log_error("[GL] Debug output could not be enabled!");
     }
 } 
 

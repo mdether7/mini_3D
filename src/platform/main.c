@@ -1,14 +1,16 @@
-#include "platform_glfw.h"
-
 #define GLFW_INCLUDE_NONE
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+
+#include <stdlib.h>
 
 #include "platform_log.h"
 #include "platform_debug.h"
 
 GLFWwindow* window = NULL;
 int fullscreen     = 0;
+int window_width   = 1280;
+int window_height  = 720;
 
 static void error_callback(int error, const char* description)
 {
@@ -20,13 +22,15 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 }
 
-int platform_initialize(const char* window_name, int w, int h)
+int main(void)
 {
     glfwSetErrorCallback(error_callback);
     if (!glfwInit()) {
-        return 1;
+        platform_log_error("[GLFW] Failed to initialize!");
+        return EXIT_FAILURE;
     }
-    
+
+
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -34,38 +38,41 @@ int platform_initialize(const char* window_name, int w, int h)
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); 
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
 
-    window = glfwCreateWindow(w, h, window_name, NULL, NULL);
+    
+    window = glfwCreateWindow(window_width, window_height, "DunGen", NULL, NULL);
     if (!window) {
         glfwTerminate();
-        return 1;
+        return EXIT_FAILURE;
     }
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // enable vsync
 
+
     glfwSetKeyCallback(window, key_callback);
+
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         glfwDestroyWindow(window);
         glfwTerminate();
         platform_log_error("[GLAD] Failed to initialize!");
-        return 1;
+        return EXIT_FAILURE;
     }
-    
-    debug_gl_enable();    
-    debug_display_information();
 
-    return 0;
-}
+    // initialize nuklear.
+    // initialize game.
 
-void platform_present_frame(void)
-{
-    glfwSwapBuffers(window);
-    glfwPollEvents();
-}
+    while (!glfwWindowShouldClose(window))
+    {
+        
 
-int platform_window_shoudl_close(void)
-{
-    return glfwWindowShouldClose(window);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
+
+    return EXIT_SUCCESS;
 }
 
 

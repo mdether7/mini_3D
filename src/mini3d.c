@@ -889,10 +889,10 @@ int main(int argc, char* argv[])
     /////////////////////////////////////////////////
 
     // some ortographic magic.
-    float aspect = (float)g_window_state.width / g_window_state.height;
-    float half_height = g_window_state.height / 2.0f;
-    float half_width  = half_height * aspect;   
-    util_print_n_flush("%f", aspect);
+    // float aspect = (float)g_window_state.width / g_window_state.height;
+    // float half_height = g_window_state.height / 2.0f;
+    // float half_width  = half_height * aspect;   
+    // util_print_n_flush("%f", aspect);
 
     /* OpenGL initial options setup */
     glClearColor(0.21f, 0.72f, 0.43f, 1.0f);
