@@ -1,4 +1,4 @@
-PROGRAM_NAME:= mini3D 
+PROGRAM_NAME:= DunGen
 CC:= gcc
 CPPFLAGS:= -Iinclude
 LDFLAGS:= -Llib
@@ -13,28 +13,19 @@ endif
 ifeq ($(BUILD),release)
 	CFLAGS += -O2 -DNDEBUG
 else ifeq ($(BUILD),debug)
-	CFLAGS += -g -O0 -DDEBUG -DENABLE_GL_DEBUG_OUTPUT
+	CFLAGS += -g -O0 -DDEBUG -DENABLE_GL_DEBUG
 else
 	$(error Invalid BUILD value. Use 'debug' or 'release')
 endif
 
-all: generate_bin mini3d
+all: dungen
 
-mini3d:
+dungen: generate_bin 
 	${CC} ${CPPFLAGS} ${LDFLAGS} ${CFLAGS} -o bin/${PROGRAM_NAME} \
-	src/mini3d.c \
-	src/mini_utils.c \
-	src/math_helpers.c \
-	src/gl_helpers.c \
-	src/shader.c \
-	src/draw2d.c \
-	src/file_read.c \
-	src/glad.c \
-	src/dun_mesh.c \
-	src/render/renderer2d.c \
-	src/dungen/dice.c \
-	src/dungen/dungen.c \
-	src/dungen/rooms.c \
+	src/platform/main.c \
+	src/platform/glad.c \
+	src/platform/platform_debug.c \
+	src/platform/platform_log.c \
 	${LDLIBS}
 
 generate_bin:

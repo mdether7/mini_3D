@@ -2,10 +2,28 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
+// Nuklear 
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
+#define NK_IMPLEMENTATION
+#include "Nuklear/nuklear.h"
+
+#define NK_GLFW_GL3_IMPLEMENTATION
+#include "Nuklear/nuklear_glfw_gl3.h"
+
 #include <stdlib.h>
 
 #include "platform_log.h"
 #include "platform_debug.h"
+
+#ifdef DEBUG
+#warning "Debug build enabled!"
+#endif
 
 GLFWwindow* window = NULL;
 int fullscreen     = 0;
@@ -30,14 +48,14 @@ int main(void)
         return EXIT_FAILURE;
     }
 
-
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); 
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
-
+#ifdef ENABLE_GL_DEBUG
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+#endif
     
     window = glfwCreateWindow(window_width, window_height, "DunGen", NULL, NULL);
     if (!window) {
@@ -57,6 +75,11 @@ int main(void)
         platform_log_error("[GLAD] Failed to initialize!");
         return EXIT_FAILURE;
     }
+
+#ifdef ENABLE_GL_DEBUG
+    debug_gl_enable();
+    debug_display_information();
+#endif
 
     // initialize nuklear.
     // initialize game.

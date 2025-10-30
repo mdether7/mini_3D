@@ -4,10 +4,10 @@
 #include "../math_helpers.h"
 
 Render2DContext renderer2d = {
-    .program   = 0, // cus UNSIGNED INT!!! TODO: get your hands dirty with
-    .ortho    = MAT4x4_IDENTITY,             // debugging on linux.
-    .quad_vao = 0,                           // glfwGetWindowSize;                           
-    .quad_vbo = 0,                           // glfwGetFramebufferSize;
+    .program   = 0,
+    .ortho    = MAT4x4_IDENTITY,                                        
+    .quad_vbo = 0,                           
+    .quad_vao = 0,                           
     .quad_ebo = 0,
     .u_use_texture = -1,
     .u_projection  = -1,
