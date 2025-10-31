@@ -42,16 +42,20 @@ static void error_callback(int error, const char* description)
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    // 1. Exit on ESC
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-    if (key == GLFW_KEY_A) {
-        platform_internal_input_set_button(KEY_A, action);
+    for (int button = GLFW_KEY_A; button <= GLFW_KEY_Z; button++) {
+        if (key == button) {
+            platform_input_set_key(button - GLFW_KEY_A, action);
+        }
     }
 
+#if 0
     platform_log_info("KEY: %d (scancode %d), action %d, mods %d",
             key, scancode, action, mods);
+#endif
+
 }
 
 int main(void)
@@ -98,11 +102,27 @@ int main(void)
     // initialize nuklear.
     // initialize game.
 
+    // fps counter / delta time.
     while (!glfwWindowShouldClose(window))
     {
-        
+        // update.
+        if (platform_is_key_down(KEY_W)) {
+            platform_log_info("UP");
+        }
+        if (platform_is_key_down(KEY_S)) {
+            platform_log_info("DOWN");
+        } 
+        if (platform_is_key_down(KEY_A)) {
+            platform_log_info("LEFT");
+        }
+        if (platform_is_key_down(KEY_D)) {
+            platform_log_info("RIGHT");
+        }
+
+        // render.
 
         glfwSwapBuffers(window);
+        platform_input_reset_keys_state();
         glfwPollEvents();
     }
 

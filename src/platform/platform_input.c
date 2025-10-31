@@ -3,26 +3,63 @@
 
 #include <assert.h>
 
-Button buttons[KEY_COUNT];
+Key keys[KEY_COUNT];
 
-void platform_internal_input_set_button(const button_type type, int action)
+int platform_is_key_pressed(key_type key)
 {
+    return keys[key].pressed;
+}
+
+int platform_is_key_released(key_type key)
+{
+    return keys[key].released;
+}
+
+int platform_is_key_held(key_type key)
+{
+    return keys[key].held;
+}
+
+int platform_is_key_down(key_type key)
+{
+    return keys[key].down;
+}
+
+
+void platform_input_set_key(key_type type, int action)
+{
+    assert((type >= KEY_A && type < KEY_COUNT));
     switch(action)
     {
-        case GLFW_RELEASE:
-        {
-            buttons[type].released = 1;
-        } break;
         case GLFW_PRESS:
         {
-            buttons[type].pressed = 1;
+            keys[type].pressed = 1;
+            keys[type].down = 1;
         } break;
         case GLFW_REPEAT:
         {
-            buttons[type].held = 1;
+            keys[type].held = 1;
+        } break;
+        case GLFW_RELEASE:
+        {
+            keys[type].released = 1;
         } break;
         default: {
             assert(0 && "Unknown button action");
         } break;
+    }
+}
+
+void platform_input_reset_keys_state(void)
+{
+    for (int i = 0; i < KEY_COUNT; i++) {
+
+        if (keys[i].released) {
+            keys[i].held = 0;
+            keys[i].down = 0;
+        }
+
+        keys[i].pressed  = 0;
+        keys[i].released = 0;
     }
 }

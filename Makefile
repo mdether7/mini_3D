@@ -24,6 +24,7 @@ dungen: generate_bin
 	${CC} ${CPPFLAGS} ${LDFLAGS} ${CFLAGS} -o bin/${PROGRAM_NAME} \
 	src/platform/main.c \
 	src/platform/glad.c \
+	src/platform/platform_input.c \
 	src/platform/platform_debug.c \
 	src/platform/platform_log.c \
 	${LDLIBS}
