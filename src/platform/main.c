@@ -18,7 +18,6 @@
 
 // Standard Library
 #include <stdlib.h>
-#include <assert.h> // for test, maybe remove?
 
 // Platform
 #include "platform_log.h"
@@ -45,10 +44,14 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-    for (int button = GLFW_KEY_A; button <= GLFW_KEY_Z; button++) {
-        if (key == button) {
-            platform_input_set_key(button - GLFW_KEY_A, action);
-        }
+    // for (int button = GLFW_KEY_A; button <= GLFW_KEY_Z; button++) {
+    //     if (key == button) {
+    //         platform_input_set_key(button - GLFW_KEY_A, action);
+    //     }
+    // }    [FOR LOOP NOT ALWAYS THE BEST CHOICE]
+
+    if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
+        platform_input_set_key(key - GLFW_KEY_A, action);
     }
 
 #if 0
@@ -102,6 +105,12 @@ int main(void)
     // initialize nuklear.
     // initialize game.
 
+    glViewport(0, 0, window_width / 2, window_height / 2);
+    glScissor(0,0,window_width / 2,window_height/ 2);
+    glEnable(GL_SCISSOR_TEST);
+
+    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+
     // fps counter / delta time.
     while (!glfwWindowShouldClose(window))
     {
@@ -118,6 +127,14 @@ int main(void)
         if (platform_is_key_down(KEY_D)) {
             platform_log_info("RIGHT");
         }
+
+        static float x = 0.0f;
+        glClearColor(x, 0.0f, 0.0f, 1.0f);
+        x += 0.01f;
+        if (x >= 1.0f) {
+            x = 0.0f;
+        }
+        glClear(GL_COLOR_BUFFER_BIT);
 
         // render.
 
