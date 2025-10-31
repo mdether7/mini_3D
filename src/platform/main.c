@@ -16,10 +16,15 @@
 #define NK_GLFW_GL3_IMPLEMENTATION
 #include "Nuklear/nuklear_glfw_gl3.h"
 
+// Standard Library
 #include <stdlib.h>
+#include <assert.h> // for test, maybe remove?
 
+// Platform
 #include "platform_log.h"
+#include "platform_input.h"
 #include "platform_debug.h"
+#include "platform_tools.h"
 
 #ifdef DEBUG
 #warning "Debug build enabled!"
@@ -37,7 +42,16 @@ static void error_callback(int error, const char* description)
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+    // 1. Exit on ESC
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
 
+    if (key == GLFW_KEY_A) {
+        platform_internal_input_set_button(KEY_A, action);
+    }
+
+    platform_log_info("KEY: %d (scancode %d), action %d, mods %d",
+            key, scancode, action, mods);
 }
 
 int main(void)
