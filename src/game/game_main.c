@@ -1,6 +1,7 @@
 #include "game_main.h"
 
 #include <glad/glad.h>
+#include <math.h>
 
 #include "platform/platform_input.h"
 #include "platform/platform_log.h"
@@ -44,16 +45,17 @@ int dg_loop(float dt)
     }
 
     // update.
-    game_state.point_size += 1.0f;
-    glPointSize(game_state.point_size);
-    if (game_state.point_size >= 200.0f) {
-        game_state.point_size = 1.0f;
-    }
+    GLfloat attrib[] = { (float)sin(dt) * 0.5f, 
+        (float)cos(dt) * 0.6f, 0.0f, 0.0f };
+
+    glVertexAttrib2fv(0, attrib);
 
     // render.
+    glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
+
     glBindVertexArray(game_state.vao);
     shader_program_bind(&game_state.shady);
-    glDrawArrays(GL_POINTS, 0, 2);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     return 0;
 }

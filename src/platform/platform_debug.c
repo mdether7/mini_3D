@@ -121,5 +121,5 @@ void APIENTRY gl_debug_output_callback(GLenum source, GLenum type, unsigned int 
         case GL_DEBUG_SEVERITY_NOTIFICATION: _severity = "Severity: notification"; break;
         default: _severity = "Severity: Unknown [Default switch case!]"; break;
     }
-    platform_log_error("[GL DEBUG]Debug message (ID: %u) -> %s | %s | %s | %s\n", id, message, _source, _type, _severity);
+    platform_log_error("[GL DEBUG] Debug message (ID: %u) -> %s | %s | %s | %s\n", id, message, _source, _type, _severity);
 }
