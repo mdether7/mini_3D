@@ -48,7 +48,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     //     if (key == button) {
     //         platform_input_set_key(button - GLFW_KEY_A, action);
     //     }
-    // }    [FOR LOOP NOT ALWAYS THE BEST CHOICE]
+    // }    [DRILL THIS INTO YOUR EYES!]
 
     if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
         platform_input_set_key(key - GLFW_KEY_A, action);
@@ -105,15 +105,16 @@ int main(void)
     // initialize nuklear.
     // initialize game.
 
-    glViewport(0, 0, window_width / 2, window_height / 2);
-    glScissor(0,0,window_width / 2,window_height/ 2);
-    glEnable(GL_SCISSOR_TEST);
+    // glViewport(0, 0, window_width / 2, window_height / 2);
+    // glScissor(0,0,window_width / 2,window_height/ 2);
+    // glEnable(GL_SCISSOR_TEST);
 
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    // glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
     // fps counter / delta time.
     while (!glfwWindowShouldClose(window))
     {
+        float current_time = glfwGetTime();
         // update.
         if (platform_is_key_down(KEY_W)) {
             platform_log_info("UP");
@@ -128,18 +129,24 @@ int main(void)
             platform_log_info("RIGHT");
         }
 
-        static float x = 0.0f;
-        glClearColor(x, 0.0f, 0.0f, 1.0f);
-        x += 0.01f;
-        if (x >= 1.0f) {
-            x = 0.0f;
-        }
-        glClear(GL_COLOR_BUFFER_BIT);
+        platform_log_info("%f", (sin(current_time) + 1.0f) / 2);
+        float xd = (sin(current_time) + 1.0f) / 2.0f;
+        
+
+        // static float x = 0.0f;
+        // glClearColor(x, 0.0f, 0.0f, 1.0f);
+        // x += 0.01f;
+        // if (x >= 1.0f) {
+        //     x = 0.0f;
+        // }
+        // glClear(GL_COLOR_BUFFER_BIT);
+        glClearBufferfv(GL_COLOR, 0, (GLfloat[]){xd, 0.8f, 1.0f, 1.0f});
 
         // render.
 
-        glfwSwapBuffers(window);
         platform_input_reset_keys_state();
+
+        glfwSwapBuffers(window);
         glfwPollEvents();
     }
 

@@ -1,6 +1,6 @@
 PROGRAM_NAME:= DunGen
 CC:= gcc
-CPPFLAGS:= -Iinclude
+CPPFLAGS:= -Iinclude -Isrc
 LDFLAGS:= -Llib
 CFLAGS+= -std=c99 -Wall -Wextra -Wno-unused-function -Wno-unused-parameter #-pedantic
 LDLIBS:= -lglfw3 -lcglm -lGL -lfreetype -lz -lX11 -lpthread -lXrandr -lXi -ldl -lm
@@ -27,6 +27,10 @@ dungen: generate_bin
 	src/platform/platform_input.c \
 	src/platform/platform_debug.c \
 	src/platform/platform_log.c \
+	src/game/renderer/renderer.c \
+	src/game/renderer/camera.c \
+	src/game/renderer/shader.c \
+	src/game/renderer/texture.c \
 	${LDLIBS}
 
 generate_bin:
