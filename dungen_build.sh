@@ -3,5 +3,5 @@
 make clean
 make
 cd bin
-#notify-send "Mini started!"
+#notify-send "DunGen started!"
 ./DunGen

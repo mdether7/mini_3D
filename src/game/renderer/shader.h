@@ -7,8 +7,8 @@ typedef struct {
     GLuint id;
 } Shader;
 
-int shader_program_compile_from_path(const char* vert_path, const char* frag_path);
-
-
+Shader shader_program_compile_from_path(const char* vert_path, const char* frag_path);
+void   shader_program_delete(Shader* shader);
+void   shader_program_bind(Shader* shader);
 
 #endif

@@ -25,6 +25,9 @@
 #include "platform_debug.h"
 #include "platform_tools.h"
 
+// Game
+#include "game/game_main.h"
+
 #ifdef DEBUG
 #warning "Debug build enabled!"
 #endif
@@ -103,52 +106,36 @@ int main(void)
 #endif
 
     // initialize nuklear.
-    // initialize game.
+    
+
+    
 
     // glViewport(0, 0, window_width / 2, window_height / 2);
     // glScissor(0,0,window_width / 2,window_height/ 2);
     // glEnable(GL_SCISSOR_TEST);
 
     // glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-
+    if (dg_init()) {
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        platform_log_error("[DUNGEN] Failed to initialize!");
+        return EXIT_FAILURE;
+    }
+    
     // fps counter / delta time.
     while (!glfwWindowShouldClose(window))
     {
         float current_time = glfwGetTime();
-        // update.
-        if (platform_is_key_down(KEY_W)) {
-            platform_log_info("UP");
-        }
-        if (platform_is_key_down(KEY_S)) {
-            platform_log_info("DOWN");
-        } 
-        if (platform_is_key_down(KEY_A)) {
-            platform_log_info("LEFT");
-        }
-        if (platform_is_key_down(KEY_D)) {
-            platform_log_info("RIGHT");
-        }
 
-        platform_log_info("%f", (sin(current_time) + 1.0f) / 2);
-        float xd = (sin(current_time) + 1.0f) / 2.0f;
-        
-
-        // static float x = 0.0f;
-        // glClearColor(x, 0.0f, 0.0f, 1.0f);
-        // x += 0.01f;
-        // if (x >= 1.0f) {
-        //     x = 0.0f;
-        // }
-        // glClear(GL_COLOR_BUFFER_BIT);
-        glClearBufferfv(GL_COLOR, 0, (GLfloat[]){xd, 0.8f, 1.0f, 1.0f});
-
-        // render.
+        dg_loop(current_time); // current time for now.
 
         platform_input_reset_keys_state();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    dg_close();
 
     glfwDestroyWindow(window);
     glfwTerminate();

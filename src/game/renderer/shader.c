@@ -4,17 +4,33 @@
 #include <assert.h>
 
 #include "platform/file_read.h"
+#include "platform/platform_tools.h"
 #include "platform/platform_log.h"
 
 static int shader_compile_error(GLuint shader);
 static int shader_program_link_error(GLuint program);
 
-int shader_program_compile_from_path(const char* vert_path, const char* frag_path)
+void shader_program_delete(Shader* shader)
+{
+    if (shader && shader->id != 0) {
+        glDeleteProgram(shader->id);
+        shader->id = 0;
+    }
+}
+
+void shader_program_bind(Shader* shader)
+{
+    glUseProgram(shader->id);
+}
+
+Shader shader_program_compile_from_path(const char* vert_path, const char* frag_path)
 {  
     assert(vert_path && frag_path);
+    RELEASE_ASSERT(vert_path && frag_path);
 
     char*         vertex_source   = NULL;
     char*         fragment_source = NULL;
+    Shader        shader          = {0};
 
     vertex_source   = read_file(vert_path);
     fragment_source = read_file(frag_path);
@@ -22,7 +38,7 @@ int shader_program_compile_from_path(const char* vert_path, const char* frag_pat
     if (!vertex_source || !fragment_source) {
         free(vertex_source);
         free(fragment_source);
-        return 1;
+        return shader;
     }
 
     GLuint vertex_shader_id   = glCreateShader(GL_VERTEX_SHADER);
@@ -45,7 +61,7 @@ int shader_program_compile_from_path(const char* vert_path, const char* frag_pat
         glDeleteShader(vertex_shader_id);  
         glDeleteShader(fragment_shader_id);
 
-        return 1;
+        return shader;
     }
 
     GLuint program_id = glCreateProgram();
@@ -60,11 +76,13 @@ int shader_program_compile_from_path(const char* vert_path, const char* frag_pat
     if (shader_program_link_error(program_id) < 0) {
 
         glDeleteProgram(program_id);
-        return 1;
+        return shader;
 
     }
 
-    return 0;
+    shader.id = program_id;
+
+    return shader;
 }
 
 static int shader_compile_error(GLuint shader)

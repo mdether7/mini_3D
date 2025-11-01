@@ -55,7 +55,7 @@
 #warning "Leaving this for the memorization :D"
 #endif
 
-#include "shader.h"
+#include "old_shader.h"
 #include "draw2d.h"
 #include "mini_utils.h"
 #include "gl_helpers.h"
