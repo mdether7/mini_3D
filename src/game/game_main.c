@@ -28,10 +28,15 @@ int dg_init(void)
     return 0;
 }
 
+float red;
+float green;
+float blue;
+
 int dg_loop(float dt)
 {
     // input.
     if (platform_is_key_down(KEY_W)) {
+        red = green = blue = 0.0f;
         platform_log_info("UP");
     }
     if (platform_is_key_down(KEY_S)) {
@@ -43,18 +48,33 @@ int dg_loop(float dt)
     if (platform_is_key_down(KEY_D)) {
         platform_log_info("RIGHT");
     }
+    if (platform_is_key_down(KEY_R)) {
+        red += 0.05f;
+    }
+    if (platform_is_key_down(KEY_G)) {
+        green += 0.05f;
+    }
+    if (platform_is_key_down(KEY_B)) {
+        blue += 0.05f;
+    }
 
     // update.
     GLfloat attrib[] = { (float)sin(dt) * 0.5f, 
         (float)cos(dt) * 0.6f, 0.0f, 0.0f };
 
+    GLfloat color[] = {red, green, blue, 1.0f};
+
     glVertexAttrib2fv(0, attrib);
+    glVertexAttrib4fv(1, color);
+    
+    // TODO: Test if glVertexAttribPointer() will change with me
+    //       updating the array being pointed at.
 
     // render.
     glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
 
-    glBindVertexArray(game_state.vao);
     shader_program_bind(&game_state.shady);
+    glBindVertexArray(game_state.vao);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     return 0;
