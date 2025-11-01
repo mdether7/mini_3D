@@ -107,15 +107,13 @@ int main(void)
 
     // initialize nuklear.
     
-
-    
-
+    // Scissor playground //
     // glViewport(0, 0, window_width / 2, window_height / 2);
     // glScissor(0,0,window_width / 2,window_height/ 2);
     // glEnable(GL_SCISSOR_TEST);
-
     // glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-    if (dg_init()) {
+    
+    if (dg_init()) { // TODO: Here think about proper game cleanup.
         glfwDestroyWindow(window);
         glfwTerminate();
         platform_log_error("[DUNGEN] Failed to initialize!");

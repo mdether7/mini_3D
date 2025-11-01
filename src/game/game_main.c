@@ -7,8 +7,16 @@
 #include "platform/platform_log.h"
 #include "renderer/shader.h"
 
+
+// https://stackoverflow.com/questions/427477/fastest-way-to-clamp-a-real-fixed-floating-point-value
+static inline float clampf(float f, float min, float max) {
+  const float t = f < min ? min : f;
+  return t > max ? max : t;
+}
+
 typedef struct {
     Shader shady;
+    Shader tess_shady;
     GLuint vao;
     float  point_size;
 } GameState;
@@ -21,6 +29,13 @@ int dg_init(void)
     if (game_state.shady.id == 0) {
         return 1;
     }
+
+    game_state.tess_shady = shader_program_tess_compile_from_path("shaders/dungen.vert",
+        "shaders/dungen.tcs", "shaders/dungen.tes", "shaders/dungen.frag");
+    if (game_state.tess_shady.id == 0) {
+        return 1;
+    }
+
     glGenVertexArrays(1, &game_state.vao);
 
     game_state.point_size = 1.0f;
@@ -31,7 +46,6 @@ int dg_init(void)
 float red;
 float green;
 float blue;
-
 int dg_loop(float dt)
 {
     // input.
@@ -50,18 +64,20 @@ int dg_loop(float dt)
     }
     if (platform_is_key_down(KEY_R)) {
         red += 0.05f;
+        red = clampf(red, 0.0f, 1.0f);
     }
     if (platform_is_key_down(KEY_G)) {
         green += 0.05f;
+        green = clampf(green, 0.0f, 1.0f);
     }
     if (platform_is_key_down(KEY_B)) {
         blue += 0.05f;
+        blue = clampf(blue, 0.0f, 1.0f);
     }
 
     // update.
     GLfloat attrib[] = { (float)sin(dt) * 0.5f, 
         (float)cos(dt) * 0.6f, 0.0f, 0.0f };
-
     GLfloat color[] = {red, green, blue, 1.0f};
 
     glVertexAttrib2fv(0, attrib);
@@ -71,6 +87,7 @@ int dg_loop(float dt)
     //       updating the array being pointed at.
 
     // render.
+    platform_log_info("%f ,%f, %f", red, green, blue);
     glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
 
     shader_program_bind(&game_state.shady);
