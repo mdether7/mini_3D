@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "shader.h"
+#include "old_shader.h"
 #include "math_helpers.h"
 
 

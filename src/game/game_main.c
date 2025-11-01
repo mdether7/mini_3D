@@ -25,10 +25,10 @@ static GameState game_state = {0}; // static?
 
 int dg_init(void)
 {
-    game_state.shady = shader_program_compile_from_path("shaders/dungen.vert", "shaders/dungen.frag");
-    if (game_state.shady.id == 0) {
-        return 1;
-    }
+    // game_state.shady = shader_program_compile_from_path("shaders/dungen.vert", "shaders/dungen.frag");
+    // if (game_state.shady.id == 0) {
+    //     return 1;
+    // }
 
     game_state.tess_shady = shader_program_tess_compile_from_path("shaders/dungen.vert",
         "shaders/dungen.tcs", "shaders/dungen.tes", "shaders/dungen.frag");
@@ -90,9 +90,9 @@ int dg_loop(float dt)
     platform_log_info("%f ,%f, %f", red, green, blue);
     glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
 
-    shader_program_bind(&game_state.shady);
-    glBindVertexArray(game_state.vao);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // shader_program_bind(&game_state.shady);
+    // glBindVertexArray(game_state.vao);
+    // glDrawArrays(GL_TRIANGLES, 0, 3);
 
     return 0;
 }

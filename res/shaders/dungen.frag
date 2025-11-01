@@ -1,13 +1,17 @@
 #version 430 core
 
-in VS_OUT {
+// in VS_OUT {
+//     vec4 color_to_frag;
+// } vs_in;
+
+in TES_OUT {
     vec4 color_to_frag;
-} vs_in;
+} tes_in;
 
 // output to framebuffer.
 out vec4 color;
 
 void main(void)
 {
-    color = vs_in.color_to_frag;
+    color = tes_in.color_to_frag;
 }
