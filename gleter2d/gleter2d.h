@@ -16,8 +16,11 @@
 // FONT 
 
 typedef struct {
-
-} Font;
+    stbtt_packedchar *chardata_for_range;
+    unsigned char* data;
+    GLuint atlas;
+    unsigned int num_chars;
+} GLE2D_Font;
 
 int gle2d_font_load_ttf_form_file(const char* path, float pixel_height);
 int gle2d_font_load_ttf_form_file_v2(const char* path);

@@ -14,6 +14,7 @@
 #define GLE2D_DEAFULT_SHADER_VERSION "#version 430 core"
 #define GLE2D_FONT_TTF_BUFFER_SIZE 1<<20 // 1 MiB
 #define GLE2D_FONT_TTF_PIXEL_HEIGHT 64
+#define GLE2D_FONT_BITMAP_SIZE 1024*1024 // 1 MiB
 
 #define GLE2D_MINMAX(a,b)  (((a) > (b)) ? (a) : (b))
 
@@ -32,7 +33,7 @@ typedef struct {
    float xoff;
    float yoff;
    float xadvance;
-} Gle2DBakedCharData;
+} GLE2D_BakedCharData;
 
 // g_default_font.glyphs[c].size[0] =    face->glyph->bitmap.width;
 // g_default_font.glyphs[c].size[1] =    face->glyph->bitmap.rows;
@@ -40,7 +41,7 @@ typedef struct {
 // g_default_font.glyphs[c].bearing[1] = face->glyph->bitmap_top;
 // g_default_font.glyphs[c].advance =    face->glyph->advance.x;
 
-Gle2DBakedCharData cdata[96]; // ASCII 32..126 is 95 glyphs
+GLE2D_BakedCharData cdata[96]; // ASCII 32..126 is 95 glyphs
 
 int gle2d_font_load_ttf_form_file(const char* path, float pixel_height)
 {
@@ -102,6 +103,89 @@ int gle2d_font_load_ttf_form_file_v2(const char* path)
     if (gle2d_font_load_ttf_from_datav2(ttf_buffer)) {
         return 1;
     }
+
+    return 0;
+}
+
+unsigned char* gle2d_font_load_into_memory(const char* path)
+{
+    assert(path);
+    unsigned char* data = NULL;
+
+    FILE* f = fopen(path, "rb");
+    if (!f) {
+        return NULL;
+    }
+
+    fseek(f, 0L, SEEK_END);
+    long size = ftell(f);
+    fseek(f, 0L, SEEK_SET);
+    if (size <= 0) {
+        fclose(f);
+        return NULL;
+    }
+    
+    data = malloc(size);
+    if (!data) {
+        fclose(f);
+        return NULL;
+    }
+
+    size_t bytes_read = fread(data, 1, size, f);
+    fclose(f);
+    if (bytes_read != size) {  // Should read exactly 'size' bytes
+        free(data);
+        return NULL;
+    }
+
+    return data;
+}
+
+// typedef struct
+// {
+//    unsigned short x0,y0,x1,y1; // coordinates of bbox in bitmap
+//    float xoff,yoff,xadvance;
+//    float xoff2,yoff2;
+// } stbtt_packedchar;
+
+
+int gle2d_font_load_and_pack_atlas(GLE2D_Font* font, const char* path, float px_size)
+{
+    assert(font && path);
+    assert(px_size > 0);
+
+    // TODO: Think about it.(upper or lower?)
+    // memset(font, 0, sizeof(GLE2D_Font)); 
+    int num_char = 95; // for now at least.
+
+    font->num_chars = num_char;
+    font->chardata_for_range = malloc(sizeof(*font->chardata_for_range) * 95);
+    if (!font->chardata_for_range) {
+
+    }
+    
+    font->data = gle2d_font_load_into_memory(path);
+    if (!font->data) {
+        return 1;
+    }
+
+    stbtt_fontinfo font_info;
+    if (!stbtt_InitFont(&font_info, font->data, stbtt_GetFontOffsetForIndex(font->data, 0))) {
+        return 1;
+    }
+
+    unsigned char* bitmap = malloc(GLE2D_FONT_BITMAP_SIZE);
+    memset(bitmap, 0, GLE2D_FONT_BITMAP_SIZE); // set to black
+
+    stbtt_pack_context spc;                                              // Thightly packed
+    stbtt_PackBegin(&spc, bitmap, GLE2D_FONT_BITMAP_SIZE, GLE2D_FONT_BITMAP_SIZE, 0, 1, NULL);                               
+    stbtt_PackFontRange(&spc, font->data, 0, px_size, 32, 95, font->chardata_for_range);
+                                        
+
+    
+
+
+    stbtt_PackEnd(&spc);
 
     return 0;
 }

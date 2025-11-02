@@ -50,6 +50,7 @@ int dg_init(void)
         return 1;
     }
     gle2d_misc_texture_save_to_disk_as_png(gle2d_font_get_font_texture(), "bake.png");
+    
 
     // Usually you want viewport to match framebuffer
     int dims[2];
