@@ -3,7 +3,7 @@ CC:= gcc
 CPPFLAGS:= -Iinclude -Isrc
 LDFLAGS:= -Llib
 CFLAGS+= -std=c99 -Wall -Wextra -Wno-unused-function -Wno-unused-parameter #-pedantic
-LDLIBS:= -lglfw3 -lcglm -lGL -lfreetype -lz -lX11 -lpthread -lXrandr -lXi -ldl -lm
+LDLIBS:= -lglfw3 -lcglm -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm #freetype -lfreetype -lz 
 BUILD?= debug
 
 ifeq ($(OS),Windows_NT)
@@ -22,6 +22,7 @@ all: dungen
 
 dungen: generate_bin 
 	${CC} ${CPPFLAGS} ${LDFLAGS} ${CFLAGS} -o bin/${PROGRAM_NAME} \
+	gleter2d/gleter2d.c \
 	src/platform/main.c \
 	src/platform/glad.c \
 	src/platform/file_read.c \
