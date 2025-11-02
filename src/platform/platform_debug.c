@@ -1,8 +1,9 @@
 #include "platform_debug.h"
-#include "platform_log.h"
-#include <glad/glad.h>
 
+#include <glad/glad.h>
 #include <stdio.h>
+
+#include "platform_log.h"
 
 void debug_gl_enable(void)
 {

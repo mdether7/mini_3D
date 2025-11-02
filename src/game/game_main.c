@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "platform/platform_input.h"
+#include "platform/platform_other.h"
 #include "platform/platform_log.h"
 #include "renderer/shader.h"
 
@@ -36,14 +37,21 @@ int dg_init(void)
         return 1;
     }
 
+    // Usually you want viewport to match framebuffer
+    int dims[2];
+    platform_get_framebuffer_size(dims);
+    glViewport(0, 0, dims[0], dims[1]); 
+    
     glGenVertexArrays(1, &game_state.vao);
+    glPatchParameteri(GL_PATCH_VERTICES, 43);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     game_state.point_size = 1.0f;
 
     return 0;
 }
 
-float red;
+float red = 1.0f;
 float green;
 float blue;
 int dg_loop(float dt)
@@ -89,10 +97,9 @@ int dg_loop(float dt)
     // render.
     platform_log_info("%f ,%f, %f", red, green, blue);
     glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
-
-    // shader_program_bind(&game_state.shady);
-    // glBindVertexArray(game_state.vao);
-    // glDrawArrays(GL_TRIANGLES, 0, 3);
+    shader_program_bind(&game_state.tess_shady);
+    glBindVertexArray(game_state.vao);
+    glDrawArrays(GL_PATCHES, 0, 3);
 
     return 0;
 }

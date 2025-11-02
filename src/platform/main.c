@@ -1,6 +1,6 @@
 #define GLFW_INCLUDE_NONE
-#include "glad/glad.h"
-#include "GLFW/glfw3.h"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 // Nuklear 
 #define NK_INCLUDE_FIXED_TYPES
@@ -11,10 +11,10 @@
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
-#include "Nuklear/nuklear.h"
+#include <Nuklear/nuklear.h>
 
 #define NK_GLFW_GL3_IMPLEMENTATION
-#include "Nuklear/nuklear_glfw_gl3.h"
+#include <Nuklear/nuklear_glfw_gl3.h>
 
 // Standard Library
 #include <stdlib.h>
@@ -61,8 +61,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     platform_log_info("KEY: %d (scancode %d), action %d, mods %d",
             key, scancode, action, mods);
 #endif
-
 }
+
 
 int main(void)
 {
@@ -119,6 +119,9 @@ int main(void)
         platform_log_error("[DUNGEN] Failed to initialize!");
         return EXIT_FAILURE;
     }
+
+    // glfwGetFramebufferSize(window, );
+    // glfwGetWindowSize(window,)
     
     // fps counter / delta time.
     while (!glfwWindowShouldClose(window))

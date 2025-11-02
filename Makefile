@@ -26,6 +26,7 @@ dungen: generate_bin
 	src/platform/glad.c \
 	src/platform/file_read.c \
 	src/platform/platform_input.c \
+	src/platform/platform_other.c \
 	src/platform/platform_debug.c \
 	src/platform/platform_log.c \
 	src/game/game_main.c \

@@ -1,6 +1,5 @@
 #include "platform_input.h"
-#include "GLFW/glfw3.h"
-
+#include <GLFW/glfw3.h>
 #include <assert.h>
 
 Key keys[KEY_COUNT];
