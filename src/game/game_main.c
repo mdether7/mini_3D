@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <math.h>
 
+#include "../../gleter2d/gleter2d.h" // placeholder, this needs to be a lib.
 #include "platform/platform_input.h"
 #include "platform/platform_other.h"
 #include "platform/platform_log.h"
@@ -37,13 +38,25 @@ int dg_init(void)
         return 1;
     }
 
+    const char* path = "fonts/ligurino.ttf";
+    // if (gle2d_font_load_ttf_form_file(path, 64.0f)) {
+    //     return 1;
+    // }
+    // gle2d_misc_texture_save_to_disk_as_png(gle2d_font_get_font_texture(), "bake.png");
+
+    // gle2d_font_load_ttf_form_file_v2(path);
+
+    if (gle2d_font_load_ttf_form_file_v2(path)) {
+        return 1;
+    }
+    gle2d_misc_texture_save_to_disk_as_png(gle2d_font_get_font_texture(), "bake.png");
+
     // Usually you want viewport to match framebuffer
     int dims[2];
     platform_get_framebuffer_size(dims);
     glViewport(0, 0, dims[0], dims[1]); 
     
     glGenVertexArrays(1, &game_state.vao);
-    glPatchParameteri(GL_PATCH_VERTICES, 43);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     game_state.point_size = 1.0f;
@@ -101,6 +114,8 @@ int dg_loop(float dt)
     glBindVertexArray(game_state.vao);
     glDrawArrays(GL_PATCHES, 0, 3);
 
+    gle2d_font_render_text("HELLO OPENGL!", 0, 0);
+
     return 0;
 }
 
@@ -108,4 +123,5 @@ void dg_close(void)
 {
     shader_program_delete(&game_state.shady);
     glDeleteVertexArrays(1, &game_state.vao);
+    gle2d_font_cleanup();
 }
