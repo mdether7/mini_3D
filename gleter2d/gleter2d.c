@@ -5,7 +5,7 @@
 
 #include <glad/glad.h>
 #include <linmath/linmath.h>
-#define STBTT_STATIC // To avoid confiliction with Nuklear.
+#define STBTT_STATIC // To avoid conflict with Nuklear for my project.
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb/stb_truetype.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -133,7 +133,7 @@ unsigned char* gle2d_font_load_into_memory(const char* path)
 
     size_t bytes_read = fread(data, 1, size, f);
     fclose(f);
-    if (bytes_read != size) {  // Should read exactly 'size' bytes
+    if (bytes_read != (size_t)size) {  // Should read exactly 'size' bytes
         free(data);
         return NULL;
     }
@@ -141,54 +141,81 @@ unsigned char* gle2d_font_load_into_memory(const char* path)
     return data;
 }
 
-// typedef struct
-// {
-//    unsigned short x0,y0,x1,y1; // coordinates of bbox in bitmap
-//    float xoff,yoff,xadvance;
-//    float xoff2,yoff2;
-// } stbtt_packedchar;
-
-
 int gle2d_font_load_and_pack_atlas(GLE2D_Font* font, const char* path, float px_size)
 {
     assert(font && path);
     assert(px_size > 0);
 
-    // TODO: Think about it.(upper or lower?)
-    // memset(font, 0, sizeof(GLE2D_Font)); 
-    int num_char = 95; // for now at least.
+    // GLE2D_Font //
+    stbtt_packedchar* packed_char_array = NULL;
+    unsigned char* ttf_data = NULL;
+    GLuint atlas = 0;
+    int num_char = 95; //! For now at least.
+    //------------//
 
-    font->num_chars = num_char;
-    font->chardata_for_range = malloc(sizeof(*font->chardata_for_range) * 95);
-    if (!font->chardata_for_range) {
-
+    packed_char_array = malloc(sizeof(*packed_char_array) * num_char);
+    if (!packed_char_array) {
+        return 1;
     }
     
-    font->data = gle2d_font_load_into_memory(path);
-    if (!font->data) {
+    ttf_data = gle2d_font_load_into_memory(path);
+    if (!ttf_data) {
+        free(packed_char_array);
         return 1;
     }
 
-    stbtt_fontinfo font_info;
-    if (!stbtt_InitFont(&font_info, font->data, stbtt_GetFontOffsetForIndex(font->data, 0))) {
+    stbtt_fontinfo font_info;                                         
+    if (!stbtt_InitFont(&font_info, ttf_data, stbtt_GetFontOffsetForIndex(ttf_data, 0))) {
+        free(ttf_data);
+        free(packed_char_array);
         return 1;
     }
 
     unsigned char* bitmap = malloc(GLE2D_FONT_BITMAP_SIZE);
+    if (!bitmap) {
+        free(packed_char_array);
+        free(ttf_data);
+        return 1;
+    }
     memset(bitmap, 0, GLE2D_FONT_BITMAP_SIZE); // set to black
 
     stbtt_pack_context spc;                                              // Thightly packed
-    stbtt_PackBegin(&spc, bitmap, GLE2D_FONT_BITMAP_SIZE, GLE2D_FONT_BITMAP_SIZE, 0, 1, NULL);                               
-    stbtt_PackFontRange(&spc, font->data, 0, px_size, 32, 95, font->chardata_for_range);
-                                        
-
-    
-
-
+    if (!stbtt_PackBegin(&spc, bitmap, 1024, 1024, 0, 1, NULL)) {
+        free(packed_char_array);
+        free(ttf_data);
+        free(bitmap);
+        return 1;
+    } 
+    //float scale = stbtt_ScaleForPixelHeight(&font_info, px_size);              
+    if (!stbtt_PackFontRange(&spc, ttf_data, 0, px_size, 32, 95, packed_char_array)) {
+        free(packed_char_array);
+        free(ttf_data);
+        free(bitmap);
+        return 1;
+    }
     stbtt_PackEnd(&spc);
+
+    glGenTextures(1, &atlas);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, atlas);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 1024, 1024, 0, GL_RED, GL_UNSIGNED_BYTE, bitmap);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    free(bitmap);
+
+    font->packed_char_array = packed_char_array;
+    font->ttf_data = ttf_data;
+    font->atlas = atlas;
+    font->num_chars = num_char;
 
     return 0;
 }
+
+// stbtt_GetPackedQuad
 
 // Clear this, use PACK.
 int gle2d_font_load_ttf_from_datav2(const unsigned char* data)

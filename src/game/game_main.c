@@ -37,19 +37,17 @@ int dg_init(void)
     if (game_state.tess_shady.id == 0) {
         return 1;
     }
-
     const char* path = "fonts/ligurino.ttf";
-    // if (gle2d_font_load_ttf_form_file(path, 64.0f)) {
+    // if (gle2d_font_load_ttf_form_file_v2(path)) {
     //     return 1;
     // }
     // gle2d_misc_texture_save_to_disk_as_png(gle2d_font_get_font_texture(), "bake.png");
 
-    // gle2d_font_load_ttf_form_file_v2(path);
-
-    if (gle2d_font_load_ttf_form_file_v2(path)) {
+    GLE2D_Font font;
+    if (gle2d_font_load_and_pack_atlas(&font, path, 64.0f)) {
         return 1;
     }
-    gle2d_misc_texture_save_to_disk_as_png(gle2d_font_get_font_texture(), "bake.png");
+    gle2d_misc_texture_save_to_disk_as_png(font.atlas, "bake.png");
     
 
     // Usually you want viewport to match framebuffer

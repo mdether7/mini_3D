@@ -2,6 +2,8 @@
 #define GLETER_2D_H
 
 #include <glad/glad.h>
+#define STBTT_STATIC  // To avoid conflict with Nuklear for my project.
+#include <stb/stb_truetype.h>
 
 /////////////////////////////////////
 // DEPENDENCIES                    
@@ -16,12 +18,13 @@
 // FONT 
 
 typedef struct {
-    stbtt_packedchar *chardata_for_range;
-    unsigned char* data;
+    stbtt_packedchar *packed_char_array;
+    unsigned char* ttf_data;
     GLuint atlas;
     unsigned int num_chars;
 } GLE2D_Font;
 
+int gle2d_font_load_and_pack_atlas(GLE2D_Font* font, const char* path, float px_size);
 int gle2d_font_load_ttf_form_file(const char* path, float pixel_height);
 int gle2d_font_load_ttf_form_file_v2(const char* path);
 int gle2d_font_load_ttf_from_datav2(const unsigned char* data);
