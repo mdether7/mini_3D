@@ -24,8 +24,10 @@
 
 GLuint gle2d_font_shader_program;
 
-static unsigned char* gle2d_font_load_into_memory(const char *path);
-static GLuint gle2d_create_shader_from_data(const char* vertex, const char* fragment);
+static unsigned char* gle2d_internal_font_load_into_memory(const char *path);
+static GLuint         gle2d_internal_create_shader_from_data(const char* vertex, const char* fragment);
+static int            gle2d_internal_shader_compile_error(GLuint shader);
+static int            gle2d_internal_shader_program_link_error(GLuint shader);
 
 int gle2d_init(void)
 {
@@ -194,69 +196,7 @@ int gle2d_misc_texture_save_to_disk_as_png(GLuint texture, const char *name)
 /////////////
 // Internal
 
-Shader shader_program_compile_from_path(const char* vert_path, const char* frag_path)
-{  
-    assert(vert_path && frag_path);
-    RELEASE_ASSERT(vert_path && frag_path);
-
-    char*         vertex_source   = NULL;
-    char*         fragment_source = NULL;
-    Shader        shader          = {0};
-
-    vertex_source   = read_file(vert_path);
-    fragment_source = read_file(frag_path);
-
-    if (!vertex_source || !fragment_source) {
-        free(vertex_source);
-        free(fragment_source);
-        return shader;
-    }
-
-    GLuint vertex_shader_id   = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
-
-    glShaderSource(vertex_shader_id, 1, (const GLchar**)&vertex_source, NULL);
-    glShaderSource(fragment_shader_id, 1, (const GLchar**)&fragment_source, NULL);
-
-    free(vertex_source);
-    free(fragment_source);
-    vertex_source   = NULL;
-    fragment_source = NULL;
-
-    glCompileShader(vertex_shader_id);
-    glCompileShader(fragment_shader_id);
-
-    if (shader_compile_error(vertex_shader_id)   > 0 ||
-        shader_compile_error(fragment_shader_id) > 0) {
-
-        glDeleteShader(vertex_shader_id);  
-        glDeleteShader(fragment_shader_id);
-
-        return shader;
-    }
-
-    GLuint program_id = glCreateProgram();
-
-    glAttachShader(program_id, vertex_shader_id);
-    glAttachShader(program_id, fragment_shader_id);
-    glLinkProgram(program_id);
-
-    glDeleteShader(vertex_shader_id);  
-    glDeleteShader(fragment_shader_id);
-
-    if (shader_program_link_error(program_id) > 0) {
-
-        glDeleteProgram(program_id);
-        return shader;
-
-    }
-
-    shader.id = program_id;
-
-    return shader;
-}
-
-static GLuint gle2d_create_shader_from_data(const char* vertex, const char* fragment)
+static GLuint gle2d_internal_create_shader_from_data(const char* vertex, const char* fragment)
 {
     assert(vertex && fragment);
     GLuint shader_program = 0;
@@ -268,11 +208,35 @@ static GLuint gle2d_create_shader_from_data(const char* vertex, const char* frag
     glCompileShader(vertex_shader);
     glCompileShader(fragment_shader);
 
-    glGetShaderiv
+    if (gle2d_internal_shader_compile_error(vertex_shader)   > 0 ||
+        gle2d_internal_shader_compile_error(fragment_shader) > 0) {
 
+        glDeleteShader(vertex_shader);  
+        glDeleteShader(fragment_shader);
+
+        return shader_program;
+    }
+
+    shader_program = glCreateProgram();
+    glAttachShader(shader_program, vertex_shader);
+    glAttachShader(shader_program, fragment_shader);
+    glLinkProgram(shader_program);
+    glDeleteShader(vertex_shader);  
+    glDeleteShader(fragment_shader);
+
+    if (gle2d_internal_shader_program_link_error(shader_program) > 0) {
+
+        glDeleteProgram(shader_program);
+        shader_program = 0;
+        return shader_program;
+
+    }
+
+    return shader_program;
+    
 }
 
-static int shader_compile_error(GLuint shader)
+static int gle2d_internal_shader_compile_error(GLuint shader)
 {
 	GLint success;
 	char info_log[1024] = {0};
@@ -280,13 +244,27 @@ static int shader_compile_error(GLuint shader)
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 	if (!success) {
 		glGetShaderInfoLog(shader, sizeof(info_log), NULL, info_log);
-        platform_log_error("[SHADER COMPILE] Log: %s", info_log);
+        fprintf(stderr, "[GLE2D][SHADER COMPILE] Log: %s", info_log);
 		return 1;
 	}
 	return 0;
 }
 
-static unsigned char* gle2d_font_load_into_memory(const char *path)
+static int gle2d_internal_shader_program_link_error(GLuint shader)
+{
+    GLint success;
+    char info_log[1024] = {0};
+
+    glGetProgramiv(shader, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(shader, sizeof(info_log), NULL, info_log);
+        fprintf(stderr, "[GLE2D][SHADER LINK] Log: %s", info_log);
+        return 1;
+    }
+    return 0;
+}
+
+static unsigned char* gle2d_internal_font_load_into_memory(const char *path)
 {
     assert(path);
     unsigned char *data = NULL;
@@ -312,7 +290,7 @@ static unsigned char* gle2d_font_load_into_memory(const char *path)
 
     size_t bytes_read = fread(data, 1, size, f);
     fclose(f);
-    if (bytes_read != (size_t)size) { // Should read exactly 'size' bytes
+    if (bytes_read != (size_t)size) { // Should read exactly size bytes
         free(data);
         return NULL;
     }
