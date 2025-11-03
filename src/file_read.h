@@ -46,7 +46,6 @@ bool read_data_from_file_binary(void* data, const char* filename);
  * @note Caller must free() the returned pointer
  */
 char* read_file_linux(const char* filename);
-
 // TODO: read_file_windows(const char* filename);
 
 

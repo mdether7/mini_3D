@@ -75,7 +75,7 @@ int gle2d_font_load_and_pack_atlas(GLE2D_Font *font, const char *path, float px_
         goto cleanup;
     }
 
-    ttf_data = gle2d_font_load_into_memory(path);
+    ttf_data = gle2d_internal_font_load_into_memory(path);
     if (!ttf_data) {
         goto cleanup;
     }
@@ -125,8 +125,6 @@ cleanup:
     }
     return result;
 }
-
-// stbtt_GetPackedQuad ?
 
 void gle2d_font_render_text(const GLE2D_Font* font, const char *text, float x, float y)
 {
