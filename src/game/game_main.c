@@ -28,28 +28,24 @@ static GameState game_state = {0}; // static?
 
 int dg_init(void)
 {
-    // game_state.shady = shader_program_compile_from_path("shaders/dungen.vert", "shaders/dungen.frag");
-    // if (game_state.shady.id == 0) {
-    //     return 1;
-    // }
-
+#if 0
+    game_state.shady = shader_program_compile_from_path("shaders/dungen.vert", "shaders/dungen.frag");
+    if (game_state.shady.id == 0) {
+        return 1;
+    }
+#endif
     game_state.tess_shady = shader_program_tess_compile_from_path("shaders/dungen.vert",
         "shaders/dungen.tcs", "shaders/dungen.tes", "shaders/dungen.frag");
     if (game_state.tess_shady.id == 0) {
         return 1;
     }
-    const char* path = "fonts/ligurino.ttf";
-    // if (gle2d_font_load_ttf_form_file_v2(path)) {
-    //     return 1;
-    // }
-    // gle2d_misc_texture_save_to_disk_as_png(gle2d_font_get_font_texture(), "bake.png");
 
+    const char* path = "fonts/ligurino.ttf";
     if (gle2d_font_load_and_pack_atlas(&game_state.default_font, path, 64.0f)) {
         return 1;
     }
     gle2d_misc_texture_save_to_disk_as_png(game_state.default_font.atlas, "bake.png");
     
-
     // Usually you want viewport to match framebuffer
     int dims[2];
     platform_get_framebuffer_size(dims);
@@ -59,7 +55,6 @@ int dg_init(void)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     game_state.point_size = 1.0f;
-
     return 0;
 }
 
@@ -103,8 +98,8 @@ int dg_loop(float dt)
     glVertexAttrib2fv(0, attrib);
     glVertexAttrib4fv(1, color);
     
-    // TODO: Test if glVertexAttribPointer() will change with me
-    //       updating the array being pointed at.
+    // TODO: Test if glVertexAttribPointer() will change when
+    // TODO  updating the array being pointed at.
 
     // render.
     platform_log_info("%f ,%f, %f", red, green, blue);
@@ -113,7 +108,7 @@ int dg_loop(float dt)
     glBindVertexArray(game_state.vao);
     glDrawArrays(GL_PATCHES, 0, 3);
 
-    gle2d_font_render_text("HELLO OPENGL!", 0, 0);
+    gle2d_font_render_text(&game_state.default_font, "HELLO OPENGL!", 0, 0);
 
     return 0;
 }

@@ -12,51 +12,28 @@
 #include "stb/stb_image_write.h"
 
 #define GLE2D_DEAFULT_SHADER_VERSION "#version 430 core"
-#define GLE2D_FONT_BITMAP_SIZE 1024
 
+#define GLE2D_FONT_ATLAS_SIZE 1024
+#define GLE2D_FONT_FIRST_CHAR 32
+#define GLE2D_FONT_LAST_CHAR 95
+
+//////////////////////////////////////////////////////
 // Do only what needs to be done, build up your app //
 // from smaller, simple, concise functions.         //
+//////////////////////////////////////////////////////
+
+GLuint gle2d_font_shader_program;
+
+static unsigned char* gle2d_font_load_into_memory(const char *path);
+static GLuint gle2d_create_shader_from_data(const char* vertex, const char* fragment);
+
+int gle2d_init(void)
+{
+    
+}
 
 //////////
 // FONT
-
-static unsigned char* gle2d_font_load_into_memory(const char *path)
-{
-    assert(path);
-    unsigned char *data = NULL;
-
-    FILE *f = fopen(path, "rb");
-    if (!f)
-    {
-        return NULL;
-    }
-
-    fseek(f, 0L, SEEK_END);
-    long size = ftell(f);
-    fseek(f, 0L, SEEK_SET);
-    if (size <= 0)
-    {
-        fclose(f);
-        return NULL;
-    }
-
-    data = malloc(size);
-    if (!data)
-    {
-        fclose(f);
-        return NULL;
-    }
-
-    size_t bytes_read = fread(data, 1, size, f);
-    fclose(f);
-    if (bytes_read != (size_t)size)
-    { // Should read exactly 'size' bytes
-        free(data);
-        return NULL;
-    }
-
-    return data;
-}
 
 int gle2d_font_load_and_pack_atlas(GLE2D_Font *font, const char *path, float px_size)
 {
@@ -75,7 +52,7 @@ int gle2d_font_load_and_pack_atlas(GLE2D_Font *font, const char *path, float px_
     stbtt_packedchar *packed_char_array = NULL;
     unsigned char *ttf_data = NULL;
     GLuint atlas = 0;
-    int num_char = 95; //! HARDCODED
+    int num_char = GLE2D_FONT_LAST_CHAR;
     //------------//
 
     packed_char_array = malloc(sizeof(*packed_char_array) * num_char);
@@ -92,16 +69,16 @@ int gle2d_font_load_and_pack_atlas(GLE2D_Font *font, const char *path, float px_
         goto cleanup;
     }
 
-    bitmap = malloc(GLE2D_FONT_BITMAP_SIZE * GLE2D_FONT_BITMAP_SIZE);
+    bitmap = malloc(GLE2D_FONT_ATLAS_SIZE * GLE2D_FONT_ATLAS_SIZE);
     if (!bitmap) {
         goto cleanup;
     }
-    memset(bitmap, 0, GLE2D_FONT_BITMAP_SIZE * GLE2D_FONT_BITMAP_SIZE); // set to black
+    memset(bitmap, 0, GLE2D_FONT_ATLAS_SIZE * GLE2D_FONT_ATLAS_SIZE); // set to black
 
-    if (!stbtt_PackBegin(&spc, bitmap, GLE2D_FONT_BITMAP_SIZE, GLE2D_FONT_BITMAP_SIZE, 0, 1, NULL)) {
+    if (!stbtt_PackBegin(&spc, bitmap, GLE2D_FONT_ATLAS_SIZE, GLE2D_FONT_ATLAS_SIZE, 0, 1, NULL)) {
         goto cleanup;
     }
-    if (!stbtt_PackFontRange(&spc, ttf_data, 0, px_size, 32, 95, packed_char_array)) {
+    if (!stbtt_PackFontRange(&spc, ttf_data, 0, px_size, GLE2D_FONT_FIRST_CHAR, GLE2D_FONT_LAST_CHAR, packed_char_array)) {
         goto cleanup;
     }
     stbtt_PackEnd(&spc);
@@ -109,7 +86,7 @@ int gle2d_font_load_and_pack_atlas(GLE2D_Font *font, const char *path, float px_
     glGenTextures(1, &atlas);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, atlas);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, GLE2D_FONT_BITMAP_SIZE, GLE2D_FONT_BITMAP_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, bitmap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, GLE2D_FONT_ATLAS_SIZE, GLE2D_FONT_ATLAS_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, bitmap);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -120,6 +97,7 @@ int gle2d_font_load_and_pack_atlas(GLE2D_Font *font, const char *path, float px_
     font->ttf_data = ttf_data;
     font->atlas = atlas;
     font->num_chars = num_char;
+    
     result = 0;
 
 cleanup:
@@ -135,9 +113,27 @@ cleanup:
 
 // stbtt_GetPackedQuad ?
 
-void gle2d_font_render_text(const char *text, float x, float y)
+void gle2d_font_render_text(const GLE2D_Font* font, const char *text, float x, float y)
 {
-    // glDisable(GL_DEPTH_TEST);
+    float xpos = x;
+    float ypos = y;
+
+    while (*text != '\0') {
+        stbtt_aligned_quad q;
+        stbtt_GetPackedQuad(font->packed_char_array,
+                            GLE2D_FONT_ATLAS_SIZE,
+                            GLE2D_FONT_ATLAS_SIZE,
+                            *text - GLE2D_FONT_FIRST_CHAR,
+                            &xpos, &ypos,
+                            &q, 1);
+
+        
+
+        
+
+        *text++;
+    }
+
 }
 
 void gle2d_font_cleanup(GLE2D_Font* font)
@@ -171,15 +167,13 @@ int gle2d_misc_texture_save_to_disk_as_png(GLuint texture, const char *name)
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &internal_format);
 
-    if (internal_format != GL_RED && internal_format != GL_R8)
-    {
+    if (internal_format != GL_RED && internal_format != GL_R8) {
         glBindTexture(GL_TEXTURE_2D, 0);
         return 1; // not 1 byte per pixel.
     }
 
     unsigned char *pixels = malloc(width * height);
-    if (!pixels)
-    {
+    if (!pixels) {
         glBindTexture(GL_TEXTURE_2D, 0);
         return 1;
     }
@@ -195,4 +189,133 @@ int gle2d_misc_texture_save_to_disk_as_png(GLuint texture, const char *name)
     free(pixels);
 
     return result ? 0 : 1;
+}
+
+/////////////
+// Internal
+
+Shader shader_program_compile_from_path(const char* vert_path, const char* frag_path)
+{  
+    assert(vert_path && frag_path);
+    RELEASE_ASSERT(vert_path && frag_path);
+
+    char*         vertex_source   = NULL;
+    char*         fragment_source = NULL;
+    Shader        shader          = {0};
+
+    vertex_source   = read_file(vert_path);
+    fragment_source = read_file(frag_path);
+
+    if (!vertex_source || !fragment_source) {
+        free(vertex_source);
+        free(fragment_source);
+        return shader;
+    }
+
+    GLuint vertex_shader_id   = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
+
+    glShaderSource(vertex_shader_id, 1, (const GLchar**)&vertex_source, NULL);
+    glShaderSource(fragment_shader_id, 1, (const GLchar**)&fragment_source, NULL);
+
+    free(vertex_source);
+    free(fragment_source);
+    vertex_source   = NULL;
+    fragment_source = NULL;
+
+    glCompileShader(vertex_shader_id);
+    glCompileShader(fragment_shader_id);
+
+    if (shader_compile_error(vertex_shader_id)   > 0 ||
+        shader_compile_error(fragment_shader_id) > 0) {
+
+        glDeleteShader(vertex_shader_id);  
+        glDeleteShader(fragment_shader_id);
+
+        return shader;
+    }
+
+    GLuint program_id = glCreateProgram();
+
+    glAttachShader(program_id, vertex_shader_id);
+    glAttachShader(program_id, fragment_shader_id);
+    glLinkProgram(program_id);
+
+    glDeleteShader(vertex_shader_id);  
+    glDeleteShader(fragment_shader_id);
+
+    if (shader_program_link_error(program_id) > 0) {
+
+        glDeleteProgram(program_id);
+        return shader;
+
+    }
+
+    shader.id = program_id;
+
+    return shader;
+}
+
+static GLuint gle2d_create_shader_from_data(const char* vertex, const char* fragment)
+{
+    assert(vertex && fragment);
+    GLuint shader_program = 0;
+
+    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(vertex_shader, 1, (const GLchar**)&vertex, NULL);
+    glShaderSource(fragment_shader, 1, (const GLchar**)&fragment, NULL);
+    glCompileShader(vertex_shader);
+    glCompileShader(fragment_shader);
+
+    glGetShaderiv
+
+}
+
+static int shader_compile_error(GLuint shader)
+{
+	GLint success;
+	char info_log[1024] = {0};
+
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		glGetShaderInfoLog(shader, sizeof(info_log), NULL, info_log);
+        platform_log_error("[SHADER COMPILE] Log: %s", info_log);
+		return 1;
+	}
+	return 0;
+}
+
+static unsigned char* gle2d_font_load_into_memory(const char *path)
+{
+    assert(path);
+    unsigned char *data = NULL;
+
+    FILE *f = fopen(path, "rb");
+    if (!f) {
+        return NULL;
+    }
+
+    fseek(f, 0L, SEEK_END);
+    long size = ftell(f);
+    fseek(f, 0L, SEEK_SET);
+    if (size <= 0) {
+        fclose(f);
+        return NULL;
+    }
+
+    data = malloc(size);
+    if (!data) {
+        fclose(f);
+        return NULL;
+    }
+
+    size_t bytes_read = fread(data, 1, size, f);
+    fclose(f);
+    if (bytes_read != (size_t)size) { // Should read exactly 'size' bytes
+        free(data);
+        return NULL;
+    }
+
+    return data;
 }

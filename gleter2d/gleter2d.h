@@ -25,7 +25,7 @@ typedef struct {
 } GLE2D_Font;
 
 int gle2d_font_load_and_pack_atlas(GLE2D_Font* font, const char* path, float px_size);
-void gle2d_font_render_text(const char* text, float x, float y);
+void gle2d_font_render_text(const GLE2D_Font* font, const char *text, float x, float y);
 void gle2d_font_cleanup(GLE2D_Font* font);
 
 /////////
