@@ -17,6 +17,7 @@ static inline float clampf(float f, float min, float max) {
 }
 
 typedef struct {
+    GLE2D_Font default_font;
     Shader shady;
     Shader tess_shady;
     GLuint vao;
@@ -43,11 +44,10 @@ int dg_init(void)
     // }
     // gle2d_misc_texture_save_to_disk_as_png(gle2d_font_get_font_texture(), "bake.png");
 
-    GLE2D_Font font;
-    if (gle2d_font_load_and_pack_atlas(&font, path, 64.0f)) {
+    if (gle2d_font_load_and_pack_atlas(&game_state.default_font, path, 64.0f)) {
         return 1;
     }
-    gle2d_misc_texture_save_to_disk_as_png(font.atlas, "bake.png");
+    gle2d_misc_texture_save_to_disk_as_png(game_state.default_font.atlas, "bake.png");
     
 
     // Usually you want viewport to match framebuffer
@@ -122,5 +122,5 @@ void dg_close(void)
 {
     shader_program_delete(&game_state.shady);
     glDeleteVertexArrays(1, &game_state.vao);
-    gle2d_font_cleanup();
+    gle2d_font_cleanup(&game_state.default_font);
 }
