@@ -11,7 +11,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
-#define GLE2D_DEAFULT_SHADER_VERSION "#version 430 core"
+#define GLE2D_DEAFULT_SHADER_VERSION "#version 430 core\n"
 
 #define GLE2D_FONT_ATLAS_SIZE 1024
 #define GLE2D_FONT_FIRST_CHAR 32
@@ -31,7 +31,20 @@ static int            gle2d_internal_shader_program_link_error(GLuint shader);
 
 int gle2d_init(void)
 {
-    
+    const char* font_vertex_src = 
+    GLE2D_DEAFULT_SHADER_VERSION
+    "";
+
+    const char* font_fragment_src = 
+    GLE2D_DEAFULT_SHADER_VERSION
+    "";
+
+    gle2d_font_shader_program = gle2d_internal_create_shader_from_data(font_vertex_src, font_fragment_src);
+    if (gle2d_font_shader_program == 0) {
+        return 1;
+    }
+
+    return 0;
 }
 
 //////////
@@ -233,7 +246,7 @@ static GLuint gle2d_internal_create_shader_from_data(const char* vertex, const c
     }
 
     return shader_program;
-    
+
 }
 
 static int gle2d_internal_shader_compile_error(GLuint shader)
