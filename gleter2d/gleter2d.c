@@ -22,12 +22,19 @@
 // from smaller, simple, concise functions.         //
 //////////////////////////////////////////////////////
 
+// GLE2D context //
 GLuint gle2d_font_shader_program;
+mat4x4 gle2d_projection_matrix;
+GLuint gle2d_quad_vao;
+GLuint gle2d_quad_vbo;
+//---------------//
 
+// GLE2D internal //
 static unsigned char* gle2d_internal_font_load_into_memory(const char *path);
 static GLuint         gle2d_internal_create_shader_from_data(const char* vertex, const char* fragment);
 static int            gle2d_internal_shader_compile_error(GLuint shader);
 static int            gle2d_internal_shader_program_link_error(GLuint shader);
+//----------------//
 
 int gle2d_init(void)
 {
@@ -44,7 +51,30 @@ int gle2d_init(void)
         return 1;
     }
 
+    // First glGen...
+    glGenVertexArrays(1, &gle2d_quad_vao);
+    glGenBuffers(1, &gle2d_quad_vbo);
+    glBindVertexArray(gle2d_quad_vao); // Start recording...
+    glBindBuffer(GL_ARRAY_BUFFER, gle2d_quad_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0); // "Cleanup"...
+    glBindVertexArray(0);
+
+    mat4x4_identity(gle2d_projection_matrix);
     return 0;
+}
+
+// The current drawable framebuffer dimensions (the values you pass to glViewport).
+void gle2d_update_rendering_area(int viewport_width, int viewport_height)
+{
+    mat4x4_ortho(gle2d_projection_matrix, 0.0f, viewport_width, viewport_height, 0.0f, -1.0f, 1.0f);
+}
+
+void gle2d_cleanup(void)
+{
+    glDeleteProgram(gle2d_font_shader_program);
 }
 
 //////////
@@ -141,12 +171,22 @@ void gle2d_font_render_text(const GLE2D_Font* font, const char *text, float x, f
                             &q, 1);
 
         
+        // float x0,y0,s0,t0; // top-left
+        // float x1,y1,s1,t1; // bottom-right
 
+        // float char_vertices[] = {
+        //     q.x0, q.y0, q.s0, q.t0,
+        //     q.x0, q.y1, q.s0, q.t1,
+        //     q.x1, q.y1, q.s1, q.t1,
+        //     q.x1, q.y0, q.s1,
+        // };
+
+        // glDrawArrays(GL_TRIANGLES, )
         
 
         *text++;
     }
-
+    //glEnable(GL_DEPTH_TEST);
 }
 
 void gle2d_font_cleanup(GLE2D_Font* font)
