@@ -12,13 +12,16 @@
 //////////////////////////
 // FEATURES
 // Load ttf fonts.
+// Render text using those fonts.
 // Save textures as png.
+
+// TODO MALLOC/FREE in main loop!!!
 
 //////////
 // GLE2D
 int gle2d_init(void);
 void gle2d_update_rendering_area(int viewport_width, int viewport_height);
-void gle2d_cleanup(void);
+void gle2d_shutdown(void);
 
 //////////
 // FONT 
@@ -30,9 +33,9 @@ typedef struct {
     unsigned int num_chars;
 } GLE2D_Font;
 
-int gle2d_font_load_and_pack_atlas(GLE2D_Font* font, const char* path, float px_size);
+int gle2d_font_create(GLE2D_Font* font, const char* path, float px_size);
 void gle2d_font_render_text(const GLE2D_Font* font, const char *text, float x, float y);
-void gle2d_font_cleanup(GLE2D_Font* font);
+void gle2d_font_destroy(GLE2D_Font* font);
 
 /////////
 // MISC

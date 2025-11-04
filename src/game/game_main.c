@@ -34,7 +34,9 @@ int dg_init(void)
         return 1;
     }
 #endif
-    gle2d_init();
+    if (gle2d_init()) {
+        return 1;
+    }
 
     game_state.tess_shady = shader_program_tess_compile_from_path("shaders/dungen.vert",
         "shaders/dungen.tcs", "shaders/dungen.tes", "shaders/dungen.frag");
@@ -42,13 +44,10 @@ int dg_init(void)
         return 1;
     }
 
-    const char* path = "fonts/ligurino.ttf";
-    if (gle2d_font_load_and_pack_atlas(&game_state.default_font, path, 64.0f)) {
+    const char* path = "fonts/ligurino_bold.ttf";
+    if (gle2d_font_create(&game_state.default_font, path, 64.0f)) {
         return 1;
     }
-    gle2d_misc_texture_save_to_disk_as_png(game_state.default_font.atlas, "bake.png");
-
-
 
     // Usually you want viewport to match framebuffer
     int dims[2];
@@ -57,19 +56,14 @@ int dg_init(void)
     gle2d_update_rendering_area(dims[0], dims[1]);
     
     glGenVertexArrays(1, &game_state.vao);
-
     game_state.point_size = 1.0f;
     return 0;
 }
 
-float red = 1.0f;
-float green;
-float blue;
 int dg_loop(float dt)
 {
     // input.
     if (platform_is_key_down(KEY_W)) {
-        red = green = blue = 0.0f;
         platform_log_info("UP");
     }
     if (platform_is_key_down(KEY_S)) {
@@ -81,23 +75,11 @@ int dg_loop(float dt)
     if (platform_is_key_down(KEY_D)) {
         platform_log_info("RIGHT");
     }
-    if (platform_is_key_down(KEY_R)) {
-        red += 0.05f;
-        red = clampf(red, 0.0f, 1.0f);
-    }
-    if (platform_is_key_down(KEY_G)) {
-        green += 0.05f;
-        green = clampf(green, 0.0f, 1.0f);
-    }
-    if (platform_is_key_down(KEY_B)) {
-        blue += 0.05f;
-        blue = clampf(blue, 0.0f, 1.0f);
-    }
 
     // update.
     GLfloat attrib[] = { (float)sin(dt) * 0.5f, 
         (float)cos(dt) * 0.6f, 0.0f, 0.0f };
-    GLfloat color[] = {red, green, blue, 1.0f};
+    GLfloat color[] = {1.0f, 0.0f, 0.5f, 1.0f};
 
     glVertexAttrib2fv(0, attrib);
     glVertexAttrib4fv(1, color);
@@ -107,14 +89,16 @@ int dg_loop(float dt)
 
     // render.
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    platform_log_info("%f ,%f, %f", red, green, blue);
     glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
     shader_program_bind(&game_state.tess_shady);
     glBindVertexArray(game_state.vao);
     glDrawArrays(GL_PATCHES, 0, 3);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    gle2d_font_render_text(&game_state.default_font, "Hello, darnkes my old firend!!", 0, 50);
+    gle2d_font_render_text(&game_state.default_font, "This is my sample text!", 50, 50);
+    gle2d_font_render_text(&game_state.default_font, "This is my sample text!", 50, 100);
+    gle2d_font_render_text(&game_state.default_font, "This is my sample text!", 50, 150);
+    gle2d_font_render_text(&game_state.default_font, "This is my sample text!", 50, 200);
 
     return 0;
 }
@@ -123,5 +107,7 @@ void dg_close(void)
 {
     shader_program_delete(&game_state.shady);
     glDeleteVertexArrays(1, &game_state.vao);
-    gle2d_font_cleanup(&game_state.default_font);
+
+    gle2d_font_destroy(&game_state.default_font);
+    gle2d_shutdown();
 }
