@@ -15,6 +15,7 @@
 #define GLE2D_DEAFULT_SHADER_VERSION "#version 460 core\n"
 
 #define GLE2D_FONT_ATLAS_SIZE 1024
+#define GLE2D_FONT_MAX_TEXT_LEN 1024    
 #define GLE2D_FONT_FIRST_CHAR 32
 #define GLE2D_FONT_LAST_CHAR 95
 
@@ -23,14 +24,17 @@
 // from smaller, simple, concise functions.         //
 //////////////////////////////////////////////////////
 
-// GLE2D context //
-GLuint gle2d_ctx_font_shader_program;
-GLint  gle2d_ctx_font_projection_loc;
-GLint  gle2d_ctx_font_text_color_loc;
-mat4x4 gle2d_ctx_projection_matrix;
-GLuint gle2d_ctx_quad_vao;
-GLuint gle2d_ctx_quad_vbo;
-//---------------//
+typedef struct {
+    mat4x4 projection_matrix;
+    GLuint font_shader_program;
+    GLint  font_projection_loc;
+    GLint  font_text_color_loc;
+    float* font_batch_buffer;
+    GLuint font_quad_vao;
+    GLuint font_quad_vbo;
+} GLE2D_Context;
+
+static GLE2D_Context context;
 
 // GLE2D internal //
 static unsigned char* gle2d_internal_font_load_into_memory(const char *path);
@@ -64,40 +68,50 @@ int gle2d_init(void)
     "   color = vec4(text_color, 1.0) * sampled;\n"
     "}\n";
 
-    gle2d_ctx_font_shader_program = gle2d_internal_create_shader_from_data(font_vertex_src, font_fragment_src);
-    if (gle2d_ctx_font_shader_program == 0) {
+    context.font_shader_program = gle2d_internal_create_shader_from_data(font_vertex_src, font_fragment_src);
+    if (context.font_shader_program == 0) {
         return 1;
     }
-    gle2d_ctx_font_projection_loc = glGetUniformLocation(gle2d_ctx_font_shader_program, "projection");
-    gle2d_ctx_font_text_color_loc = glGetUniformLocation(gle2d_ctx_font_shader_program, "text_color");
+    context.font_projection_loc = glGetUniformLocation(context.font_shader_program, "projection");
+    context.font_text_color_loc = glGetUniformLocation(context.font_shader_program, "text_color");
 
+    int max_buffer_size = GLE2D_FONT_MAX_TEXT_LEN * 6 * 4 * sizeof(float);
     // First glGen...
-    glGenVertexArrays(1, &gle2d_ctx_quad_vao);
-    glGenBuffers(1, &gle2d_ctx_quad_vbo);
-    glBindVertexArray(gle2d_ctx_quad_vao); // Start recording...
-    glBindBuffer(GL_ARRAY_BUFFER, gle2d_ctx_quad_vbo);
-    glBufferData(GL_ARRAY_BUFFER, 2048*2048, NULL, GL_DYNAMIC_DRAW);
+    glGenVertexArrays(1, &context.font_quad_vao);
+    glGenBuffers(1, &context.font_quad_vbo);
+    glBindVertexArray(context.font_quad_vao); // Start recording...
+    glBindBuffer(GL_ARRAY_BUFFER, context.font_quad_vbo);
+    glBufferData(GL_ARRAY_BUFFER, max_buffer_size, NULL, GL_DYNAMIC_DRAW); 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0); // "Cleanup"...
     glBindVertexArray(0); // EBO must be unboud after VBO unbind beacouse it remembers.
 
-    mat4x4_identity(gle2d_ctx_projection_matrix);
+    context.font_batch_buffer = malloc(max_buffer_size);
+    if (!context.font_batch_buffer) {
+        return 1;
+    }
+
+    mat4x4_identity(context.projection_matrix);
     return 0;
 }
 // The current drawable framebuffer dimensions (the values you pass to glViewport).
 void gle2d_update_rendering_area(int viewport_width, int viewport_height)
 {
-    mat4x4_ortho(gle2d_ctx_projection_matrix, 0.0f, viewport_width, viewport_height, 0.0f, -1.0f, 1.0f);
-    glUseProgram(gle2d_ctx_font_shader_program);
-    glUniformMatrix4fv(gle2d_ctx_font_projection_loc, 1, GL_FALSE, &gle2d_ctx_projection_matrix[0][0]);
+    mat4x4_ortho(context.projection_matrix, 0.0f, viewport_width, viewport_height, 0.0f, -1.0f, 1.0f);
+    glUseProgram(context.font_shader_program);
+    glUniformMatrix4fv(context.font_projection_loc, 1, GL_FALSE, &context.projection_matrix[0][0]);
 }
 
 void gle2d_shutdown(void)
 {
-    glDeleteProgram(gle2d_ctx_font_shader_program);
-    glDeleteVertexArrays(1, &gle2d_ctx_quad_vao);
-    glDeleteBuffers(1, &gle2d_ctx_quad_vbo);
+    glUseProgram(0);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDeleteProgram(context.font_shader_program);
+    glDeleteBuffers(1, &context.font_quad_vbo);
+    glDeleteVertexArrays(1, &context.font_quad_vao);
+    free(context.font_batch_buffer);
 }
 
 //////////
@@ -185,21 +199,22 @@ void gle2d_font_render_text(const GLE2D_Font* font, const char* text, float x, f
         return;
     }
 
-    glUseProgram(gle2d_ctx_font_shader_program);
-    glUniform3f(gle2d_ctx_font_text_color_loc, 0.5f, 0.8f, 0.2f);
+    glUseProgram(context.font_shader_program);
+    glUniform3f(context.font_text_color_loc, 0.5f, 0.8f, 0.2f);
 
-    glBindVertexArray(gle2d_ctx_quad_vao);
+    glBindVertexArray(context.font_quad_vao);
     glBindTexture(GL_TEXTURE_2D, font->atlas);
-    glBindBuffer(GL_ARRAY_BUFFER, gle2d_ctx_quad_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, context.font_quad_vbo);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);
 
     size_t text_len = strlen(text);
-    float* batched_verts = malloc(text_len * 6 * 4 * sizeof(float));
-    if (!batched_verts)
-        return;
+    assert(text_len <= GLE2D_FONT_MAX_TEXT_LEN);
+    if (text_len > GLE2D_FONT_MAX_TEXT_LEN) {
+        text_len = GLE2D_FONT_MAX_TEXT_LEN;
+    } 
 
     float xpos = x;
     float ypos = y;
@@ -224,14 +239,12 @@ void gle2d_font_render_text(const GLE2D_Font* font, const char* text, float x, f
             q.x1, q.y1, q.s1, q.t1,
         };
 
-        memcpy(&batched_verts[cursor], char_vertices, sizeof(char_vertices));
+        memcpy(&context.font_batch_buffer[cursor], char_vertices, sizeof(char_vertices));
         cursor += 6 * 4;
         p++;
     }
-    glBufferSubData(GL_ARRAY_BUFFER, 0, (cursor * sizeof(float)), batched_verts);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, (cursor * sizeof(float)), context.font_batch_buffer);
     glDrawArrays(GL_TRIANGLES, 0, cursor / 4);
-
-    free(batched_verts);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
