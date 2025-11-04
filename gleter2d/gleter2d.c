@@ -173,9 +173,6 @@ cleanup:
 
 void gle2d_font_render_text(const GLE2D_Font* font, const char *text, float x, float y)
 {
-    float xpos = x;
-    float ypos = y;
-
     glUseProgram(gle2d_ctx_font_shader_program);
     glUniformMatrix4fv(glGetUniformLocation(gle2d_ctx_font_shader_program, "projection"), 1, GL_FALSE, &gle2d_ctx_projection_matrix[0][0]);
     glUniform3f(glGetUniformLocation(gle2d_ctx_font_shader_program, "textColor"), 0.5f, 0.8f, 0.2f);
@@ -188,6 +185,8 @@ void gle2d_font_render_text(const GLE2D_Font* font, const char *text, float x, f
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);
 
+    float xpos = x;
+    float ypos = y;
     while (*text != '\0') {
         stbtt_aligned_quad q;
         stbtt_GetPackedQuad(font->packed_char_array,
