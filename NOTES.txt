@@ -7,6 +7,11 @@ MATRIX CHEAT SHEET
 [02 12 22 32]
 [03 13 23 33]
 
+// console prints not interfere with gdb tui.
+sudo gdb -tui your_program
+(gdb) tty /dev/pts/2
+(gdb) run
+
 Model ->       Right-handed
 World ->       Right-handed
 View/Camera -> Right-handed

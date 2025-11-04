@@ -34,6 +34,8 @@ int dg_init(void)
         return 1;
     }
 #endif
+    gle2d_init();
+
     game_state.tess_shady = shader_program_tess_compile_from_path("shaders/dungen.vert",
         "shaders/dungen.tcs", "shaders/dungen.tes", "shaders/dungen.frag");
     if (game_state.tess_shady.id == 0) {
@@ -45,14 +47,16 @@ int dg_init(void)
         return 1;
     }
     gle2d_misc_texture_save_to_disk_as_png(game_state.default_font.atlas, "bake.png");
-    
+
+
+
     // Usually you want viewport to match framebuffer
     int dims[2];
     platform_get_framebuffer_size(dims);
     glViewport(0, 0, dims[0], dims[1]); 
+    gle2d_update_rendering_area(dims[0], dims[1]);
     
     glGenVertexArrays(1, &game_state.vao);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     game_state.point_size = 1.0f;
     return 0;
@@ -102,13 +106,15 @@ int dg_loop(float dt)
     // TODO  updating the array being pointed at.
 
     // render.
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     platform_log_info("%f ,%f, %f", red, green, blue);
     glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
     shader_program_bind(&game_state.tess_shady);
     glBindVertexArray(game_state.vao);
     glDrawArrays(GL_PATCHES, 0, 3);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    gle2d_font_render_text(&game_state.default_font, "HELLO OPENGL!", 0, 0);
+    gle2d_font_render_text(&game_state.default_font, "Hello, darnkes my old firend!!", 0, 50);
 
     return 0;
 }

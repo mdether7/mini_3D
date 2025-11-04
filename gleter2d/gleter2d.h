@@ -14,7 +14,6 @@
 // Load ttf fonts.
 // Save textures as png.
 
-
 //////////
 // GLE2D
 int gle2d_init(void);
