@@ -26,10 +26,10 @@
 
 typedef struct {
     mat4x4 projection_matrix;
+    float* font_batch_buffer;
     GLuint font_shader_program;
     GLint  font_projection_loc;
     GLint  font_text_color_loc;
-    float* font_batch_buffer;
     GLuint font_quad_vao;
     GLuint font_quad_vbo;
 } GLE2D_Context;

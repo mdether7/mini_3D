@@ -1,3 +1,5 @@
-An attempt to make a simple 2d lib using opengl
-for my personal projects. (For now i want to add font loading and rendering)
-(hopefully one day i will make this into a lib or something.)
+An attempt to make a simple 2d lib using opengl.
+-Supports font loading, rendering, they are easy to manage
+and incorporate in your project.
+-Basic hacky font saving to disc.
+-Minimal dependencies. 

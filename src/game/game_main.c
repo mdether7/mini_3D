@@ -18,22 +18,19 @@ static inline float clampf(float f, float min, float max) {
 
 typedef struct {
     GLE2D_Font default_font;
-    Shader shady;
+    GLE2D_Font extra_font;
+} DG_Fonts;
+
+typedef struct {
+    DG_Fonts fonts;
     Shader tess_shady;
     GLuint vao;
-    float  point_size;
-} GameState;
+} DG_GameState;
 
-static GameState game_state = {0}; // static?
+static DG_GameState game_state = {0}; // static?
 
 int dg_init(void)
 {
-#if 0
-    game_state.shady = shader_program_compile_from_path("shaders/dungen.vert", "shaders/dungen.frag");
-    if (game_state.shady.id == 0) {
-        return 1;
-    }
-#endif
     if (gle2d_init()) {
         return 1;
     }
@@ -45,7 +42,11 @@ int dg_init(void)
     }
 
     const char* path = "fonts/ligurino_bold.ttf";
-    if (gle2d_font_create(&game_state.default_font, path, 64.0f)) {
+    if (gle2d_font_create(&game_state.fonts.default_font, path, 32.0f)) {
+        return 1;
+    }
+    const char* path_2 = "fonts/ligurino.ttf";
+    if (gle2d_font_create(&game_state.fonts.extra_font, path_2, 64.0f)) {
         return 1;
     }
 
@@ -56,7 +57,6 @@ int dg_init(void)
     gle2d_update_rendering_area(dims[0], dims[1]);
     
     glGenVertexArrays(1, &game_state.vao);
-    game_state.point_size = 1.0f;
     return 0;
 }
 
@@ -95,19 +95,21 @@ int dg_loop(float dt)
     glDrawArrays(GL_PATCHES, 0, 3);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    gle2d_font_render_text(&game_state.default_font, "This is my sample text!", 50, 50);
-    gle2d_font_render_text(&game_state.default_font, "This is my sample text!", 50, 100);
-    gle2d_font_render_text(&game_state.default_font, "This is my sample text!", 50, 150);
-    gle2d_font_render_text(&game_state.default_font, "This is my sample text!", 50, 200);
+    const char* text = "Suka kreci sie jak beyblade!XD";
+    gle2d_font_render_text(&game_state.fonts.default_font, text, 50, 50);
+    gle2d_font_render_text(&game_state.fonts.extra_font, text, 50, 100);
+    gle2d_font_render_text(&game_state.fonts.default_font, text, 50, 150);
+    gle2d_font_render_text(&game_state.fonts.extra_font, text, 50, 200);
 
     return 0;
 }
 
 void dg_close(void)
 {
-    shader_program_delete(&game_state.shady);
+    shader_program_delete(&game_state.tess_shady);
     glDeleteVertexArrays(1, &game_state.vao);
 
-    gle2d_font_destroy(&game_state.default_font);
+    gle2d_font_destroy(&game_state.fonts.default_font);
+    gle2d_font_destroy(&game_state.fonts.extra_font);
     gle2d_shutdown();
 }

@@ -15,7 +15,8 @@
 // Render text using those fonts.
 // Save textures as png.
 
-// TODO MALLOC/FREE in main loop!!!
+// TODO add color as parameter to text
+// TODO add rendering textured/colored quads.
 
 //////////
 // GLE2D
@@ -44,8 +45,5 @@ void gle2d_font_destroy(GLE2D_Font* font);
 // NOTES: Unbinds currently bound texture.
 //        Requires texture format to be GL_RED (single channel, 8-bit).
 int gle2d_misc_texture_save_to_disk_as_png(GLuint texture, const char* name);
-
-
-
 
 #endif
