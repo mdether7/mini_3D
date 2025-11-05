@@ -34,7 +34,6 @@ dungen: generate_bin
 	src/game/renderer/renderer.c \
 	src/game/renderer/camera.c \
 	src/game/renderer/shader.c \
-	src/game/renderer/texture.c \
 	${LDLIBS}
 
 generate_bin:

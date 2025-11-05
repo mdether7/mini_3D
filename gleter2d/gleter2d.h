@@ -2,6 +2,7 @@
 #define GLETER_2D_H
 
 #include <glad/glad.h>
+#include <linmath/linmath.h>
 #define STBTT_STATIC  // To avoid conflict with Nuklear for my project.
 #include <stb/stb_truetype.h>
 
@@ -20,13 +21,21 @@
 
 //////////
 // GLE2D
+
+// Run this after openGL is initialized.
 int gle2d_init(void);
+// Run this at least once before rendering to update 2d projection matrix.
+// And after every resolution change.
 void gle2d_update_rendering_area(int viewport_width, int viewport_height);
 void gle2d_shutdown(void);
 
+///////////
+// Shapes
+
+void gle2d_shapes_draw_quad(float x, float y, float w, float h, vec4 color, GLuint texture);
+
 //////////
 // FONT 
-
 typedef struct {
     stbtt_packedchar *packed_char_array;
     unsigned char* ttf_data;

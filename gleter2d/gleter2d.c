@@ -26,9 +26,19 @@
 
 typedef struct {
     mat4x4 projection_matrix;
+
+    mat4x4 shapes_model_matrix;
+    GLuint shapes_shader_program;
+    GLint  shapes_loc_model;   
+    GLint  shapes_loc_proj;    // This could be common \/
+    GLint  shapes_loc_flag;
+    GLuint shapes_quad_vao;
+    GLuint shapes_quad_vbo;
+    GLuint shpaes_quad_ebo;
+
     float* font_batch_buffer;
     GLuint font_shader_program;
-    GLint  font_projection_loc;
+    GLint  font_projection_loc; // With this... maybe?
     GLint  font_text_color_loc;
     GLuint font_quad_vao;
     GLuint font_quad_vbo;
@@ -45,6 +55,59 @@ static int            gle2d_internal_shader_program_link_error(GLuint shader);
 
 int gle2d_init(void)
 {
+    // shapes
+    const char* shapes_vertex_src =
+    GLE2D_DEAFULT_SHADER_VERSION
+    "layout (location = 0) in vec2 in_pos;\n"
+    "layout (location = 1) in vec4 in_color;\n"
+    "out vec4 vs_pass_color;\n"
+    "out vec2 vs_pass_texture_uv;\n"
+    "uniform mat4 model;\n"
+    "uniform mat4 projection;\n"
+    "void main()\n"
+    "{\n" // technically scaled_one_vertex of a quad??
+    "   gl_Position = projection * model * vec4(in_pos.xy, 0.0, 1.0);\n"
+    "   vs_pass_color = in_color;\n"
+    "   vs_pass_texture_uv = in_pos.xy;\n"
+    "}\n";
+
+    const char* shapes_fragment_src =
+    GLE2D_DEAFULT_SHADER_VERSION
+    "out vec4 FinalColor;\n"
+    "in vec4 vs_pass_color;\n"
+    "in vec2 vs_pass_texture_uv;\n"
+    "uniform sampler2D quad_texture;\n"
+    "uniform bool use_texture_flag;\n"
+    "void main()\n"
+    "{\n"
+    "   FinalColor = vs_pass_color;\n"
+    "}\n";
+
+    context.shapes_shader_program = gle2d_internal_create_shader_from_data(shapes_vertex_src, shapes_fragment_src);
+    if (context.shapes_shader_program == 0) {
+        return 1;
+    }
+    context.shapes_loc_proj = glGetUniformLocation(context.shapes_shader_program, "projection");
+    context.shapes_loc_model = glGetUniformLocation(context.shapes_shader_program, "model");
+    context.shapes_loc_flag = glGetUniformLocation(context.shapes_shader_program, "use_texture_flag");
+
+    float quad[] = {
+        0.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 1.0f, 
+        1.0f, 0.0f,
+    };
+
+    unsigned int quad_indices[] = {
+        0, 3, 1,
+        2, 1, 3,
+    };
+
+    // now create the buffers.
+
+    mat4x4_identity(context.shapes_model_matrix);
+
+    // font.
     const char* font_vertex_src = 
     GLE2D_DEAFULT_SHADER_VERSION
     "layout (location = 0) in vec4 vertex;\n"
@@ -52,7 +115,7 @@ int gle2d_init(void)
     "uniform mat4 projection;\n"
     "void main()\n"
     "{\n"
-    "   gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);\n"
+    "	gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);\n"
     "   TexCoords = vertex.zw;\n"
     "}\n";
 
@@ -100,6 +163,7 @@ void gle2d_update_rendering_area(int viewport_width, int viewport_height)
 {
     mat4x4_ortho(context.projection_matrix, 0.0f, viewport_width, viewport_height, 0.0f, -1.0f, 1.0f);
     glUseProgram(context.font_shader_program);
+    // TODO find a way to do this as common location \/.
     glUniformMatrix4fv(context.font_projection_loc, 1, GL_FALSE, &context.projection_matrix[0][0]);
 }
 
@@ -108,10 +172,21 @@ void gle2d_shutdown(void)
     glUseProgram(0);
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDeleteProgram(context.shapes_shader_program);
     glDeleteProgram(context.font_shader_program);
     glDeleteBuffers(1, &context.font_quad_vbo);
     glDeleteVertexArrays(1, &context.font_quad_vao);
+    // TODO delete shapes buffers!.
     free(context.font_batch_buffer);
+}
+
+///////////
+// Shapes
+
+void gle2d_shapes_draw_quad(float x, float y, float w, float h, vec4 color, GLuint texture)
+{   
+    glUseProgram(context.font_shader_program);
+
 }
 
 //////////
