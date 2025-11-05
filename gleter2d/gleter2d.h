@@ -16,8 +16,10 @@
 // Render text using those fonts.
 // Save textures as png.
 
+// TODO wglGetCurrentContext/Linux verion to chceck if opengl started.
 // TODO add color as parameter to text
-// TODO add rendering textured/colored quads.
+// TODO add rendering textured quads.
+// TODO add basic texture functionality.
 
 //////////
 // GLE2D
@@ -28,6 +30,13 @@ int gle2d_init(void);
 // And after every resolution change.
 void gle2d_update_rendering_area(int viewport_width, int viewport_height);
 void gle2d_shutdown(void);
+
+/////////////
+// TEXTURES
+
+typedef struct {
+    GLuint id;
+} GLE2D_Texture;
 
 ///////////
 // Shapes

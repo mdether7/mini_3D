@@ -10,9 +10,9 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb/stb_truetype.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb/stb_image_write.h"
+#include <stb/stb_image_write.h>
 
-#define GLE2D_DEAFULT_SHADER_VERSION "#version 460 core\n"
+#define GLE2D_DEFAULT_SHADER_VERSION "#version 460 core\n"
 
 #define GLE2D_FONT_ATLAS_SIZE 1024
 #define GLE2D_FONT_MAX_TEXT_LEN 1024    
@@ -32,9 +32,10 @@ typedef struct {
     GLint  shapes_loc_model;   
     GLint  shapes_loc_proj;    // This could be common \/
     GLint  shapes_loc_flag;
+    GLint  shapes_loc_color;
     GLuint shapes_quad_vao;
     GLuint shapes_quad_vbo;
-    GLuint shpaes_quad_ebo;
+    GLuint shapes_quad_ebo;
 
     float* font_batch_buffer;
     GLuint font_shader_program;
@@ -46,6 +47,20 @@ typedef struct {
 
 static GLE2D_Context context;
 
+void util_print_mat4x4(const mat4x4 M)
+{
+    int i, j;
+    fprintf(stdout, "-------\n");
+	for(i=0; i<4; ++i) {
+        for(j=0; j<4; ++j) {
+            fprintf(stdout, "%.6f ", M[j][i]);
+        }
+        putchar('\n');
+    }
+    fprintf(stdout, "-------\n");
+    fflush(stdout);
+}
+
 // GLE2D internal //
 static unsigned char* gle2d_internal_font_load_into_memory(const char *path);
 static GLuint         gle2d_internal_create_shader_from_data(const char* vertex, const char* fragment);
@@ -53,26 +68,28 @@ static int            gle2d_internal_shader_compile_error(GLuint shader);
 static int            gle2d_internal_shader_program_link_error(GLuint shader);
 //----------------//
 
+// glIsTexture(texture) <= this seems useful.
+
 int gle2d_init(void)
 {
-    // shapes
+    // SHAPES //
     const char* shapes_vertex_src =
-    GLE2D_DEAFULT_SHADER_VERSION
+    GLE2D_DEFAULT_SHADER_VERSION
     "layout (location = 0) in vec2 in_pos;\n"
-    "layout (location = 1) in vec4 in_color;\n"
     "out vec4 vs_pass_color;\n"
     "out vec2 vs_pass_texture_uv;\n"
+    "uniform vec4 u_color;\n"
     "uniform mat4 model;\n"
     "uniform mat4 projection;\n"
     "void main()\n"
     "{\n" // technically scaled_one_vertex of a quad??
-    "   gl_Position = projection * model * vec4(in_pos.xy, 0.0, 1.0);\n"
-    "   vs_pass_color = in_color;\n"
+    "   gl_Position = projection * model * vec4(in_pos, 0.0, 1.0);\n"
+    "   vs_pass_color = u_color;\n"
     "   vs_pass_texture_uv = in_pos.xy;\n"
     "}\n";
 
     const char* shapes_fragment_src =
-    GLE2D_DEAFULT_SHADER_VERSION
+    GLE2D_DEFAULT_SHADER_VERSION
     "out vec4 FinalColor;\n"
     "in vec4 vs_pass_color;\n"
     "in vec2 vs_pass_texture_uv;\n"
@@ -90,6 +107,7 @@ int gle2d_init(void)
     context.shapes_loc_proj = glGetUniformLocation(context.shapes_shader_program, "projection");
     context.shapes_loc_model = glGetUniformLocation(context.shapes_shader_program, "model");
     context.shapes_loc_flag = glGetUniformLocation(context.shapes_shader_program, "use_texture_flag");
+    context.shapes_loc_color = glGetUniformLocation(context.shapes_shader_program, "u_color");
 
     float quad[] = {
         0.0f, 0.0f,
@@ -104,12 +122,25 @@ int gle2d_init(void)
     };
 
     // now create the buffers.
+    glGenVertexArrays(1, &context.shapes_quad_vao);
+    glGenBuffers(1, &context.shapes_quad_vbo);
+    glGenBuffers(1, &context.shapes_quad_ebo);
+    glBindVertexArray(context.shapes_quad_vao); // start recording.
+    glBindBuffer(GL_ARRAY_BUFFER, context.shapes_quad_vbo); // send the data.
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, context.shapes_quad_ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quad_indices), quad_indices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0); //cleanup.
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     mat4x4_identity(context.shapes_model_matrix);
 
-    // font.
+    // FONT //
     const char* font_vertex_src = 
-    GLE2D_DEAFULT_SHADER_VERSION
+    GLE2D_DEFAULT_SHADER_VERSION
     "layout (location = 0) in vec4 vertex;\n"
     "out vec2 TexCoords;\n"
     "uniform mat4 projection;\n"
@@ -120,7 +151,7 @@ int gle2d_init(void)
     "}\n";
 
     const char* font_fragment_src = 
-    GLE2D_DEAFULT_SHADER_VERSION
+    GLE2D_DEFAULT_SHADER_VERSION
     "in vec2 TexCoords;\n"
     "out vec4 color;\n"
     "uniform sampler2D text;\n"
@@ -148,7 +179,8 @@ int gle2d_init(void)
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0); // "Cleanup"...
-    glBindVertexArray(0); // EBO must be unboud after VBO unbind beacouse it remembers.
+    glBindVertexArray(0); // EBO must be unboud after VBO
+                          // unbind beacouse it is "recording".
 
     context.font_batch_buffer = malloc(max_buffer_size);
     if (!context.font_batch_buffer) {
@@ -161,10 +193,12 @@ int gle2d_init(void)
 // The current drawable framebuffer dimensions (the values you pass to glViewport).
 void gle2d_update_rendering_area(int viewport_width, int viewport_height)
 {
+    mat4x4_identity(context.projection_matrix);
     mat4x4_ortho(context.projection_matrix, 0.0f, viewport_width, viewport_height, 0.0f, -1.0f, 1.0f);
     glUseProgram(context.font_shader_program);
-    // TODO find a way to do this as common location \/.
     glUniformMatrix4fv(context.font_projection_loc, 1, GL_FALSE, &context.projection_matrix[0][0]);
+    glUseProgram(context.shapes_shader_program);
+    glUniformMatrix4fv(context.shapes_loc_proj, 1, GL_FALSE, &context.projection_matrix[0][0]);
 }
 
 void gle2d_shutdown(void)
@@ -175,8 +209,10 @@ void gle2d_shutdown(void)
     glDeleteProgram(context.shapes_shader_program);
     glDeleteProgram(context.font_shader_program);
     glDeleteBuffers(1, &context.font_quad_vbo);
+    glDeleteBuffers(1, &context.shapes_quad_vbo);
+    glDeleteBuffers(1, &context.shapes_quad_ebo);
     glDeleteVertexArrays(1, &context.font_quad_vao);
-    // TODO delete shapes buffers!.
+    glDeleteVertexArrays(1, &context.shapes_quad_vao);
     free(context.font_batch_buffer);
 }
 
@@ -184,9 +220,28 @@ void gle2d_shutdown(void)
 // Shapes
 
 void gle2d_shapes_draw_quad(float x, float y, float w, float h, vec4 color, GLuint texture)
-{   
-    glUseProgram(context.font_shader_program);
+{       
+    mat4x4_identity(context.shapes_model_matrix);
+    mat4x4_translate_in_place(context.shapes_model_matrix, x, y, 1.0f);
+    mat4x4_scale_aniso(context.shapes_model_matrix, context.shapes_model_matrix, w, h, 1.0f);
+    //mat4x4_rotate_Z(context.shapes_model_matrix, context.shapes_model_matrix, 1.0f);
 
+    glUseProgram(context.shapes_shader_program);
+    glUniform4fv(context.shapes_loc_color, 1, color);
+    glUniformMatrix4fv(context.shapes_loc_model, 1, GL_FALSE, &context.shapes_model_matrix[0][0]);
+    int use_texture = texture > 0 ? 1 : 0;
+    glUniform1i(context.shapes_loc_flag, use_texture);
+
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBindVertexArray(context.shapes_quad_vao);
+    if (use_texture) {
+        glBindTexture(GL_TEXTURE_2D, texture);
+    }
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+    glDisable(GL_BLEND);
 }
 
 //////////
@@ -278,6 +333,7 @@ void gle2d_font_render_text(const GLE2D_Font* font, const char* text, float x, f
     glUniform3f(context.font_text_color_loc, 0.5f, 0.8f, 0.2f);
 
     glBindVertexArray(context.font_quad_vao);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, font->atlas);
     glBindBuffer(GL_ARRAY_BUFFER, context.font_quad_vbo);
 
@@ -343,6 +399,10 @@ void gle2d_font_destroy(GLE2D_Font* font)
 
     font->num_chars = 0;
 }
+
+/////////////
+// TEXTURES
+
 
 
 /////////

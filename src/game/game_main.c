@@ -103,6 +103,8 @@ int dg_loop(float dt)
     gle2d_font_render_text(&game_state.fonts.extra_font, text, 50, 100);
     gle2d_font_render_text(&game_state.fonts.default_font, text, 50, 150);
     gle2d_font_render_text(&game_state.fonts.extra_font, text, 50, 200);
+    
+    gle2d_shapes_draw_quad(300, 200, 200, 200, (vec4){1.0f, 0.3f, 0.5f, 0.4f}, 0);
 
     return 0;
 }
