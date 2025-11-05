@@ -42,11 +42,11 @@ int dg_init(void)
     }
 
     const char* path = "fonts/ligurino_bold.ttf";
-    if (gle2d_font_create(&game_state.fonts.default_font, path, 16.0f)) {
+    if (gle2d_font_create(&game_state.fonts.default_font, path, 8.0f)) {
         return 1;
     }
     const char* path_2 = "fonts/ligurino.ttf";
-    if (gle2d_font_create(&game_state.fonts.extra_font, path_2, 64.0f)) {
+    if (gle2d_font_create(&game_state.fonts.extra_font, path_2, 32.0f)) {
         return 1;
     }
 
@@ -79,16 +79,10 @@ int dg_loop(float dt)
     // update.
     GLfloat attrib[] = {(float)sin(dt) * 0.5f, (float)cos(dt) * 0.6f};
     GLfloat color[] = {1.0f, 0.0f, 0.5f, 1.0f};
-
-    platform_log_info("%d, %d", 
-    glGetAttribLocation(game_state.tess_shady.id, "offset"),
-    glGetAttribLocation(game_state.tess_shady.id, "color"));
-
+    glGetAttribLocation(game_state.tess_shady.id, "offset");
+    glGetAttribLocation(game_state.tess_shady.id, "color");
     glVertexAttrib2fv(0, attrib);
     glVertexAttrib4fv(1, color);
-    
-    // TODO: Test if glVertexAttribPointer() will change when
-    // TODO  updating the array being pointed at.
 
     // render.
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -105,6 +99,7 @@ int dg_loop(float dt)
     gle2d_font_render_text(&game_state.fonts.extra_font, text, 50, 200);
     
     gle2d_shapes_draw_quad(300, 200, 200, 200, (vec4){1.0f, 0.3f, 0.5f, 0.4f}, 0);
+    gle2d_shapes_draw_quad(300, 250, 200, 200, (vec4){0.5f, 0.5f, 0.2f, 0.4f}, 0);
 
     return 0;
 }

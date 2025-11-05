@@ -9,6 +9,8 @@
 #define STBTT_STATIC // To avoid conflict with Nuklear for my project.
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb/stb_truetype.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
@@ -403,6 +405,49 @@ void gle2d_font_destroy(GLE2D_Font* font)
 /////////////
 // TEXTURES
 
+GLE2D_Texture gle2d_texture_load(const char* path)
+{
+    GLE2D_Texture texture = {0};
+
+    int width;
+    int height;
+    int channel_number;
+    stbi_set_flip_vertically_on_load(1);                            // TODO ------- Questionable 4??
+    unsigned char* data = stbi_load(path, &width, &height, &channel_number, 4);
+    stbi_set_flip_vertically_on_load(0);
+    if (!data) {
+        return texture;
+    } 
+
+    glGenTextures(1, &texture.id);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture.id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    stbi_image_free(data);
+
+    texture.width = width;
+    texture.height = height;
+    return texture;
+}
+
+void gle2d_texture_bind(GLE2D_Texture texture)
+{
+    assert(texture.id != 0);
+    glBindTexture(GL_TEXTURE_2D, texture.id);
+}
+
+void gle2d_texture_delete(GLE2D_Texture texture)
+{
+    assert(texture.id != 0);
+    glDeleteTextures(1, &texture.id);
+}
 
 
 /////////

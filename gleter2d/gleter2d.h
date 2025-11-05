@@ -19,7 +19,6 @@
 // TODO wglGetCurrentContext/Linux verion to chceck if opengl started.
 // TODO add color as parameter to text
 // TODO add rendering textured quads.
-// TODO add basic texture functionality.
 
 //////////
 // GLE2D
@@ -36,7 +35,13 @@ void gle2d_shutdown(void);
 
 typedef struct {
     GLuint id;
+    int width;
+    int height;
 } GLE2D_Texture;
+
+GLE2D_Texture gle2d_texture_load(const char* path);
+void gle2d_texture_bind(GLE2D_Texture texture);
+void gle2d_texture_delete(GLE2D_Texture texture);
 
 ///////////
 // Shapes
