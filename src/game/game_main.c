@@ -42,7 +42,7 @@ int dg_init(void)
     }
 
     const char* path = "fonts/ligurino_bold.ttf";
-    if (gle2d_font_create(&game_state.fonts.default_font, path, 32.0f)) {
+    if (gle2d_font_create(&game_state.fonts.default_font, path, 16.0f)) {
         return 1;
     }
     const char* path_2 = "fonts/ligurino.ttf";
@@ -77,9 +77,12 @@ int dg_loop(float dt)
     }
 
     // update.
-    GLfloat attrib[] = { (float)sin(dt) * 0.5f, 
-        (float)cos(dt) * 0.6f, 0.0f, 0.0f };
+    GLfloat attrib[] = {(float)sin(dt) * 0.5f, (float)cos(dt) * 0.6f};
     GLfloat color[] = {1.0f, 0.0f, 0.5f, 1.0f};
+
+    platform_log_info("%d, %d", 
+    glGetAttribLocation(game_state.tess_shady.id, "offset"),
+    glGetAttribLocation(game_state.tess_shady.id, "color"));
 
     glVertexAttrib2fv(0, attrib);
     glVertexAttrib4fv(1, color);
@@ -92,10 +95,10 @@ int dg_loop(float dt)
     glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
     shader_program_bind(&game_state.tess_shady);
     glBindVertexArray(game_state.vao);
-    glDrawArrays(GL_PATCHES, 0, 3);
+    glDrawArrays(GL_PATCHES, 0, 6);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    const char* text = "Suka kreci sie jak beyblade!XD";
+    const char* text = "Lorem ipsum";
     gle2d_font_render_text(&game_state.fonts.default_font, text, 50, 50);
     gle2d_font_render_text(&game_state.fonts.extra_font, text, 50, 100);
     gle2d_font_render_text(&game_state.fonts.default_font, text, 50, 150);

@@ -82,8 +82,8 @@ int gle2d_init(void)
     glBindVertexArray(context.font_quad_vao); // Start recording...
     glBindBuffer(GL_ARRAY_BUFFER, context.font_quad_vbo);
     glBufferData(GL_ARRAY_BUFFER, max_buffer_size, NULL, GL_DYNAMIC_DRAW); 
-    glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0); // "Cleanup"...
     glBindVertexArray(0); // EBO must be unboud after VBO unbind beacouse it remembers.
 
