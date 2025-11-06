@@ -13,10 +13,7 @@ void platform_get_window_size(int result[2])
     result[1] = h;
 }
 
-void platform_get_framebuffer_size(int result[2])
+void platform_get_framebuffer_size(int* width, int* height)
 {
-    int w, h;
-    glfwGetFramebufferSize(window, &w, &h);
-    result[0] = w;
-    result[1] = h;
+    glfwGetFramebufferSize(window, width, height);
 }

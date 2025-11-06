@@ -19,7 +19,7 @@
 // Simple opengl Texture wrapper.
 
 // TODO wglGetCurrentContext/Linux version to check if OpenGL started.
-// TODO add quad and text rotations.
+// TODO add text rotations.
 // TODO add ebo to font rendering quads.
 
 //////////
@@ -54,6 +54,7 @@ void gle2d_texture_delete(GLE2D_Texture texture);
 
 // pass 0 to texture if you want to draw raw color quad.
 void gle2d_shapes_draw_quad(float x, float y, float w, float h, float rotation, vec4 color, GLuint texture);
+void gle2d_shapes_draw_circle(float x, float y, float radius, vec4 color);
 void gle2d_shapes_draw_glpoint(float x, float y, float size, vec4 color);
 
 //////////

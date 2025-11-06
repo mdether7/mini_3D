@@ -39,10 +39,10 @@ int dg_init(void)
         return 1;
     }
     // Usually you want viewport to match framebuffer
-    int dims[2];
-    platform_get_framebuffer_size(dims);
-    glViewport(0, 0, dims[0], dims[1]); 
-    gle2d_update_rendering_area(dims[0], dims[1]);
+    int w, h;
+    platform_get_framebuffer_size(&w, &h);
+    glViewport(0, 0, w, h); 
+    gle2d_update_rendering_area(w, h);
 
     game_state.tess_shady = shader_program_tess_compile_from_path("shaders/dungen.vert",
         "shaders/dungen.tcs", "shaders/dungen.tes", "shaders/dungen.frag");
@@ -110,10 +110,10 @@ int dg_loop(float dt)
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 150);
     gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
     gle2d_shapes_draw_quad(0, 0, 200, 200,(float)sin(dt) * 0.5f,  FULL_WHITE, game_state.dirt_tex.id);
-    gle2d_shapes_draw_quad(400, 250, 200, 200, 0.0f, FULL_WHITE, game_state.dirt_tex.id);
-    gle2d_shapes_draw_quad(500, 250, 200, 200, 0.0f, FULL_WHITE, game_state.dirt_tex.id);
+    gle2d_shapes_draw_quad(400, 250, 200, 200, ((float)sin(dt) * 0.5f), FULL_WHITE, game_state.dirt_tex.id);
+    gle2d_shapes_draw_quad(500, 250, 200, 200, ((float)sin(dt) * 1.0f), FULL_WHITE, game_state.dirt_tex.id);
 
-    gle2d_shapes_draw_glpoint(point_x, point_y, 10, TEXT_COLOR);
+    gle2d_shapes_draw_glpoint(300, 300, 20, TEXT_COLOR);
 
     return 0;
 }

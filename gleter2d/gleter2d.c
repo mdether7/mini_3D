@@ -84,10 +84,10 @@ int gle2d_init(void)
     }
 
     float quad[] = {
-        0.0f, 0.0f,
-        0.0f, 1.0f,
-        1.0f, 1.0f, 
-        1.0f, 0.0f,
+        -0.5f, -0.5f,
+        -0.5f, 0.5f,
+        0.5f, 0.5f, 
+        0.5f, -0.5f,
     };
 
     unsigned int quad_indices[] = {
@@ -177,7 +177,7 @@ static int gle2d_internal_init_shader_programs(void)
     "{\n"
     "   gl_Position = projection * u_model * vec4(in_pos, 0.0, 1.0);\n"
     "   vs_pass_color = u_color;\n"
-    "   vs_pass_texture_uv = in_pos.xy;\n"
+    "   vs_pass_texture_uv = in_pos.xy + vec2(0.5, 0.5);\n"
     "}\n";
 
     const char* shapes_textured_frag =
@@ -293,10 +293,14 @@ void gle2d_shutdown(void)
 ///////////
 // Shapes
 
-// void gle2d_shapes_draw_circle(float x, float y, float radius)
-// {
-    
-// }
+void gle2d_shapes_draw_circle(float x, float y, float radius, vec4 color)
+{
+    (void)x;
+    (void)y;
+    (void)radius;
+    (void)color;
+    return;
+}
 
 void gle2d_shapes_draw_glpoint(float x, float y, float size, vec4 color)
 {
@@ -318,9 +322,14 @@ void gle2d_shapes_draw_glpoint(float x, float y, float size, vec4 color)
 void gle2d_shapes_draw_quad(float x, float y, float w, float h, float rotation, vec4 color, GLuint texture)
 {       
     mat4x4_identity(context.model_matrix);
-    mat4x4_translate_in_place(context.model_matrix, x, y, 1.0f);
-    mat4x4_scale_aniso(context.model_matrix, context.model_matrix, w, h, 1.0f);
-    mat4x4_rotate_Z(context.model_matrix, context.model_matrix, rotation);
+
+    mat4x4 Translate, Rotate, Scale;
+    mat4x4_translate(Translate, x, y, 1.0f);
+    mat4x4_rotate_Z(Rotate, context.model_matrix, rotation);
+    mat4x4_scale_aniso(Scale, context.model_matrix, w, h, 1.0f);
+
+    mat4x4_mul(context.model_matrix, Scale, Rotate);
+    mat4x4_mul(context.model_matrix, Translate, context.model_matrix);
 
     int use_texture = texture > 0 ? 1 : 0;
     if (use_texture) {
