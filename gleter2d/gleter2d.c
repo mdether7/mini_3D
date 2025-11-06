@@ -68,9 +68,8 @@ static unsigned char* gle2d_internal_font_load_into_memory(const char *path);
 static GLuint         gle2d_internal_create_shader_from_data(const char* vertex, const char* fragment);
 static int            gle2d_internal_shader_compile_error(GLuint shader);
 static int            gle2d_internal_shader_program_link_error(GLuint shader);
+static int            gle2d_internal_init_shader_programs(void);
 //----------------//
-
-// glIsTexture(texture) <= this seems useful.
 
 int gle2d_init(void)
 {
@@ -79,9 +78,9 @@ int gle2d_init(void)
     GLE2D_DEFAULT_SHADER_VERSION
     "layout (location = 0) in vec2 in_pos;\n"
     "out vec4 vs_pass_color;\n"
-    "out vec2 vs_pass_texture_uv;\n"
     "uniform vec4 u_color;\n"
-    "uniform mat4 model;\n"
+    "uniform mat4 u_model;\n"
+    ""
     "uniform mat4 projection;\n"
     "void main()\n"
     "{\n"
@@ -163,11 +162,11 @@ int gle2d_init(void)
     "in vec2 TexCoords;\n"
     "out vec4 color;\n"
     "uniform sampler2D text;\n"
-    "uniform vec3 text_color;\n"
+    "uniform vec4 text_color;\n"
     "void main()\n"
     "{\n"
     "   vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);\n"
-    "   color = vec4(text_color, 1.0) * sampled;\n"
+    "   color = text_color * sampled;\n"
     "}\n";
 
     context.font_shader_program = gle2d_internal_create_shader_from_data(font_vertex_src, font_fragment_src);
@@ -198,6 +197,95 @@ int gle2d_init(void)
     mat4x4_identity(context.projection_matrix);
     return 0;
 }
+
+static int gle2d_internal_init_shader_programs(void)
+{
+    // SHAPES SOLID //
+    const char* shapes_solid_vert =
+    GLE2D_DEFAULT_SHADER_VERSION
+    "layout (location = 0) in vec2 in_pos;\n"
+    "out vec4 vs_pass_color;\n"
+    "uniform vec4 u_color;\n"
+    "uniform mat4 u_model;\n"
+    "layout (std140) uniform u_BlockProjectionMatrix\n"
+    "{\n"
+    "   mat4 projection\n"
+    "};\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = u_BlockProjectionMatrix.projection * u_model * vec4(in_pos, 0.0, 1.0);\n"
+    "   vs_pass_color = u_color;\n"
+    "}\n";
+
+    const char* shapes_solid_frag =
+    GLE2D_DEFAULT_SHADER_VERSION
+    "out vec4 FinalColor;\n"
+    "in vec4 vs_pass_color;\n"
+    "void main()\n"
+    "{\n"
+    "   FinalColor = vs_pass_color;\n"
+    "}\n";
+
+    // SHAPES TEXTURED //
+    const char* shapes_textured_vert =
+    GLE2D_DEFAULT_SHADER_VERSION
+    "layout (location = 0) in vec2 in_pos;\n"
+    "out vec4 vs_pass_color;\n"
+    "uniform vec4 u_color;\n"
+    "uniform mat4 u_model;\n"
+    "layout (std140) uniform u_BlockProjectionMatrix\n"
+    "{\n"
+    "   mat4 projection\n"
+    "};\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = u_BlockProjectionMatrix.projection * u_model * vec4(in_pos, 0.0, 1.0);\n"
+    "   vs_pass_color = u_color;\n"
+    "   vs_pass_texture_uv = in_pos.xy;\n"
+    "}\n";
+
+    const char* shapes_textured_frag =
+    GLE2D_DEFAULT_SHADER_VERSION
+    "out vec4 FinalColor;\n"
+    "in vec4 vs_pass_color;\n"
+    "in vec2 vs_pass_texture_uv;\n"
+    "uniform sampler2D u_texture;\n"
+    "void main()\n"
+    "{\n"
+    "   FinalColor = texture(quad_texture, vs_pass_texture_uv) * vs_pass_color;\n" 
+    "}\n";
+
+    // SHAPES CIRCLE //
+    // -- //
+
+    // FONT //
+    const char* font_vertex_src = 
+    GLE2D_DEFAULT_SHADER_VERSION
+    "layout (location = 0) in vec4 vertex;\n"
+    "out vec2 TexCoords;\n"
+    "uniform mat4 projection;\n"
+    "void main()\n"
+    "{\n"
+    "	gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);\n"
+    "   TexCoords = vertex.zw;\n"
+    "}\n";
+
+    const char* font_fragment_src = 
+    GLE2D_DEFAULT_SHADER_VERSION
+    "in vec2 TexCoords;\n"
+    "out vec4 color;\n"
+    "uniform sampler2D text;\n"
+    "uniform vec4 text_color;\n"
+    "void main()\n"
+    "{\n"
+    "   vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);\n"
+    "   color = text_color * sampled;\n"
+    "}\n";
+
+
+    return 0;
+}
+
 // The current drawable framebuffer dimensions (the values you pass to glViewport).
 void gle2d_update_rendering_area(int viewport_width, int viewport_height)
 {
@@ -227,12 +315,37 @@ void gle2d_shutdown(void)
 ///////////
 // Shapes
 
-void gle2d_shapes_draw_quad(float x, float y, float w, float h, vec4 color, GLuint texture)
+// void gle2d_shapes_draw_circle(float x, float y, float radius)
+// {
+    
+// }
+
+void gle2d_shapes_draw_glpoint(float x, float y, float size, vec4 color)
+{
+    mat4x4_identity(context.shapes_model_matrix);
+    mat4x4_translate_in_place(context.shapes_model_matrix, x, y, 1.0f);
+    
+    glUseProgram(context.shapes_shader_program);
+    glUniformMatrix4fv(context.shapes_loc_model, 1, GL_FALSE, &context.shapes_model_matrix[0][0]);
+    glUniform1i(context.shapes_loc_flag, 0);
+    glUniform4fv(context.shapes_loc_color, 1, color);
+
+    glBindVertexArray(context.shapes_quad_vao);
+    glPointSize(size);
+    glDisable(GL_DEPTH_TEST);
+    glDrawArrays(GL_POINTS, 0, 1); // Draw just the first vertex as a point
+
+    glBindVertexArray(0);
+    glPointSize(1.0f);
+    glDisable(GL_BLEND);
+}
+
+void gle2d_shapes_draw_quad(float x, float y, float w, float h, float rotation, vec4 color, GLuint texture)
 {       
     mat4x4_identity(context.shapes_model_matrix);
     mat4x4_translate_in_place(context.shapes_model_matrix, x, y, 1.0f);
     mat4x4_scale_aniso(context.shapes_model_matrix, context.shapes_model_matrix, w, h, 1.0f);
-    //mat4x4_rotate_Z(context.shapes_model_matrix, context.shapes_model_matrix, 1.0f);
+    mat4x4_rotate_Z(context.shapes_model_matrix, context.shapes_model_matrix, rotation);
 
     glUseProgram(context.shapes_shader_program);
     glUniform4fv(context.shapes_loc_color, 1, color);
@@ -331,14 +444,14 @@ cleanup:
     return result;
 }
 
-void gle2d_font_render_text(const GLE2D_Font* font, const char* text, float x, float y)
+void gle2d_font_render_text(const GLE2D_Font* font, vec4 color, const char* text, float x, float y)
 {
     if (!font || !text || *text == '\0') {
         return;
     }
 
     glUseProgram(context.font_shader_program);
-    glUniform3f(context.font_text_color_loc, 0.5f, 0.8f, 0.2f);
+    glUniform4f(context.font_text_color_loc, color[0], color[1], color[2], color[3]);
 
     glBindVertexArray(context.font_quad_vao);
     glActiveTexture(GL_TEXTURE0);

@@ -19,8 +19,8 @@
 // Simple opengl Texture wrapper.
 
 // TODO wglGetCurrentContext/Linux version to check if OpenGL started.
-// TODO add color parameter to text rendering.
 // TODO add quad and text rotations.
+// TODO split quad shader to normal quad and textured quad shader.
 
 //////////
 // GLE2D
@@ -53,7 +53,8 @@ void gle2d_texture_delete(GLE2D_Texture texture);
 // Shapes
 
 // pass 0 to texture if you want to draw raw color quad.
-void gle2d_shapes_draw_quad(float x, float y, float w, float h, vec4 color, GLuint texture);
+void gle2d_shapes_draw_quad(float x, float y, float w, float h, float rotation, vec4 color, GLuint texture);
+void gle2d_shapes_draw_glpoint(float x, float y, float size, vec4 color);
 
 //////////
 // FONT 
@@ -65,7 +66,7 @@ typedef struct {
 } GLE2D_Font;
 
 int gle2d_font_create(GLE2D_Font* font, const char* path, float px_size);
-void gle2d_font_render_text(const GLE2D_Font* font, const char *text, float x, float y);
+void gle2d_font_render_text(const GLE2D_Font* font, vec4 color, const char *text, float x, float y);
 void gle2d_font_destroy(GLE2D_Font* font);
 
 /////////

@@ -28,9 +28,10 @@ typedef struct {
     GLuint vao;
 } DG_GameState;
 
-static DG_GameState game_state = {0}; // static?
+static DG_GameState game_state = {0};
 
 #define FULL_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
+#define TEXT_COLOR (vec4){0.0f, 0.5f, 0.5f, 1.0f}
 
 int dg_init(void)
 {
@@ -68,6 +69,9 @@ int dg_init(void)
     return 0;
 }
 
+int point_x = 100;
+int point_y = 100;
+
 int dg_loop(float dt)
 {
     // input.
@@ -101,13 +105,15 @@ int dg_loop(float dt)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     const char* text = "Lorem ipsum";
-    gle2d_font_render_text(&game_state.fonts.default_font, text, 50, 50);
-    gle2d_font_render_text(&game_state.fonts.extra_font, text, 50, 100);
-    gle2d_font_render_text(&game_state.fonts.default_font, text, 50, 150);
-    gle2d_font_render_text(&game_state.fonts.extra_font, text, 50, 200);
-    gle2d_shapes_draw_quad(300, 250, 200, 200, FULL_WHITE, game_state.dirt_tex.id);
-    gle2d_shapes_draw_quad(400, 250, 200, 200, FULL_WHITE, game_state.dirt_tex.id);
-    gle2d_shapes_draw_quad(500, 250, 200, 200, FULL_WHITE, game_state.dirt_tex.id);
+    gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 50);
+    gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 100);
+    gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 150);
+    gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
+    gle2d_shapes_draw_quad(0, 0, 200, 200,(float)sin(dt) * 0.5f,  FULL_WHITE, game_state.dirt_tex.id);
+    gle2d_shapes_draw_quad(400, 250, 200, 200, 0.0f, FULL_WHITE, game_state.dirt_tex.id);
+    gle2d_shapes_draw_quad(500, 250, 200, 200, 0.0f, FULL_WHITE, game_state.dirt_tex.id);
+
+    gle2d_shapes_draw_glpoint(point_x, point_y, 10, TEXT_COLOR);
 
     return 0;
 }
