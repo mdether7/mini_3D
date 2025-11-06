@@ -84,7 +84,7 @@ int gle2d_init(void)
     "uniform mat4 model;\n"
     "uniform mat4 projection;\n"
     "void main()\n"
-    "{\n" // technically scaled_one_vertex of a quad??
+    "{\n"
     "   gl_Position = projection * model * vec4(in_pos, 0.0, 1.0);\n"
     "   vs_pass_color = u_color;\n"
     "   vs_pass_texture_uv = in_pos.xy;\n"
@@ -98,8 +98,14 @@ int gle2d_init(void)
     "uniform sampler2D quad_texture;\n"
     "uniform bool use_texture_flag;\n"
     "void main()\n"
-    "{\n"
-    "   FinalColor = vs_pass_color;\n"
+    "{\n" // Maybe add seprate program for textured vs non-textured quads.
+    "   if (use_texture_flag) {\n" 
+    "       FinalColor = texture(quad_texture, vs_pass_texture_uv) * vs_pass_color;\n" 
+    "}\n"
+    "else\n"
+    "{"
+    "       FinalColor = vs_pass_color;\n"
+    "}\n"
     "}\n";
 
     context.shapes_shader_program = gle2d_internal_create_shader_from_data(shapes_vertex_src, shapes_fragment_src);
@@ -380,6 +386,7 @@ void gle2d_font_render_text(const GLE2D_Font* font, const char* text, float x, f
     glDrawArrays(GL_TRIANGLES, 0, cursor / 4);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
     glDisable(GL_BLEND);
 }
@@ -407,6 +414,7 @@ void gle2d_font_destroy(GLE2D_Font* font)
 
 GLE2D_Texture gle2d_texture_load(const char* path)
 {
+    assert(path && *path != '\0');
     GLE2D_Texture texture = {0};
 
     int width;

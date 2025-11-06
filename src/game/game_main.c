@@ -23,17 +23,25 @@ typedef struct {
 
 typedef struct {
     DG_Fonts fonts;
+    GLE2D_Texture dirt_tex;
     Shader tess_shady;
     GLuint vao;
 } DG_GameState;
 
 static DG_GameState game_state = {0}; // static?
 
+#define FULL_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
+
 int dg_init(void)
 {
     if (gle2d_init()) {
         return 1;
     }
+    // Usually you want viewport to match framebuffer
+    int dims[2];
+    platform_get_framebuffer_size(dims);
+    glViewport(0, 0, dims[0], dims[1]); 
+    gle2d_update_rendering_area(dims[0], dims[1]);
 
     game_state.tess_shady = shader_program_tess_compile_from_path("shaders/dungen.vert",
         "shaders/dungen.tcs", "shaders/dungen.tes", "shaders/dungen.frag");
@@ -42,20 +50,20 @@ int dg_init(void)
     }
 
     const char* path = "fonts/ligurino_bold.ttf";
-    if (gle2d_font_create(&game_state.fonts.default_font, path, 8.0f)) {
+    if (gle2d_font_create(&game_state.fonts.default_font, path, 16.0f)) {
         return 1;
     }
     const char* path_2 = "fonts/ligurino.ttf";
-    if (gle2d_font_create(&game_state.fonts.extra_font, path_2, 32.0f)) {
+    if (gle2d_font_create(&game_state.fonts.extra_font, path_2, 64.0f)) {
         return 1;
     }
 
-    // Usually you want viewport to match framebuffer
-    int dims[2];
-    platform_get_framebuffer_size(dims);
-    glViewport(0, 0, dims[0], dims[1]); 
-    gle2d_update_rendering_area(dims[0], dims[1]);
-    
+    const char* path_3 = "textures/mini_dirt.png";
+    game_state.dirt_tex = gle2d_texture_load(path_3);
+    if (game_state.dirt_tex.id == 0) {
+        return 1;
+    }
+
     glGenVertexArrays(1, &game_state.vao);
     return 0;
 }
@@ -97,9 +105,9 @@ int dg_loop(float dt)
     gle2d_font_render_text(&game_state.fonts.extra_font, text, 50, 100);
     gle2d_font_render_text(&game_state.fonts.default_font, text, 50, 150);
     gle2d_font_render_text(&game_state.fonts.extra_font, text, 50, 200);
-    
-    gle2d_shapes_draw_quad(300, 200, 200, 200, (vec4){1.0f, 0.3f, 0.5f, 0.4f}, 0);
-    gle2d_shapes_draw_quad(300, 250, 200, 200, (vec4){0.5f, 0.5f, 0.2f, 0.4f}, 0);
+    gle2d_shapes_draw_quad(300, 250, 200, 200, FULL_WHITE, game_state.dirt_tex.id);
+    gle2d_shapes_draw_quad(400, 250, 200, 200, FULL_WHITE, game_state.dirt_tex.id);
+    gle2d_shapes_draw_quad(500, 250, 200, 200, FULL_WHITE, game_state.dirt_tex.id);
 
     return 0;
 }
@@ -111,5 +119,6 @@ void dg_close(void)
 
     gle2d_font_destroy(&game_state.fonts.default_font);
     gle2d_font_destroy(&game_state.fonts.extra_font);
+    gle2d_texture_delete(game_state.dirt_tex);
     gle2d_shutdown();
 }

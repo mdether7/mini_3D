@@ -15,20 +15,26 @@
 // Load ttf fonts.
 // Render text using those fonts.
 // Save textures as png.
+// Render quads.
+// Simple opengl Texture wrapper.
 
-// TODO wglGetCurrentContext/Linux verion to chceck if opengl started.
-// TODO add color as parameter to text
-// TODO add rendering textured quads.
+// TODO wglGetCurrentContext/Linux version to check if OpenGL started.
+// TODO add color parameter to text rendering.
+// TODO add quad and text rotations.
 
 //////////
 // GLE2D
 
 // Run this after openGL is initialized.
 int gle2d_init(void);
-// Run this at least once before rendering to update 2d projection matrix.
-// And after every resolution change.
+// Updates the orthographic projection matrix.
+// Should be called whenever the viewport size changes.
 void gle2d_update_rendering_area(int viewport_width, int viewport_height);
+// at the end obviously.
 void gle2d_shutdown(void);
+
+// Textures and Fonts are both managed by the caller.
+// Makes it easier for me to integrate in my project.
 
 /////////////
 // TEXTURES
@@ -46,6 +52,7 @@ void gle2d_texture_delete(GLE2D_Texture texture);
 ///////////
 // Shapes
 
+// pass 0 to texture if you want to draw raw color quad.
 void gle2d_shapes_draw_quad(float x, float y, float w, float h, vec4 color, GLuint texture);
 
 //////////
