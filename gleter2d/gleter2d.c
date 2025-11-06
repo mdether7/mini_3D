@@ -48,10 +48,11 @@ typedef struct {
     GLuint shapes_quad_vbo;
     GLuint shapes_quad_ebo;
 
-    float* font_batch_buffer;
-    GLuint font_fbo;
-    GLuint font_quad_vao;
-    GLuint font_quad_vbo;
+    float*        font_batch_buffer;
+    GLE2D_Texture font_dynamic_texutre;
+    GLuint        font_fbo;
+    GLuint        font_quad_vao;
+    GLuint        font_quad_vbo;
 } GLE2D_Context;
 
 static GLE2D_Context context;
@@ -72,6 +73,7 @@ void util_print_mat4x4(const mat4x4 M)
 
 // GLE2D internal //
 static unsigned char* gle2d_internal_font_load_into_memory(const char *path);
+static void           gle2d_internal_font_calculate_text_bounding_box(const GLE2D_Font* font, const char* text, vec2 out);
 static GLuint         gle2d_internal_create_shader_from_data(const char* vertex, const char* fragment);
 static int            gle2d_internal_shader_compile_error(GLuint shader);
 static int            gle2d_internal_shader_program_link_error(GLuint shader);
@@ -440,9 +442,70 @@ cleanup:
     return result;
 }
 
+static void gle2d_internal_font_calculate_text_bounding_box(const GLE2D_Font* font, const char* text, vec2 out)
+{
+    float w = 0.0f;
+    float h = 0.0f;
+    if (text[0] == '\0') {
+        out[0] = w;
+        out[1] = h;
+        return;
+    }
+
+    float xpos = 0.0f;
+    float ypos = 0.0f;
+
+    float leftmost_x = 0.0f;
+    float rightmost_x = 0.0f;
+    float curr_glyph_height = 0.0f;
+
+    stbtt_aligned_quad q;
+    const char* p = text;
+    int first_char = 1; // true;
+
+    while (*p != '\0') {
+        stbtt_GetPackedQuad(font->packed_char_array,
+                            GLE2D_FONT_ATLAS_SIZE,
+                            GLE2D_FONT_ATLAS_SIZE,
+                            *p - GLE2D_FONT_FIRST_CHAR,
+                            &xpos, &ypos,
+                            &q, 1);
+
+        if (first_char) {
+            leftmost_x = q.x0;
+            first_char = 0;
+        }
+
+        if (*(p + 1) == '\0') { // last char.
+            rightmost_x = q.x1;
+        }
+
+        curr_glyph_height = q.y1 - q.y0;
+        if (curr_glyph_height > h) {
+            h = curr_glyph_height;
+        }
+
+        p++;
+    }
+    w = rightmost_x - leftmost_x;
+
+    out[0] = w;
+    out[1] = h;
+}
+
 void gle2d_font_render_text_rotation(const GLE2D_Font* font, const char* text, float x, float y, float rotation, vec4 color)
 {
-    
+    if (!font || !text || *text == '\0') {
+        return;
+    }
+    vec2 texture_dims;
+    gle2d_internal_font_calculate_text_bounding_box(font, text, texture_dims);
+
+
+
+
+
+
 }
 
 void gle2d_font_render_text(const GLE2D_Font* font, vec4 color, const char* text, float x, float y)
@@ -472,10 +535,9 @@ void gle2d_font_render_text(const GLE2D_Font* font, vec4 color, const char* text
     float xpos = x;
     float ypos = y;
     int cursor = 0;
-
+    stbtt_aligned_quad q;
     const char* p = text; // walk the string without modifying 'text'
     while (*p != '\0') {                     // strlen gotcha!!
-        stbtt_aligned_quad q;
         stbtt_GetPackedQuad(font->packed_char_array,
                             GLE2D_FONT_ATLAS_SIZE,
                             GLE2D_FONT_ATLAS_SIZE,

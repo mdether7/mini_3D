@@ -21,6 +21,7 @@
 // TODO wglGetCurrentContext/Linux version to check if OpenGL started.
 // TODO add text rotations.
 // TODO add line drawing.
+// TODO !!! Fix rendering quads at correct places (0, 0) center at topleft etc. like pygame.
 // TODO add ebo to font rendering quads.
 
 //////////

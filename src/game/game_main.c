@@ -118,7 +118,7 @@ int dg_loop(float dt)
     gle2d_font_render_text(&game_state.fonts.extra_font, (vec4){0.0f, 0.5f, 0.5f, (float)sin(dt)}, text, 50, 100);
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 150);
     gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
-    gle2d_shapes_draw_quad(0, 0, 200, 200,(float)sin(dt) * 0.5f,  FULL_WHITE, game_state.dirt_tex.id);
+    gle2d_shapes_draw_quad(200, 200, 200, 200,(float)sin(dt) * 0.5f,  FULL_WHITE, game_state.dirt_tex.id);
     gle2d_shapes_draw_quad(400, 250, 200, 200, ((float)sin(dt) * 0.5f), FULL_WHITE, game_state.dirt_tex.id);
     gle2d_shapes_draw_quad(500, 250, 200, 200, ((float)sin(dt) * 1.0f), FULL_WHITE, game_state.dirt_tex.id);
 
