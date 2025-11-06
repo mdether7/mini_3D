@@ -20,6 +20,7 @@
 
 // TODO wglGetCurrentContext/Linux version to check if OpenGL started.
 // TODO add text rotations.
+// TODO add line drawing.
 // TODO add ebo to font rendering quads.
 
 //////////
