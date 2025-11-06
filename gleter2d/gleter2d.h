@@ -69,6 +69,7 @@ typedef struct {
 
 int gle2d_font_create(GLE2D_Font* font, const char* path, float px_size);
 void gle2d_font_render_text(const GLE2D_Font* font, vec4 color, const char *text, float x, float y);
+void gle2d_font_render_text_rotation(const GLE2D_Font* font, const char* text, float x, float y, float rotation, vec4 color);
 void gle2d_font_destroy(GLE2D_Font* font);
 
 /////////

@@ -65,6 +65,15 @@ int dg_init(void)
         return 1;
     }
 
+    // GLint currentFBO, readFBO;
+    // glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &currentFBO);
+    // glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFBO);
+    // platform_log_info("%d, %d", currentFBO, readFBO);
+
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+        platform_log_success("HEHE");
+    }
+
     glGenVertexArrays(1, &game_state.vao);
     return 0;
 }
@@ -106,7 +115,7 @@ int dg_loop(float dt)
 
     const char* text = "Lorem ipsum";
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 50);
-    gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 100);
+    gle2d_font_render_text(&game_state.fonts.extra_font, (vec4){0.0f, 0.5f, 0.5f, (float)sin(dt)}, text, 50, 100);
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 150);
     gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
     gle2d_shapes_draw_quad(0, 0, 200, 200,(float)sin(dt) * 0.5f,  FULL_WHITE, game_state.dirt_tex.id);

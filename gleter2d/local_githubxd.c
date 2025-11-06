@@ -49,7 +49,6 @@ typedef struct {
     GLuint shapes_quad_ebo;
 
     float* font_batch_buffer;
-    GLuint font_fbo;
     GLuint font_quad_vao;
     GLuint font_quad_vbo;
 } GLE2D_Context;
@@ -128,10 +127,6 @@ int gle2d_init(void)
     if (!context.font_batch_buffer) {
         return 1;
     }
-
-    glGenFramebuffers(1, &context.font_fbo);
-
-
 
     mat4x4_identity(context.model_matrix);
     mat4x4_identity(context.projection_matrix);
@@ -292,7 +287,6 @@ void gle2d_shutdown(void)
     glDeleteBuffers(1, &context.shapes_quad_ebo);
     glDeleteVertexArrays(1, &context.font_quad_vao);
     glDeleteVertexArrays(1, &context.shapes_quad_vao);
-    glDeleteFramebuffers(1, &context.font_fbo);
     free(context.font_batch_buffer);
 }
 
@@ -438,11 +432,6 @@ cleanup:
         free(bitmap);
     }
     return result;
-}
-
-void gle2d_font_render_text_rotation(const GLE2D_Font* font, const char* text, float x, float y, float rotation, vec4 color)
-{
-    
 }
 
 void gle2d_font_render_text(const GLE2D_Font* font, vec4 color, const char* text, float x, float y)
