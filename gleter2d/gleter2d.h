@@ -20,7 +20,7 @@
 
 // TODO wglGetCurrentContext/Linux version to check if OpenGL started.
 // TODO add quad and text rotations.
-// TODO split quad shader to normal quad and textured quad shader.
+// TODO add ebo to font rendering quads.
 
 //////////
 // GLE2D

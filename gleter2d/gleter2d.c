@@ -28,6 +28,7 @@
 
 typedef struct {
     mat4x4 projection_matrix;
+    mat4x4 model_matrix;
 
     GLuint uniform_buffer;
 
@@ -38,26 +39,16 @@ typedef struct {
     GLuint program_shapes_textured;
     GLint  textured_loc_u_color;
     GLint  textured_loc_u_model; 
+    GLint  textured_loc_u_texture;
 
     GLuint program_font;
     GLint  font_loc_u_color; 
 
-
-
-    mat4x4 shapes_model_matrix;
-    GLuint shapes_shader_program;
-    GLint  shapes_loc_model;   
-    GLint  shapes_loc_proj;    // This could be common \/
-    GLint  shapes_loc_flag;
-    GLint  shapes_loc_color;
     GLuint shapes_quad_vao;
     GLuint shapes_quad_vbo;
     GLuint shapes_quad_ebo;
 
     float* font_batch_buffer;
-    GLuint font_shader_program;
-    GLint  font_projection_loc; // With this... maybe?
-    GLint  font_text_color_loc;
     GLuint font_quad_vao;
     GLuint font_quad_vbo;
 } GLE2D_Context;
@@ -88,48 +79,9 @@ static int            gle2d_internal_init_shader_programs(void);
 
 int gle2d_init(void)
 {
-    // SHAPES //
-    const char* shapes_vertex_src =
-    GLE2D_DEFAULT_SHADER_VERSION
-    "layout (location = 0) in vec2 in_pos;\n"
-    "out vec4 vs_pass_color;\n"
-    "uniform vec4 u_color;\n"
-    "uniform mat4 u_model;\n"
-    ""
-    "uniform mat4 projection;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = projection * model * vec4(in_pos, 0.0, 1.0);\n"
-    "   vs_pass_color = u_color;\n"
-    "   vs_pass_texture_uv = in_pos.xy;\n"
-    "}\n";
-
-    const char* shapes_fragment_src =
-    GLE2D_DEFAULT_SHADER_VERSION
-    "out vec4 FinalColor;\n"
-    "in vec4 vs_pass_color;\n"
-    "in vec2 vs_pass_texture_uv;\n"
-    "uniform sampler2D quad_texture;\n"
-    "uniform bool use_texture_flag;\n"
-    "void main()\n"
-    "{\n" // Maybe add seprate program for textured vs non-textured quads.
-    "   if (use_texture_flag) {\n" 
-    "       FinalColor = texture(quad_texture, vs_pass_texture_uv) * vs_pass_color;\n" 
-    "}\n"
-    "else\n"
-    "{"
-    "       FinalColor = vs_pass_color;\n"
-    "}\n"
-    "}\n";
-
-    context.shapes_shader_program = gle2d_internal_create_shader_from_data(shapes_vertex_src, shapes_fragment_src);
-    if (context.shapes_shader_program == 0) {
+    if (gle2d_internal_init_shader_programs()) {
         return 1;
     }
-    context.shapes_loc_proj = glGetUniformLocation(context.shapes_shader_program, "projection");
-    context.shapes_loc_model = glGetUniformLocation(context.shapes_shader_program, "model");
-    context.shapes_loc_flag = glGetUniformLocation(context.shapes_shader_program, "use_texture_flag");
-    context.shapes_loc_color = glGetUniformLocation(context.shapes_shader_program, "u_color");
 
     float quad[] = {
         0.0f, 0.0f,
@@ -158,39 +110,6 @@ int gle2d_init(void)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    mat4x4_identity(context.shapes_model_matrix);
-
-    // FONT //
-    const char* font_vertex_src = 
-    GLE2D_DEFAULT_SHADER_VERSION
-    "layout (location = 0) in vec4 vertex;\n"
-    "out vec2 TexCoords;\n"
-    "uniform mat4 projection;\n"
-    "void main()\n"
-    "{\n"
-    "	gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);\n"
-    "   TexCoords = vertex.zw;\n"
-    "}\n";
-
-    const char* font_fragment_src = 
-    GLE2D_DEFAULT_SHADER_VERSION
-    "in vec2 TexCoords;\n"
-    "out vec4 color;\n"
-    "uniform sampler2D text;\n"
-    "uniform vec4 text_color;\n"
-    "void main()\n"
-    "{\n"
-    "   vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);\n"
-    "   color = text_color * sampled;\n"
-    "}\n";
-
-    context.font_shader_program = gle2d_internal_create_shader_from_data(font_vertex_src, font_fragment_src);
-    if (context.font_shader_program == 0) {
-        return 1;
-    }
-    context.font_projection_loc = glGetUniformLocation(context.font_shader_program, "projection");
-    context.font_text_color_loc = glGetUniformLocation(context.font_shader_program, "text_color");
-
     int max_buffer_size = GLE2D_FONT_MAX_TEXT_LEN * 6 * 4 * sizeof(float);
     // First glGen...
     glGenVertexArrays(1, &context.font_quad_vao);
@@ -209,6 +128,7 @@ int gle2d_init(void)
         return 1;
     }
 
+    mat4x4_identity(context.model_matrix);
     mat4x4_identity(context.projection_matrix);
     return 0;
 }
@@ -224,11 +144,11 @@ static int gle2d_internal_init_shader_programs(void)
     "uniform mat4 u_model;\n"
     "layout (std140) uniform u_BlockProjectionMatrix\n"
     "{\n"
-    "   mat4 projection\n"
+    "   mat4 projection;\n"
     "};\n"
     "void main()\n"
     "{\n"
-    "   gl_Position = u_BlockProjectionMatrix.projection * u_model * vec4(in_pos, 0.0, 1.0);\n"
+    "   gl_Position = projection * u_model * vec4(in_pos, 0.0, 1.0);\n"
     "   vs_pass_color = u_color;\n"
     "}\n";
 
@@ -246,15 +166,16 @@ static int gle2d_internal_init_shader_programs(void)
     GLE2D_DEFAULT_SHADER_VERSION
     "layout (location = 0) in vec2 in_pos;\n"
     "out vec4 vs_pass_color;\n"
+    "out vec2 vs_pass_texture_uv;\n"
     "uniform vec4 u_color;\n"
     "uniform mat4 u_model;\n"
     "layout (std140) uniform u_BlockProjectionMatrix\n"
     "{\n"
-    "   mat4 projection\n"
+    "   mat4 projection;\n"
     "};\n"
     "void main()\n"
     "{\n"
-    "   gl_Position = u_BlockProjectionMatrix.projection * u_model * vec4(in_pos, 0.0, 1.0);\n"
+    "   gl_Position = projection * u_model * vec4(in_pos, 0.0, 1.0);\n"
     "   vs_pass_color = u_color;\n"
     "   vs_pass_texture_uv = in_pos.xy;\n"
     "}\n";
@@ -267,7 +188,7 @@ static int gle2d_internal_init_shader_programs(void)
     "uniform sampler2D u_texture;\n"
     "void main()\n"
     "{\n"
-    "   FinalColor = texture(quad_texture, vs_pass_texture_uv) * vs_pass_color;\n" 
+    "   FinalColor = texture(u_texture, vs_pass_texture_uv) * vs_pass_color;\n" 
     "}\n";
 
     // SHAPES CIRCLE //
@@ -280,11 +201,11 @@ static int gle2d_internal_init_shader_programs(void)
     "out vec2 TexCoords;\n"
     "layout (std140) uniform u_BlockProjectionMatrix\n"
     "{\n"
-    "   mat4 projection\n"
+    "   mat4 projection;\n"
     "};\n"
     "void main()\n"
     "{\n"
-    "	gl_Position = u_BlockProjectionMatrix.projection * vec4(vertex.xy, 0.0, 1.0);\n"
+    "	gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);\n"
     "   TexCoords = vertex.zw;\n"
     "}\n";
 
@@ -314,22 +235,29 @@ static int gle2d_internal_init_shader_programs(void)
     context.solid_loc_u_model = glGetUniformLocation(context.program_shapes_solid, "u_model");
 
     context.textured_loc_u_color = glGetUniformLocation(context.program_shapes_textured, "u_color");
-    context.textured_loc_u_model = glGetUniformLocation(context.program_shapes_textured, "u_model");   
+    context.textured_loc_u_model = glGetUniformLocation(context.program_shapes_textured, "u_model"); 
+    context.textured_loc_u_texture = glGetUniformLocation(context.program_shapes_textured, "u_texture");  
 
     context.font_loc_u_color =  glGetUniformLocation(context.program_font, "u_color");
-    
+
+    int ubo_index = 0;
     GLuint block_index_one = glGetUniformBlockIndex(context.program_shapes_solid, "u_BlockProjectionMatrix");
     GLuint block_index_two = glGetUniformBlockIndex(context.program_shapes_textured, "u_BlockProjectionMatrix");
     GLuint block_index_three = glGetUniformBlockIndex(context.program_font, "u_BlockProjectionMatrix");
-    glUniformBlockBinding(context.program_shapes_solid, block_index_one, 0);
-    glUniformBlockBinding(context.program_shapes_textured, block_index_two, 0);
-    glUniformBlockBinding(context.program_font, block_index_three, 0);
+    glUniformBlockBinding(context.program_shapes_solid, block_index_one, ubo_index);
+    glUniformBlockBinding(context.program_shapes_textured, block_index_two, ubo_index);
+    glUniformBlockBinding(context.program_font, block_index_three, ubo_index);
 
     glGenBuffers(1, &context.uniform_buffer);
     glBindBuffer(GL_UNIFORM_BUFFER, context.uniform_buffer);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(mat4x4), NULL, GL_STATIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, ubo_index, context.uniform_buffer);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-
-
+    // map sampler to texture unit 0
+    glUseProgram(context.program_shapes_textured);
+    glUniform1i(context.textured_loc_u_texture, 0);
+    glUseProgram(0);
 
     return 0;
 }
@@ -339,10 +267,9 @@ void gle2d_update_rendering_area(int viewport_width, int viewport_height)
 {
     mat4x4_identity(context.projection_matrix);
     mat4x4_ortho(context.projection_matrix, 0.0f, viewport_width, viewport_height, 0.0f, -1.0f, 1.0f);
-    glUseProgram(context.font_shader_program);
-    glUniformMatrix4fv(context.font_projection_loc, 1, GL_FALSE, &context.projection_matrix[0][0]);
-    glUseProgram(context.shapes_shader_program);
-    glUniformMatrix4fv(context.shapes_loc_proj, 1, GL_FALSE, &context.projection_matrix[0][0]);
+    glBindBuffer(GL_UNIFORM_BUFFER, context.uniform_buffer);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4x4), context.projection_matrix);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 void gle2d_shutdown(void)
@@ -350,8 +277,11 @@ void gle2d_shutdown(void)
     glUseProgram(0);
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDeleteProgram(context.shapes_shader_program);
-    glDeleteProgram(context.font_shader_program);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glDeleteProgram(context.program_shapes_solid);
+    glDeleteProgram(context.program_shapes_textured);
+    glDeleteProgram(context.program_font);
+    glDeleteBuffers(1, &context.uniform_buffer);
     glDeleteBuffers(1, &context.font_quad_vbo);
     glDeleteBuffers(1, &context.shapes_quad_vbo);
     glDeleteBuffers(1, &context.shapes_quad_ebo);
@@ -370,42 +300,45 @@ void gle2d_shutdown(void)
 
 void gle2d_shapes_draw_glpoint(float x, float y, float size, vec4 color)
 {
-    mat4x4_identity(context.shapes_model_matrix);
-    mat4x4_translate_in_place(context.shapes_model_matrix, x, y, 1.0f);
+    mat4x4_identity(context.model_matrix);
+    mat4x4_translate_in_place(context.model_matrix, x, y, 1.0f);
     
-    glUseProgram(context.shapes_shader_program);
-    glUniformMatrix4fv(context.shapes_loc_model, 1, GL_FALSE, &context.shapes_model_matrix[0][0]);
-    glUniform1i(context.shapes_loc_flag, 0);
-    glUniform4fv(context.shapes_loc_color, 1, color);
+    glUseProgram(context.program_shapes_solid);
+    glUniformMatrix4fv(context.solid_loc_u_model, 1, GL_FALSE, &context.model_matrix[0][0]);
+    glUniform4fv(context.solid_loc_u_color, 1, color);
 
     glBindVertexArray(context.shapes_quad_vao);
     glPointSize(size);
     glDisable(GL_DEPTH_TEST);
     glDrawArrays(GL_POINTS, 0, 1); // Draw just the first vertex as a point
-
     glBindVertexArray(0);
     glPointSize(1.0f);
-    glDisable(GL_BLEND);
 }
 
 void gle2d_shapes_draw_quad(float x, float y, float w, float h, float rotation, vec4 color, GLuint texture)
 {       
-    mat4x4_identity(context.shapes_model_matrix);
-    mat4x4_translate_in_place(context.shapes_model_matrix, x, y, 1.0f);
-    mat4x4_scale_aniso(context.shapes_model_matrix, context.shapes_model_matrix, w, h, 1.0f);
-    mat4x4_rotate_Z(context.shapes_model_matrix, context.shapes_model_matrix, rotation);
+    mat4x4_identity(context.model_matrix);
+    mat4x4_translate_in_place(context.model_matrix, x, y, 1.0f);
+    mat4x4_scale_aniso(context.model_matrix, context.model_matrix, w, h, 1.0f);
+    mat4x4_rotate_Z(context.model_matrix, context.model_matrix, rotation);
 
-    glUseProgram(context.shapes_shader_program);
-    glUniform4fv(context.shapes_loc_color, 1, color);
-    glUniformMatrix4fv(context.shapes_loc_model, 1, GL_FALSE, &context.shapes_model_matrix[0][0]);
     int use_texture = texture > 0 ? 1 : 0;
-    glUniform1i(context.shapes_loc_flag, use_texture);
+    if (use_texture) {
+        glUseProgram(context.program_shapes_textured);
+        glUniform4fv(context.textured_loc_u_color, 1, color);
+        glUniformMatrix4fv(context.textured_loc_u_model, 1, GL_FALSE, &context.model_matrix[0][0]);
+    } else {
+        glUseProgram(context.program_shapes_solid);
+        glUniform4fv(context.solid_loc_u_color, 1, color);
+        glUniformMatrix4fv(context.solid_loc_u_model, 1, GL_FALSE, &context.model_matrix[0][0]);
+    }
 
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBindVertexArray(context.shapes_quad_vao);
     if (use_texture) {
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
     }
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -498,8 +431,8 @@ void gle2d_font_render_text(const GLE2D_Font* font, vec4 color, const char* text
         return;
     }
 
-    glUseProgram(context.font_shader_program);
-    glUniform4f(context.font_text_color_loc, color[0], color[1], color[2], color[3]);
+    glUseProgram(context.program_font);
+    glUniform4f(context.font_loc_u_color, color[0], color[1], color[2], color[3]);
 
     glBindVertexArray(context.font_quad_vao);
     glActiveTexture(GL_TEXTURE0);
