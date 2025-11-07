@@ -19,9 +19,7 @@
 // Simple opengl Texture wrapper.
 
 // TODO wglGetCurrentContext/Linux version to check if OpenGL started.
-// TODO FIX rotated text rendering.
 // TODO add line drawing.
-// TODO !!! Fix rendering quads at correct places (0, 0) center at topleft etc. like pygame.
 // TODO add ebo to font rendering quads.
 
 //////////
@@ -66,6 +64,11 @@ typedef struct {
     unsigned char* ttf_data;
     GLuint atlas;
     unsigned int num_chars;
+    float px_size;
+    float px_scale;
+    int ascent;
+    int descent;
+    int linegap;
 } GLE2D_Font;
 
 int gle2d_font_create(GLE2D_Font* font, const char* path, float px_size);

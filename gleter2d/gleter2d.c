@@ -1,6 +1,7 @@
 #include "gleter2d.h"
 
 #include <stdio.h>
+#include <float.h>
 #include <string.h>
 #include <assert.h>
 
@@ -80,6 +81,7 @@ static unsigned char* gle2d_internal_font_load_into_memory(const char *path);
 static void           gle2d_internal_font_calculate_text_bounding_box(const GLE2D_Font* font, const char* text, vec2 out);
 static GLE2D_Texture  gle2d_internal_texture_create_empty_texture_for_font_rendering(int width, int height);
 static GLuint         gle2d_internal_create_shader_from_data(const char* vertex, const char* fragment);
+static void           gle2d_internal_update_rendering_area_and_projection(int viewport_width, int viewport_height);
 static int            gle2d_internal_shader_compile_error(GLuint shader);
 static int            gle2d_internal_shader_program_link_error(GLuint shader);
 static int            gle2d_internal_init_shader_programs(void);
@@ -198,7 +200,7 @@ static int gle2d_internal_init_shader_programs(void)
     "{\n"
     "   gl_Position = projection * u_model * vec4(in_pos, 0.0, 1.0);\n"
     "   vs_pass_color = u_color;\n"
-    "   vs_pass_texture_uv = in_pos.xy + vec2(0.5, 0.5);\n"
+    "   vs_pass_texture_uv = vec2(in_pos.x, in_pos.y) + vec2(0.5, 0.5);\n"
     "}\n";
 
     const char* shapes_textured_frag =
@@ -289,6 +291,7 @@ static int gle2d_internal_init_shader_programs(void)
 // The current drawable framebuffer dimensions (the values you pass to glViewport).
 void gle2d_update_rendering_area(int viewport_width, int viewport_height)
 {
+    glViewport(0, 0, viewport_width, viewport_height);
     mat4x4_identity(context.projection_matrix);
     mat4x4_ortho(context.projection_matrix, 0.0f, viewport_width, viewport_height, 0.0f, -1.0f, 1.0f);
     glBindBuffer(GL_UNIFORM_BUFFER, context.uniform_buffer);
@@ -296,6 +299,16 @@ void gle2d_update_rendering_area(int viewport_width, int viewport_height)
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     context.cached_viewport_width = viewport_width;
     context.cached_viewport_height = viewport_height;
+}
+
+static void gle2d_internal_update_rendering_area_and_projection(int viewport_width, int viewport_height)
+{
+    glViewport(0, 0, viewport_width, viewport_height);
+    mat4x4_identity(context.projection_matrix);
+    mat4x4_ortho(context.projection_matrix, 0.0f, viewport_width, 0.0f, viewport_height, -1.0f, 1.0f);
+    glBindBuffer(GL_UNIFORM_BUFFER, context.uniform_buffer);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4x4), context.projection_matrix);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 void gle2d_shutdown(void)
@@ -352,7 +365,7 @@ void gle2d_shapes_draw_quad(float x, float y, float w, float h, float rotation, 
     mat4x4_identity(context.model_matrix);
 
     mat4x4 Translate, Rotate, Scale;
-    mat4x4_translate(Translate, x, y, 1.0f);
+    mat4x4_translate(Translate, x+w/2, y+h/2, 1.0f);
     mat4x4_rotate_Z(Rotate, context.model_matrix, rotation);
     mat4x4_scale_aniso(Scale, context.model_matrix, w, h, 1.0f);
 
@@ -404,7 +417,11 @@ int gle2d_font_create(GLE2D_Font *font, const char *path, float px_size)
     unsigned char *ttf_data = NULL;
     GLuint atlas = 0;
     int num_char = GLE2D_FONT_LAST_CHAR;
-    //------------//
+    int ascent = 0;
+    int descent = 0;
+    int linegap = 0;
+    float scale = 0.0f;
+    //------------// 
 
     packed_char_array = malloc(sizeof(*packed_char_array) * num_char);
     if (!packed_char_array) {
@@ -419,6 +436,8 @@ int gle2d_font_create(GLE2D_Font *font, const char *path, float px_size)
     if (!stbtt_InitFont(&font_info, ttf_data, stbtt_GetFontOffsetForIndex(ttf_data, 0))) {
         goto cleanup;
     }
+    stbtt_GetFontVMetrics(&font_info, &ascent, &descent, &linegap);
+    scale = stbtt_ScaleForPixelHeight(&font_info, px_size);
 
     bitmap = malloc(GLE2D_FONT_ATLAS_SIZE * GLE2D_FONT_ATLAS_SIZE);
     if (!bitmap) {
@@ -448,6 +467,11 @@ int gle2d_font_create(GLE2D_Font *font, const char *path, float px_size)
     font->ttf_data = ttf_data;
     font->atlas = atlas;
     font->num_chars = num_char;
+    font->ascent = ascent;
+    font->descent = descent;
+    font->linegap = linegap;
+    font->px_size = px_size;
+    font->px_scale = scale;
     
     result = 0;
 
@@ -475,13 +499,13 @@ static void gle2d_internal_font_calculate_text_bounding_box(const GLE2D_Font* fo
     float xpos = 0.0f;
     float ypos = 0.0f;
 
-    float leftmost_x = 0.0f;
-    float rightmost_x = 0.0f;
-    float curr_glyph_height = 0.0f;
+    float leftmost_x = FLT_MAX;
+    float rightmost_x = -FLT_MAX;
+    float topmost_y = FLT_MAX;
+    float bottommost_y = -FLT_MAX; 
 
     stbtt_aligned_quad q;
     const char* p = text;
-    int first_char = 1; // true;
 
     while (*p != '\0') {
         stbtt_GetPackedQuad(font->packed_char_array,
@@ -491,26 +515,17 @@ static void gle2d_internal_font_calculate_text_bounding_box(const GLE2D_Font* fo
                             &xpos, &ypos,
                             &q, 1);
 
-        if (first_char) {
-            leftmost_x = q.x0;
-            first_char = 0;
-        }
-
-        if (*(p + 1) == '\0') { // last char.
-            rightmost_x = q.x1;
-        }
-
-        curr_glyph_height = q.y1 - q.y0;
-        if (curr_glyph_height > h) {
-            h = curr_glyph_height;
-        }
+        // Get the total font bounding box.
+        if (q.x0 < leftmost_x) leftmost_x = q.x0;
+        if (q.x1 > rightmost_x) rightmost_x = q.x1;
+        if (q.y0 < topmost_y) topmost_y = q.y0;
+        if (q.y1 > bottommost_y) bottommost_y = q.y1;
 
         p++;
     }
-    w = rightmost_x - leftmost_x;
 
-    out[0] = w;
-    out[1] = h;
+    out[0] = rightmost_x - leftmost_x;
+    out[1] = bottommost_y - topmost_y;
 }
 
 void gle2d_font_render_text_rotation(const GLE2D_Font* font, const char* text, float x, float y, float rotation, vec4 color)
@@ -543,39 +558,20 @@ void gle2d_font_render_text_rotation(const GLE2D_Font* font, const char* text, f
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, context.font_fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, context.font_dynamic_texutre.id, 0);
-    glViewport(0, 0, context.font_dynamic_texutre.width, context.font_dynamic_texutre.height);
-
-    mat4x4_identity(context.projection_matrix);
-    mat4x4_ortho(context.projection_matrix, 0.0f, context.font_dynamic_texutre.width, context.font_dynamic_texutre.height, 0.0f, -1.0f, 1.0f);
-    //mat4x4_ortho(context.projection_matrix, 0, context.font_dynamic_texutre.width, 0, context.font_dynamic_texutre.height, -1, 1);
-    glBindBuffer(GL_UNIFORM_BUFFER, context.uniform_buffer);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4x4), context.projection_matrix);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    gle2d_internal_update_rendering_area_and_projection(context.font_dynamic_texutre.width, context.font_dynamic_texutre.height);
 
     // // Clear to transparent
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    
-    // render text to framebuffer texture.
-    gle2d_font_render_text(font, color, text, 50, 100);
-
-//     int w = context.font_dynamic_texutre.width;
-// int h = context.font_dynamic_texutre.height;
-// unsigned char* pixels = malloc(w * h * 4);
-// glBindTexture(GL_TEXTURE_2D, context.font_dynamic_texutre.id);
-// glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-// // Save with stb_image_write to inspect visually:
-// stbi_write_png("font_tex_debug.png", w, h, 4, pixels, w * 4);
-// free(pixels);
+    // render text to framebuffer texture.      
+    gle2d_font_render_text(font, color, text, 0, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     gle2d_update_rendering_area(context.cached_viewport_width, context.cached_viewport_height);
-    glViewport(0, 0, context.cached_viewport_width, context.cached_viewport_height);
 
     // Draw text as texutred quad.
     gle2d_shapes_draw_quad(x, y, texture_dims[0], texture_dims[1], 
-        rotation, (vec4){1.0f, 1.0f, 1.0f, 1.0f}, 0);
+        rotation, (vec4){1.0f, 1.0f, 1.0f, 1.0f}, context.font_dynamic_texutre.id);
 }
 
 void gle2d_font_render_text(const GLE2D_Font* font, vec4 color, const char* text, float x, float y)
@@ -603,11 +599,11 @@ void gle2d_font_render_text(const GLE2D_Font* font, vec4 color, const char* text
     } 
 
     float xpos = x;
-    float ypos = y;
+    float ypos = y + font->ascent * font->px_scale;
     int cursor = 0;
     stbtt_aligned_quad q;
     const char* p = text; // walk the string without modifying 'text'
-    while (*p != '\0') {                     // strlen gotcha!!
+    while (*p != '\0') {                     // strlen gotcha without this XD
         stbtt_GetPackedQuad(font->packed_char_array,
                             GLE2D_FONT_ATLAS_SIZE,
                             GLE2D_FONT_ATLAS_SIZE,

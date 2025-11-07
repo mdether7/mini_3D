@@ -33,15 +33,15 @@ static DG_GameState game_state = {0};
 #define FULL_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
 #define TEXT_COLOR (vec4){0.0f, 0.5f, 0.5f, 1.0f}
 
+int w, h;
+
 int dg_init(void)
 {
     if (gle2d_init()) {
         return 1;
     }
     // Usually you want viewport to match framebuffer
-    int w, h;
     platform_get_framebuffer_size(&w, &h);
-    glViewport(0, 0, w, h); 
     gle2d_update_rendering_area(w, h);
 
     game_state.tess_shady = shader_program_tess_compile_from_path("shaders/dungen.vert",
@@ -51,7 +51,7 @@ int dg_init(void)
     }
 
     const char* path = "fonts/ligurino_bold.ttf";
-    if (gle2d_font_create(&game_state.fonts.default_font, path, 16.0f)) {
+    if (gle2d_font_create(&game_state.fonts.default_font, path, 32.0f)) {
         return 1;
     }
     const char* path_2 = "fonts/ligurino.ttf";
@@ -74,6 +74,7 @@ int dg_init(void)
     return 0;
 }
 
+#include <stdlib.h>
 int point_x = 100;
 int point_y = 100;
 
@@ -113,18 +114,16 @@ int dg_loop(float dt)
     glDrawArrays(GL_PATCHES, 0, 6);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, FULL_WHITE, game_state.dirt_tex.id);
     const char* text = "Lorem ipsum";
-    gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 50);
+    gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 0, 0);
+    //exit(0);
     gle2d_font_render_text(&game_state.fonts.extra_font, (vec4){0.0f, 0.5f, 0.5f, (float)sin(dt)}, text, 50, 100);
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 150);
     gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
     gle2d_shapes_draw_quad(500, 250, 256, 200, ((float)sin(dt) * 1.0f), FULL_WHITE, game_state.dirt_tex.id);
+    gle2d_font_render_text_rotation(&game_state.fonts.default_font, "Hello, there mr.captain, what are you up too?", 300, 300, ((float)sin(dt) * 1.0f), TEXT_COLOR);
 
-    //256.000000, 14.000000
-
-    gle2d_font_render_text_rotation(&game_state.fonts.default_font, "HEHE SPIN MEEEEEEEEEEEEEEEEEEEE", 300, 300, (float)sin(dt) * 0.5f, TEXT_COLOR);
-
-    gle2d_shapes_draw_glpoint(300, 300, 20, TEXT_COLOR);
 
     return 0;
 }

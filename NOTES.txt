@@ -53,3 +53,15 @@ stbi_write_png("test.png", 2, 2, 3, pixels, 2 * 3);
 STREAM - The data store contents will be modified once and used at most a few times.
 STATIC - The data store contents will be modified once and used many times.
 DYNAMIC - The data store contents will be modified repeatedly and used many times.
+
+Top-left origin (Y goes down)
+mat4x4_ortho(context.projection_matrix,
+             0.0f, viewport_width,     // X: left → right
+             viewport_height, 0.0f,    // Y: top → bottom
+             -1.0f, 1.0f);
+
+Bottom-left origin (Y goes up)
+mat4x4_ortho(context.projection_matrix,
+            0.0f, viewport_width,     // X: left → right
+            0.0f, viewport_height,    // Y: bottom → top
+            -1.0f, 1.0f);
