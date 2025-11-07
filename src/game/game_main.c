@@ -30,7 +30,6 @@ typedef struct {
 
 static DG_GameState game_state = {0};
 
-#define FULL_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
 #define TEXT_COLOR (vec4){0.0f, 0.5f, 0.5f, 1.0f}
 
 int w, h;
@@ -69,7 +68,6 @@ int dg_init(void)
     return 0;
 }
 
-#include <stdlib.h>
 int point_x = 100;
 int point_y = 100;
 
@@ -112,12 +110,11 @@ int dg_loop(float dt)
     gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, TEXT_COLOR, game_state.dirt_tex.id);
     const char* text = "Lorem ipsum";
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 0, 0);
-    //exit(0);
     gle2d_font_render_text(&game_state.fonts.extra_font, (vec4){0.0f, 0.5f, 0.5f, (float)sin(dt)}, text, 50, 100);
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 150);
     gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
-    gle2d_shapes_draw_quad(500, 250, 256, 200, ((float)sin(dt) * 1.0f), FULL_WHITE, game_state.dirt_tex.id);
-   // gle2d_font_render_text_rotation(&game_state.fonts.default_font, "Hello, there mr.captain, what are you up too?", 300, 300, ((float)sin(dt) * 1.0f), TEXT_COLOR);
+    gle2d_shapes_draw_quad(500, 250, 256, 200, ((float)sin(dt) * 1.0f), GLE2D_COLOR_WHITE, game_state.dirt_tex.id);
+    gle2d_font_render_text_rotation(&game_state.fonts.default_font, "Hello, there mr.captain, what are you up too?", 300, 300, 50.0f, TEXT_COLOR);
 
 
     return 0;

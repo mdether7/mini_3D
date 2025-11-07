@@ -20,10 +20,13 @@
 
 // TODO wglGetCurrentContext/Linux version to check if OpenGL started.
 // TODO add line drawing.
+// TODO add circle drawing.
 // TODO add ebo to font rendering quads.
 
 //////////
 // GLE2D
+
+#define GLE2D_COLOR_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
 
 // Run this after openGL is initialized.
 int gle2d_init(void);
