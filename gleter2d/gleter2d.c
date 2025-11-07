@@ -43,6 +43,7 @@ typedef struct {
 
     GLuint program_font;
     GLint  font_loc_u_color; 
+    GLint  font_loc_u_text;
 
     GLuint shapes_quad_vao;
     GLuint shapes_quad_vbo;
@@ -53,6 +54,9 @@ typedef struct {
     GLuint        font_fbo;
     GLuint        font_quad_vao;
     GLuint        font_quad_vbo;
+
+    int           cached_viewport_width;
+    int           cached_viewport_height;
 } GLE2D_Context;
 
 static GLE2D_Context context;
@@ -74,6 +78,7 @@ void util_print_mat4x4(const mat4x4 M)
 // GLE2D internal //
 static unsigned char* gle2d_internal_font_load_into_memory(const char *path);
 static void           gle2d_internal_font_calculate_text_bounding_box(const GLE2D_Font* font, const char* text, vec2 out);
+static GLE2D_Texture  gle2d_internal_texture_create_empty_texture_for_font_rendering(int width, int height);
 static GLuint         gle2d_internal_create_shader_from_data(const char* vertex, const char* fragment);
 static int            gle2d_internal_shader_compile_error(GLuint shader);
 static int            gle2d_internal_shader_program_link_error(GLuint shader);
@@ -130,10 +135,19 @@ int gle2d_init(void)
     if (!context.font_batch_buffer) {
         return 1;
     }
-
+                                                                                            // some dummy value.
+    context.font_dynamic_texutre = gle2d_internal_texture_create_empty_texture_for_font_rendering(10, 10); 
+    if (context.font_dynamic_texutre.id == 0) {
+        return 1;
+    }
     glGenFramebuffers(1, &context.font_fbo);
-
-
+    glBindFramebuffer(GL_FRAMEBUFFER, context.font_fbo); 
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, context.font_dynamic_texutre.id, 0);
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        return 1;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);  
 
     mat4x4_identity(context.model_matrix);
     mat4x4_identity(context.projection_matrix);
@@ -246,6 +260,7 @@ static int gle2d_internal_init_shader_programs(void)
     context.textured_loc_u_texture = glGetUniformLocation(context.program_shapes_textured, "u_texture");  
 
     context.font_loc_u_color =  glGetUniformLocation(context.program_font, "u_color");
+    context.font_loc_u_text = glGetUniformLocation(context.program_font, "text");
 
     int ubo_index = 0;
     GLuint block_index_one = glGetUniformBlockIndex(context.program_shapes_solid, "u_BlockProjectionMatrix");
@@ -257,14 +272,16 @@ static int gle2d_internal_init_shader_programs(void)
 
     glGenBuffers(1, &context.uniform_buffer);
     glBindBuffer(GL_UNIFORM_BUFFER, context.uniform_buffer);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(mat4x4), NULL, GL_STATIC_DRAW);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(mat4x4), NULL, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_UNIFORM_BUFFER, ubo_index, context.uniform_buffer);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     // map sampler to texture unit 0
     glUseProgram(context.program_shapes_textured);
     glUniform1i(context.textured_loc_u_texture, 0);
-    glUseProgram(0);
+    glUseProgram(context.program_font);
+    glUniform1i(context.font_loc_u_text, 0);
+    glUseProgram(0); // TODO check if this is needed.
 
     return 0;
 }
@@ -277,6 +294,8 @@ void gle2d_update_rendering_area(int viewport_width, int viewport_height)
     glBindBuffer(GL_UNIFORM_BUFFER, context.uniform_buffer);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4x4), context.projection_matrix);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    context.cached_viewport_width = viewport_width;
+    context.cached_viewport_height = viewport_height;
 }
 
 void gle2d_shutdown(void)
@@ -295,6 +314,7 @@ void gle2d_shutdown(void)
     glDeleteVertexArrays(1, &context.font_quad_vao);
     glDeleteVertexArrays(1, &context.shapes_quad_vao);
     glDeleteFramebuffers(1, &context.font_fbo);
+    gle2d_texture_delete(context.font_dynamic_texutre);
     free(context.font_batch_buffer);
 }
 
@@ -336,7 +356,7 @@ void gle2d_shapes_draw_quad(float x, float y, float w, float h, float rotation, 
     mat4x4_rotate_Z(Rotate, context.model_matrix, rotation);
     mat4x4_scale_aniso(Scale, context.model_matrix, w, h, 1.0f);
 
-    mat4x4_mul(context.model_matrix, Scale, Rotate);
+    mat4x4_mul(context.model_matrix, Rotate, Scale);
     mat4x4_mul(context.model_matrix, Translate, context.model_matrix);
 
     int use_texture = texture > 0 ? 1 : 0;
@@ -498,14 +518,64 @@ void gle2d_font_render_text_rotation(const GLE2D_Font* font, const char* text, f
     if (!font || !text || *text == '\0') {
         return;
     }
+
     vec2 texture_dims;
     gle2d_internal_font_calculate_text_bounding_box(font, text, texture_dims);
 
+    if (texture_dims[0] != context.font_dynamic_texutre.width ||
+        texture_dims[1] != context.font_dynamic_texutre.height) {
 
+        glBindTexture(GL_TEXTURE_2D, context.font_dynamic_texutre.id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_dims[0], texture_dims[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
+        context.font_dynamic_texutre.width = texture_dims[0];
+        context.font_dynamic_texutre.height = texture_dims[1];
 
+        // Re-attach after resizing.
+        glBindFramebuffer(GL_FRAMEBUFFER, context.font_fbo);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, context.font_dynamic_texutre.id, 0);
 
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        assert(status == GL_FRAMEBUFFER_COMPLETE);
 
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, context.font_fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, context.font_dynamic_texutre.id, 0);
+    glViewport(0, 0, context.font_dynamic_texutre.width, context.font_dynamic_texutre.height);
+
+    mat4x4_identity(context.projection_matrix);
+    mat4x4_ortho(context.projection_matrix, 0.0f, context.font_dynamic_texutre.width, context.font_dynamic_texutre.height, 0.0f, -1.0f, 1.0f);
+    //mat4x4_ortho(context.projection_matrix, 0, context.font_dynamic_texutre.width, 0, context.font_dynamic_texutre.height, -1, 1);
+    glBindBuffer(GL_UNIFORM_BUFFER, context.uniform_buffer);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4x4), context.projection_matrix);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    // // Clear to transparent
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    
+    // render text to framebuffer texture.
+    gle2d_font_render_text(font, color, text, 50, 100);
+
+//     int w = context.font_dynamic_texutre.width;
+// int h = context.font_dynamic_texutre.height;
+// unsigned char* pixels = malloc(w * h * 4);
+// glBindTexture(GL_TEXTURE_2D, context.font_dynamic_texutre.id);
+// glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+// // Save with stb_image_write to inspect visually:
+// stbi_write_png("font_tex_debug.png", w, h, 4, pixels, w * 4);
+// free(pixels);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    gle2d_update_rendering_area(context.cached_viewport_width, context.cached_viewport_height);
+    glViewport(0, 0, context.cached_viewport_width, context.cached_viewport_height);
+
+    // Draw text as texutred quad.
+    gle2d_shapes_draw_quad(x, y, texture_dims[0], texture_dims[1], 
+        rotation, (vec4){1.0f, 1.0f, 1.0f, 1.0f}, 0);
 }
 
 void gle2d_font_render_text(const GLE2D_Font* font, vec4 color, const char* text, float x, float y)
@@ -620,6 +690,32 @@ GLE2D_Texture gle2d_texture_load(const char* path)
     texture.height = height;
     return texture;
 }
+
+static GLE2D_Texture gle2d_internal_texture_create_empty_texture_for_font_rendering(int width, int height)
+{
+    assert(width > 0 && height > 0);
+    GLE2D_Texture texture = {0};
+
+    glGenTextures(1, &texture.id);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture.id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+    // Probably good settings for rendering text onto a texture
+    // Gotta keep that in mind.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);   
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    texture.width = width;
+    texture.height = height;
+
+    return texture;
+}
+
 
 void gle2d_texture_bind(GLE2D_Texture texture)
 {

@@ -70,10 +70,6 @@ int dg_init(void)
     // glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFBO);
     // platform_log_info("%d, %d", currentFBO, readFBO);
 
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
-        platform_log_success("HEHE");
-    }
-
     glGenVertexArrays(1, &game_state.vao);
     return 0;
 }
@@ -97,6 +93,10 @@ int dg_loop(float dt)
         platform_log_info("RIGHT");
     }
 
+    // TODO Test this out.
+    // GLint prev_viewport[4];
+    // glGetIntegerv(GL_VIEWPORT, prev_viewport);
+
     // update.
     GLfloat attrib[] = {(float)sin(dt) * 0.5f, (float)cos(dt) * 0.6f};
     GLfloat color[] = {1.0f, 0.0f, 0.5f, 1.0f};
@@ -118,9 +118,11 @@ int dg_loop(float dt)
     gle2d_font_render_text(&game_state.fonts.extra_font, (vec4){0.0f, 0.5f, 0.5f, (float)sin(dt)}, text, 50, 100);
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 150);
     gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
-    gle2d_shapes_draw_quad(200, 200, 200, 200,(float)sin(dt) * 0.5f,  FULL_WHITE, game_state.dirt_tex.id);
-    gle2d_shapes_draw_quad(400, 250, 200, 200, ((float)sin(dt) * 0.5f), FULL_WHITE, game_state.dirt_tex.id);
-    gle2d_shapes_draw_quad(500, 250, 200, 200, ((float)sin(dt) * 1.0f), FULL_WHITE, game_state.dirt_tex.id);
+    gle2d_shapes_draw_quad(500, 250, 256, 200, ((float)sin(dt) * 1.0f), FULL_WHITE, game_state.dirt_tex.id);
+
+    //256.000000, 14.000000
+
+    gle2d_font_render_text_rotation(&game_state.fonts.default_font, "HEHE SPIN MEEEEEEEEEEEEEEEEEEEE", 300, 300, (float)sin(dt) * 0.5f, TEXT_COLOR);
 
     gle2d_shapes_draw_glpoint(300, 300, 20, TEXT_COLOR);
 
