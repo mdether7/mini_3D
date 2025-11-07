@@ -87,10 +87,6 @@ int dg_loop(float dt)
         platform_log_info("RIGHT");
     }
 
-    // TODO Test this out.
-    // GLint prev_viewport[4];
-    // glGetIntegerv(GL_VIEWPORT, prev_viewport);
-
     // update.
     GLfloat attrib[] = {(float)sin(dt) * 0.5f, (float)cos(dt) * 0.6f};
     GLfloat color[] = {1.0f, 0.0f, 0.5f, 1.0f};
@@ -100,21 +96,24 @@ int dg_loop(float dt)
     glVertexAttrib4fv(1, color);
 
     // render.
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
+
+    gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, TEXT_COLOR, game_state.dirt_tex.id);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     shader_program_bind(&game_state.tess_shady);
     glBindVertexArray(game_state.vao);
     glDrawArrays(GL_PATCHES, 0, 6);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, TEXT_COLOR, game_state.dirt_tex.id);
-    const char* text = "Lorem ipsum";
+    //gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, TEXT_COLOR, game_state.dirt_tex.id);
+    const char* text = "Lorem ipsum.,//][$$^$&=^&*][]";
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 0, 0);
     gle2d_font_render_text(&game_state.fonts.extra_font, (vec4){0.0f, 0.5f, 0.5f, (float)sin(dt)}, text, 50, 100);
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 150);
     gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
-    gle2d_shapes_draw_quad(500, 250, 256, 200, ((float)sin(dt) * 1.0f), GLE2D_COLOR_WHITE, game_state.dirt_tex.id);
-    gle2d_font_render_text_rotation(&game_state.fonts.default_font, "Hello, there mr.captain, what are you up too?", 300, 300, 50.0f, TEXT_COLOR);
+    gle2d_shapes_draw_quad(500, 250, 256 *(float)sin(dt) , 200 * (float)cos(dt), ((float)sin(dt) * 1.0f), GLE2D_COLOR_WHITE, game_state.dirt_tex.id);
+    gle2d_font_render_text_rotation(&game_state.fonts.default_font, "Hello, there mr.captain, what are you up too?", (float)sin(dt) * 21.0f, (float)cos(dt) * 20.0f, 50.0f, TEXT_COLOR);
 
 
     return 0;

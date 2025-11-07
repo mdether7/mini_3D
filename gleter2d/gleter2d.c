@@ -87,6 +87,11 @@ static int            gle2d_internal_shader_program_link_error(GLuint shader);
 static int            gle2d_internal_init_shader_programs(void);
 //----------------//
 
+// Good to know //
+// GLint prev_viewport[4];
+// glGetIntegerv(GL_VIEWPORT, prev_viewport);
+//--------------//
+
 int gle2d_init(void)
 {
     if (gle2d_internal_init_shader_programs()) {
@@ -142,6 +147,8 @@ int gle2d_init(void)
     if (context.font_dynamic_texutre.id == 0) {
         return 1;
     }
+    
+    // Seprate framebuffer for text rotations.
     glGenFramebuffers(1, &context.font_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, context.font_fbo); 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, context.font_dynamic_texutre.id, 0);
