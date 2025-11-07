@@ -65,11 +65,6 @@ int dg_init(void)
         return 1;
     }
 
-    // GLint currentFBO, readFBO;
-    // glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &currentFBO);
-    // glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFBO);
-    // platform_log_info("%d, %d", currentFBO, readFBO);
-
     glGenVertexArrays(1, &game_state.vao);
     return 0;
 }
@@ -114,7 +109,7 @@ int dg_loop(float dt)
     glDrawArrays(GL_PATCHES, 0, 6);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, FULL_WHITE, game_state.dirt_tex.id);
+    gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, TEXT_COLOR, game_state.dirt_tex.id);
     const char* text = "Lorem ipsum";
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 0, 0);
     //exit(0);
@@ -122,7 +117,7 @@ int dg_loop(float dt)
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 150);
     gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
     gle2d_shapes_draw_quad(500, 250, 256, 200, ((float)sin(dt) * 1.0f), FULL_WHITE, game_state.dirt_tex.id);
-    gle2d_font_render_text_rotation(&game_state.fonts.default_font, "Hello, there mr.captain, what are you up too?", 300, 300, ((float)sin(dt) * 1.0f), TEXT_COLOR);
+   // gle2d_font_render_text_rotation(&game_state.fonts.default_font, "Hello, there mr.captain, what are you up too?", 300, 300, ((float)sin(dt) * 1.0f), TEXT_COLOR);
 
 
     return 0;
