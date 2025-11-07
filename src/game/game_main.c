@@ -107,13 +107,13 @@ int dg_loop(float dt)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     //gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, TEXT_COLOR, game_state.dirt_tex.id);
-    const char* text = "Lorem ipsum.,//][$$^$&=^&*][]";
+    const char* text = "gleter2d";
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 0, 0);
     gle2d_font_render_text(&game_state.fonts.extra_font, (vec4){0.0f, 0.5f, 0.5f, (float)sin(dt)}, text, 50, 100);
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 150);
     gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
     gle2d_shapes_draw_quad(500, 250, 256 *(float)sin(dt) , 200 * (float)cos(dt), ((float)sin(dt) * 1.0f), GLE2D_COLOR_WHITE, game_state.dirt_tex.id);
-    gle2d_font_render_text_rotation(&game_state.fonts.default_font, "Hello, there mr.captain, what are you up too?", (float)sin(dt) * 21.0f, (float)cos(dt) * 20.0f, 50.0f, TEXT_COLOR);
+    gle2d_font_render_text_rotation(&game_state.fonts.default_font, "gleter2d rotatin text", 200.0f, 200.0f, (float)sin(dt), TEXT_COLOR);
 
 
     return 0;
