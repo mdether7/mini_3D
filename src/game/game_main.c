@@ -89,8 +89,7 @@ int dg_loop(float dt)
     if (platform_is_key_down(KEY_R)) {
         if (gle2d_misc_shader_hot_reload(GLE2D_SHADER_SOLID, "shaders/gle2dsolid.vert", "shaders/gle2dsolid.frag")) {
             platform_log_error("Shader hot reaload error!");
-        }
-        else {
+        } else {
             platform_log_success("Shader reloaded sucesfully!");
         }
     }
@@ -108,7 +107,7 @@ int dg_loop(float dt)
 
     gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, GLE2D_COLOR_GREEN, 0);
 
-#if 0 // MY 2D LIB SHOWCASE
+#if 1 // MY 2D LIB SHOWCASE
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     shader_program_bind(&game_state.tess_shady);
     glBindVertexArray(game_state.vao);
