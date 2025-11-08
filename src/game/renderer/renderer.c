@@ -5,17 +5,31 @@
 
 float dg3d_vertex_data_cube[] = {
 
+    // indices
+// 0, 1, 2,
+// 2, 3, 0
+
+// uv
+// 0,1,
+// 0,0,
+// 1,0,
+// 1,1
+    //////////
+    // CUBE //
     // Front face
-    -0.5,  0.5, -0.5,
-    -0.5, -0.5, -0.5,
-    0.5, -0.5, -0.5,
-    0.5,  0.5, -0.5 
+    -.5, .5, .5, 
+    -.5, -.5, .5,
+    .5, -.5, .5,
+    .5, .5, .5, 
     // Back face
-
-    
-
+    .5, .5, -.5,
+    .5, -.5, -.5,
+    -.5, -.5, -.5,
+    -.5, .5, -.5,
     // Right face
-
+    .5, .5, .5,
+    .5, -.5, .5,
+    
     // Left face
 
     // Top face
@@ -24,6 +38,8 @@ float dg3d_vertex_data_cube[] = {
 
 
 };
+
+
 
 // Minimal data needed to display a cube, front face.
 //vertices
