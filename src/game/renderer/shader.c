@@ -8,6 +8,7 @@
 #include "platform/platform_log.h"
 
 // TODO: add shader compilation from char* directly.
+// TODO: Try to make it compatible with gleter2d.
 
 static int shader_compile_error(GLuint shader);
 static int shader_program_link_error(GLuint program);

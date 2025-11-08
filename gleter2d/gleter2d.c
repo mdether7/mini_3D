@@ -35,6 +35,7 @@ typedef struct {
 
     GLuint program_shapes_solid;
     GLint  solid_loc_u_color;
+    GLint  solid_loc_u_time;
     GLint  solid_loc_u_res;
     GLint  solid_loc_u_model;
 
@@ -57,6 +58,7 @@ typedef struct {
     GLuint        font_quad_vao;
     GLuint        font_quad_vbo;
 
+    float         time;
     int           cached_viewport_width;
     int           cached_viewport_height;
 } GLE2D_Context;
@@ -162,6 +164,8 @@ int gle2d_init(void)
 
     mat4x4_identity(context.model_matrix);
     mat4x4_identity(context.projection_matrix);
+    context.time = 0.0f;
+
     return 0;
 }
 
@@ -189,6 +193,7 @@ static int gle2d_internal_init_shader_programs(void)
     "out vec4 FinalColor;\n"
     "in vec4 vs_pass_color;\n"
     "uniform vec2 u_res;\n"
+    "uniform float u_time;\n"
     "void main()\n"
     "{\n"
     "   vec2 uv = (gl_FragCoord.xy / u_res.xy) * 2.0 - 1.0;\n"
@@ -269,6 +274,7 @@ static int gle2d_internal_init_shader_programs(void)
     context.solid_loc_u_color = glGetUniformLocation(context.program_shapes_solid, "u_color");
     context.solid_loc_u_model = glGetUniformLocation(context.program_shapes_solid, "u_model");
     context.solid_loc_u_res = glGetUniformLocation(context.program_shapes_solid, "u_res");
+    context.solid_loc_u_time = glGetUniformLocation(context.program_shapes_solid, "u_time");
 
     context.textured_loc_u_color = glGetUniformLocation(context.program_shapes_textured, "u_color");
     context.textured_loc_u_model = glGetUniformLocation(context.program_shapes_textured, "u_model"); 
@@ -354,6 +360,11 @@ void gle2d_shutdown(void)
 ///////////
 // Shapes
 
+void gle2d_update_time_uniform(float time)
+{
+    context.time = time;
+}
+
 void gle2d_shapes_draw_circle(float x, float y, float radius, vec4 color)
 {
     (void)x;
@@ -400,6 +411,7 @@ void gle2d_shapes_draw_quad(float x, float y, float w, float h, float rotation, 
     } else {
         glUseProgram(context.program_shapes_solid);
         glUniform4fv(context.solid_loc_u_color, 1, color);
+        glUniform1f(context.solid_loc_u_time, context.time);
         glUniformMatrix4fv(context.solid_loc_u_model, 1, GL_FALSE, &context.model_matrix[0][0]);
     }
 
@@ -811,6 +823,7 @@ int gle2d_misc_shader_hot_reload(GLE2D_ShaderType type, const char* vertex_file_
             context.solid_loc_u_color = glGetUniformLocation(new_program, "u_color");
             context.solid_loc_u_model = glGetUniformLocation(new_program, "u_model");
             context.solid_loc_u_res = glGetUniformLocation(new_program, "u_res");
+            context.solid_loc_u_time = glGetUniformLocation(new_program, "u_time");
 
             GLuint new_block_index = glGetUniformBlockIndex(new_program, "u_BlockProjectionMatrix");
             glUniformBlockBinding(new_program, new_block_index, 0);

@@ -101,13 +101,15 @@ int dg_loop(float dt)
     glGetAttribLocation(game_state.tess_shady.id, "color");
     glVertexAttrib2fv(0, attrib);
     glVertexAttrib4fv(1, color);
+    
+    gle2d_update_time_uniform(dt);
 
     // render.
     glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
 
-    gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, GLE2D_COLOR_RED, 0);
+    gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, GLE2D_COLOR_GREEN, 0);
 
-#if 1 // MY 2D LIB SHOWCASE
+#if 0 // MY 2D LIB SHOWCASE
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     shader_program_bind(&game_state.tess_shady);
     glBindVertexArray(game_state.vao);

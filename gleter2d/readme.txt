@@ -1,7 +1,3 @@
-An attempt to make a simple 2d lib using opengl.
--Supports font loading, rendering, they are easy to manage
--Basic texture wrapper.
--Supports drawing quads/ textured quad.
-and incorporate in your project.
--Basic hacky font saving to disc.
--Minimal dependencies. 
+Simple bare bones kinda opengl2d library (personal use)
+Header file it's is best documentation i have XD.
+

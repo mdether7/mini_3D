@@ -53,7 +53,6 @@ void gle2d_update_rendering_area(int viewport_width, int viewport_height);
 void gle2d_shutdown(void);
 
 // Textures and Fonts are both managed by the caller.
-// Makes it easier for me to integrate in my project.
 
 /////////////
 // TEXTURES
@@ -71,6 +70,7 @@ void gle2d_texture_delete(GLE2D_Texture texture);
 ///////////
 // Shapes
 
+void gle2d_update_time_uniform(float time);
 // pass 0 to texture if you want to draw raw color quad.
 void gle2d_shapes_draw_quad(float x, float y, float w, float h, float rotation, vec4 color, GLuint texture);
 void gle2d_shapes_draw_circle(float x, float y, float radius, vec4 color);
