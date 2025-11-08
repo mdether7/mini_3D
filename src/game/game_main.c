@@ -86,6 +86,14 @@ int dg_loop(float dt)
     if (platform_is_key_down(KEY_D)) {
         platform_log_info("RIGHT");
     }
+    if (platform_is_key_down(KEY_R)) {
+        if (gle2d_misc_shader_hot_reload(GLE2D_SHADER_SOLID, "shaders/gle2dsolid.vert", "shaders/gle2dsolid.frag")) {
+            platform_log_error("Shader hot reaload error!");
+        }
+        else {
+            platform_log_success("Shader reloaded sucesfully!");
+        }
+    }
 
     // update.
     GLfloat attrib[] = {(float)sin(dt) * 0.5f, (float)cos(dt) * 0.6f};

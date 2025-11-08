@@ -815,6 +815,10 @@ int gle2d_misc_shader_hot_reload(GLE2D_ShaderType type, const char* vertex_file_
             GLuint new_block_index = glGetUniformBlockIndex(new_program, "u_BlockProjectionMatrix");
             glUniformBlockBinding(new_program, new_block_index, 0);
 
+            glUseProgram(new_program);
+            glUniform2f(context.solid_loc_u_res, context.cached_viewport_width,context.cached_viewport_height);
+            glUseProgram(0);
+
         } break;
         case GLE2D_SHADER_TEXTURED: 
         {
