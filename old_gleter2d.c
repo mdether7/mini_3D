@@ -35,7 +35,6 @@ typedef struct {
 
     GLuint program_shapes_solid;
     GLint  solid_loc_u_color;
-    GLint  solid_loc_u_res;
     GLint  solid_loc_u_model;
 
     GLuint program_shapes_textured;
@@ -86,7 +85,6 @@ static void           gle2d_internal_update_rendering_area_and_projection(int vi
 static int            gle2d_internal_shader_compile_error(GLuint shader);
 static int            gle2d_internal_shader_program_link_error(GLuint shader);
 static int            gle2d_internal_init_shader_programs(void);
-static unsigned char* gle2d_internal_load_file_as_string_null_terminate(const char* path);
 //----------------//
 
 // Good to know //
@@ -181,20 +179,17 @@ static int gle2d_internal_init_shader_programs(void)
     "void main()\n"
     "{\n"
     "   gl_Position = projection * u_model * vec4(in_pos, 0.0, 1.0);\n"
-    "   vs_pass_color = u_color.rgba;\n"
+    "   vs_pass_color = u_color;\n"
     "}\n";
 
     const char* shapes_solid_frag =
     GLE2D_DEFAULT_SHADER_VERSION
     "out vec4 FinalColor;\n"
     "in vec4 vs_pass_color;\n"
-    "uniform vec2 u_res;\n"
     "void main()\n"
     "{\n"
-    "   vec2 uv = (gl_FragCoord.xy / u_res.xy) * 2.0 - 1.0;\n"
     "   FinalColor = vs_pass_color;\n"
     "}\n";
-
 
     // SHAPES TEXTURED //
     const char* shapes_textured_vert =
@@ -248,11 +243,11 @@ static int gle2d_internal_init_shader_programs(void)
     GLE2D_DEFAULT_SHADER_VERSION
     "in vec2 TexCoords;\n"
     "out vec4 color;\n"
-    "uniform sampler2D u_text;\n"
+    "uniform sampler2D text;\n"
     "uniform vec4 u_color;\n"
     "void main()\n"
     "{\n"
-    "   vec4 sampled = vec4(1.0, 1.0, 1.0, texture(u_text, TexCoords).r);\n"
+    "   vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);\n"
     "   color = u_color * sampled;\n"
     "}\n";
 
@@ -268,14 +263,13 @@ static int gle2d_internal_init_shader_programs(void)
 
     context.solid_loc_u_color = glGetUniformLocation(context.program_shapes_solid, "u_color");
     context.solid_loc_u_model = glGetUniformLocation(context.program_shapes_solid, "u_model");
-    context.solid_loc_u_res = glGetUniformLocation(context.program_shapes_solid, "u_res");
 
     context.textured_loc_u_color = glGetUniformLocation(context.program_shapes_textured, "u_color");
     context.textured_loc_u_model = glGetUniformLocation(context.program_shapes_textured, "u_model"); 
     context.textured_loc_u_texture = glGetUniformLocation(context.program_shapes_textured, "u_texture");  
 
     context.font_loc_u_color =  glGetUniformLocation(context.program_font, "u_color");
-    context.font_loc_u_text = glGetUniformLocation(context.program_font, "u_text");
+    context.font_loc_u_text = glGetUniformLocation(context.program_font, "text");
 
     int ubo_index = 0;
     GLuint block_index_one = glGetUniformBlockIndex(context.program_shapes_solid, "u_BlockProjectionMatrix");
@@ -305,18 +299,11 @@ static int gle2d_internal_init_shader_programs(void)
 void gle2d_update_rendering_area(int viewport_width, int viewport_height)
 {
     glViewport(0, 0, viewport_width, viewport_height);
-
-    // update projection matrix across shaders.
     mat4x4_identity(context.projection_matrix);
     mat4x4_ortho(context.projection_matrix, 0.0f, viewport_width, viewport_height, 0.0f, -1.0f, 1.0f);
     glBindBuffer(GL_UNIFORM_BUFFER, context.uniform_buffer);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4x4), context.projection_matrix);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-    glUseProgram(context.program_shapes_solid);
-    glUniform2f(context.solid_loc_u_res, viewport_width, viewport_height);
-    glUseProgram(0);
-
     context.cached_viewport_width = viewport_width;
     context.cached_viewport_height = viewport_height;
 }
@@ -485,7 +472,7 @@ int gle2d_font_create(GLE2D_Font *font, const char *path, float px_size)
 
     font->packed_char_array = packed_char_array;
     font->ttf_data = ttf_data;
-    font->atlas = atlas; 
+    font->atlas = atlas;
     font->num_chars = num_char;
     font->ascent = ascent;
     font->descent = descent;
@@ -782,80 +769,6 @@ int gle2d_misc_texture_save_to_disk_as_png(GLuint texture, const char *name)
     return result ? 0 : 1;
 }
 
-int gle2d_misc_shader_hot_reload(GLE2D_ShaderType type, const char* vertex_file_path, const char* fragment_file_path)
-{
-    assert(vertex_file_path && fragment_file_path);
-
-    unsigned char* vert_data = gle2d_internal_load_file_as_string_null_terminate(vertex_file_path);
-    unsigned char* frag_data = gle2d_internal_load_file_as_string_null_terminate(fragment_file_path);
-    if (!vert_data || !frag_data) {
-        free(vert_data);
-        free(frag_data);
-        return 1;
-    }
-
-    GLuint new_program = 0;
-    new_program = gle2d_internal_create_shader_from_data((const char*)vert_data, (const char*)frag_data);
-    free(vert_data);
-    free(frag_data);
-
-    if (new_program == 0) return 1;
-
-    GLuint* target_program = NULL;
-    switch(type) 
-    {
-        case GLE2D_SHADER_SOLID: 
-        {
-            target_program = &context.program_shapes_solid;
-            // reset uniforms locations.
-            context.solid_loc_u_color = glGetUniformLocation(new_program, "u_color");
-            context.solid_loc_u_model = glGetUniformLocation(new_program, "u_model");
-            context.solid_loc_u_res = glGetUniformLocation(new_program, "u_res");
-
-            GLuint new_block_index = glGetUniformBlockIndex(new_program, "u_BlockProjectionMatrix");
-            glUniformBlockBinding(new_program, new_block_index, 0);
-
-        } break;
-        case GLE2D_SHADER_TEXTURED: 
-        {
-            target_program = &context.program_shapes_textured;
-
-            context.textured_loc_u_color = glGetUniformLocation(new_program, "u_color");
-            context.textured_loc_u_model = glGetUniformLocation(new_program, "u_model"); 
-            context.textured_loc_u_texture = glGetUniformLocation(new_program, "u_texture"); 
-
-            GLuint new_block_index = glGetUniformBlockIndex(new_program, "u_BlockProjectionMatrix");
-            glUniformBlockBinding(new_program, new_block_index, 0);
-
-            glUseProgram(new_program);
-            glUniform1i(context.textured_loc_u_texture, 0);
-            glUseProgram(0);
-        } break;
-        case GLE2D_SHADER_FONT: 
-        {
-            target_program = &context.program_font;
-
-            context.font_loc_u_color =  glGetUniformLocation(new_program, "u_color");
-            context.font_loc_u_text = glGetUniformLocation(new_program, "u_text");
-
-            GLuint new_block_index = glGetUniformBlockIndex(new_program, "u_BlockProjectionMatrix");
-            glUniformBlockBinding(new_program, new_block_index, 0);
-
-            glUseProgram(new_program);
-            glUniform1i(context.font_loc_u_text, 0);
-            glUseProgram(0);
-        } break;
-        default:
-            glDeleteProgram(new_program);
-            return 1;
-    }
-    
-    glDeleteProgram(*target_program);
-    *target_program = new_program;
-
-    return 0;
-}
-
 /////////////
 // Internal
 
@@ -925,46 +838,6 @@ static int gle2d_internal_shader_program_link_error(GLuint shader)
         return 1;
     }
     return 0;
-}
-
-static unsigned char* gle2d_internal_load_file_as_string_null_terminate(const char* path)
-{
-    assert(path);
-    unsigned char *data = NULL;
-    int result = 1;
-
-    FILE* f = fopen(path, "rb");
-    if (!f) {
-        goto cleanup;
-    }
-
-    fseek(f, 0L, SEEK_END);
-    long size = ftell(f);
-    fseek(f, 0L, SEEK_SET);
-    if (size <= 0) { // empty or error.
-        goto cleanup;
-    }
-
-    data = malloc(size + 1); // for null termination.
-    if (!data) {
-        goto cleanup;
-    }
-
-    size_t elements_read = fread(data, 1, size, f);
-    if (elements_read != (size_t)size) {
-        goto cleanup;
-    }
-
-    data[size] = '\0';
-    result = 0;
-
-cleanup:
-    if (f) fclose(f);
-    if (result) {
-        free(data);
-        data = NULL;
-    }
-    return data;
 }
 
 static unsigned char* gle2d_internal_font_load_into_memory(const char *path)

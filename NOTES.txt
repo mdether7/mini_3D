@@ -54,6 +54,12 @@ STREAM - The data store contents will be modified once and used at most a few ti
 STATIC - The data store contents will be modified once and used many times.
 DYNAMIC - The data store contents will be modified repeatedly and used many times.
 
+// Linear remapping //
+// f(x) = c + (x - a) × (d - c) / (b - a)
+// x is your input value
+// [a, b] is the input range
+// [c, d] is the output range
+
 Top-left origin (Y goes down)
 mat4x4_ortho(context.projection_matrix,
              0.0f, viewport_width,     // X: left → right

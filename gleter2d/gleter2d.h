@@ -14,6 +14,8 @@
 // FEATURES
 // Load ttf fonts.
 // Render text using those fonts.
+// Render rotated text.
+// Hot reload build in shaders.
 // Save textures as png.
 // Render quads.
 // Simple opengl Texture wrapper.
@@ -26,7 +28,21 @@
 //////////
 // GLE2D
 
+// Some predefined colors.
+#define GLE2D_COLOR_BLACK (vec4){0.0f, 0.0f, 0.0f, 1.0f}
 #define GLE2D_COLOR_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
+#define GLE2D_COLOR_RED (vec4){1.0f, 0.0f, 0.0f, 1.0f}
+#define GLE2D_COLOR_GREEN (vec4){0.0f, 1.0f, 0.0f, 1.0f}
+#define GLE2D_COLOR_BLUE (vec4){0.0f, 0.0f, 1.0f, 1.0f}
+
+//////////
+// Enums
+typedef enum {
+    GLE2D_SHADER_SOLID = 0,
+    GLE2D_SHADER_TEXTURED,
+    GLE2D_SHADER_FONT,
+    GLE2D_SHADER_COUNT
+} GLE2D_ShaderType; 
 
 // Run this after openGL is initialized.
 int gle2d_init(void);
@@ -86,5 +102,6 @@ void gle2d_font_destroy(GLE2D_Font* font);
 // NOTES: Unbinds currently bound texture.
 //        Requires texture format to be GL_RED (single channel, 8-bit).
 int gle2d_misc_texture_save_to_disk_as_png(GLuint texture, const char* name);
+int gle2d_misc_shader_hot_reload(GLE2D_ShaderType type, const char* vertex_file_path, const char* fragment_file_path);
 
 #endif
