@@ -13,7 +13,7 @@
 static int shader_compile_error(GLuint shader);
 static int shader_program_link_error(GLuint program);
 
-void shader_program_delete(Shader* shader)
+void shader_program_delete(DG3D_Shader* shader)
 {
     if (shader && shader->id != 0) {
         glDeleteProgram(shader->id);
@@ -21,19 +21,19 @@ void shader_program_delete(Shader* shader)
     }
 }
 
-void shader_program_bind(Shader* shader)
+void shader_program_bind(DG3D_Shader* shader)
 {
     glUseProgram(shader->id);
 }
 
-Shader shader_program_compile_from_path(const char* vert_path, const char* frag_path)
+DG3D_Shader shader_program_compile_from_path(const char* vert_path, const char* frag_path)
 {  
     assert(vert_path && frag_path);
     RELEASE_ASSERT(vert_path && frag_path);
 
     char*         vertex_source   = NULL;
     char*         fragment_source = NULL;
-    Shader        shader          = {0};
+    DG3D_Shader        shader          = {0};
 
     vertex_source   = read_file(vert_path);
     fragment_source = read_file(frag_path);
@@ -88,7 +88,7 @@ Shader shader_program_compile_from_path(const char* vert_path, const char* frag_
     return shader;
 }
 
-Shader shader_program_tess_compile_from_path(const char* vert_path, 
+DG3D_Shader shader_program_tess_compile_from_path(const char* vert_path, 
     const char* tcs_path, const char* tes_path, const char* frag_path)
 {  
     assert(vert_path && tcs_path && tes_path && frag_path);
@@ -98,7 +98,7 @@ Shader shader_program_tess_compile_from_path(const char* vert_path,
     char*         tess_control_source = NULL;
     char*         tess_eval_source    = NULL;
     char*         fragment_source     = NULL;
-    Shader        shader              = {0};
+    DG3D_Shader   shader              = {0};
 
     vertex_source       = read_file(vert_path);
     tess_control_source = read_file(tcs_path);
