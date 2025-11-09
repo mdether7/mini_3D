@@ -71,3 +71,10 @@ mat4x4_ortho(context.projection_matrix,
             0.0f, viewport_width,     // X: left → right
             0.0f, viewport_height,    // Y: bottom → top
             -1.0f, 1.0f);
+
+
+// SHADERS ARE BLACK MAGIC //
+smoothstep(0.0, 0.2, uv.x) works like this:
+When uv.x ≤ 0.0 → returns 0.0
+When uv.x ≥ 0.2 → returns 1.0 (not 0.2!)
+When 0.0 < uv.x < 0.2 → returns a smooth value between 0.0 and 1.0

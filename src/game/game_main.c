@@ -107,7 +107,7 @@ int dg_loop(float dt)
     // render.
     glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
 
-    //gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, GLE2D_COLOR_GREEN, 0);
+    gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, GLE2D_COLOR_GREEN, 0);
 
 #if 1 // MY 2D LIB SHOWCASE
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -123,7 +123,7 @@ int dg_loop(float dt)
     gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
     gle2d_shapes_draw_quad(500, 250, 256 *(float)sin(dt) , 200 * (float)cos(dt), ((float)sin(dt) * 1.0f), GLE2D_COLOR_WHITE, game_state.dirt_tex.id);
     gle2d_font_render_text_rotation(&game_state.fonts.default_font, "gleter2d rotatin text", 200.0f, 200.0f, (float)sin(dt), TEXT_COLOR);
-    gle2d_shapes_draw_quad(500, 500, 100, 100, 0.0f, GLE2D_COLOR_WHITE, 0);
+   // gle2d_shapes_draw_quad(500, 600, 500, 500, 0.0f, GLE2D_COLOR_WHITE, 0);
 #endif
     gle2d_font_render_text(&game_state.fonts.default_font, GLE2D_COLOR_WHITE, "0,0", 0, 680);
     gle2d_font_render_text(&game_state.fonts.default_font, GLE2D_COLOR_WHITE, "1,0", 1220, 680);
