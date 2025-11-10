@@ -1,12 +1,14 @@
 #include "renderer.h"
 
+#include <assert.h>
+
 #include <glad/glad.h>
 #include <linmath/linmath.h>
 
 #include "shader.h"
 
 // Cube with minimal data for displaying textures / using normals.
-static float dg3d_renderer_vertex_data_cube[] = {
+static float dg3d_vertex_data_cube[] = {
     
     // CUBE //////
     // Front face
@@ -42,7 +44,7 @@ static float dg3d_renderer_vertex_data_cube[] = {
     //////////////
 };
 
-static unsigned int dg3d_renderer_index_data_cube[] = {
+static unsigned int dg3d_index_data_cube[] = {
 
     // CUBE //////
     // Front face
@@ -64,6 +66,15 @@ static unsigned int dg3d_renderer_index_data_cube[] = {
     20, 21, 22,
     22, 23, 20,
     ////////////// 
+};
+
+static float dg3d_fullscreen_quad[] = {
+    -1.0f,  1.0f,  0.0f, 1.0f,
+    -1.0f, -1.0f,  0.0f, 0.0f,
+    1.0f, -1.0f,  1.0f, 0.0f,
+    -1.0f,  1.0f,  0.0f, 1.0f,
+    1.0f, -1.0f,  1.0f, 0.0f,
+    1.0f,  1.0f,  1.0f, 1.0f
 };
 
 
@@ -104,15 +115,49 @@ typedef struct {
     DG3D_DefaultShader shader_default;
 
     GLuint FBO;
+    GLuint fbo_texture;
+    GLuint fbo_renderbuffer;
 
     int viewport_width;
     int viewport_height;
     
 } DG3D_Renderer;
 
-int dg3d_renderer_init(DG3D_Renderer* renderer)
+int dg3d_renderer_init(DG3D_Renderer* renderer, int width, int height)
 {   
+    assert(renderer);
+    assert(width > 0 && height > 0);
+
+    renderer->viewport_width = width;
+    renderer->viewport_height = height;
+
+#pragma region FBO
+    // Configure framebuffer.
     glGenFramebuffers(1, &renderer->FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, renderer->FBO); // bind FBO
+
+    glGenTextures(1, &renderer->fbo_texture);
+    glBindTexture(GL_TEXTURE_2D, renderer->fbo_texture); // bind texture
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 
+                0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
+                        GL_TEXTURE_2D, renderer->fbo_texture, 0);
+    glBindTexture(GL_TEXTURE_2D, 0); // unbind texture
+
+    glGenRenderbuffers(1, &renderer->fbo_renderbuffer); // bind renderbuffer
+    glBindRenderbuffer(GL_RENDERBUFFER, renderer->fbo_renderbuffer);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, 0); // unbind renderbuffer
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        return 1;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0); // unbind FBO.
+#pragma endregion
 
     // init shaders.
     renderer->shader_default.shader = shader_program_compile_from_path("shaders/dg3d_default.vert", "shaders/dg3d_default.frag");
@@ -127,8 +172,10 @@ void dg3d_renderer_shutdown(DG3D_Renderer* renderer)
     // Shaders Cleanup
     shader_program_delete(&renderer->shader_default.shader);
 
-    // Buffer Cleanup
+    // main FBO cleanup.
     glDeleteFramebuffers(1, &renderer->FBO);
+    glDeleteRenderbuffers(1, &renderer->fbo_renderbuffer);
+    glDeleteTextures(1, &renderer->fbo_texture);
 }
 
 void dg3d_render_mesh(DG3D_Mesh* mesh, vec3 pos)
