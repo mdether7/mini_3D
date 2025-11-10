@@ -7,6 +7,7 @@
 #include "platform/platform_input.h"
 #include "platform/platform_other.h"
 #include "platform/platform_log.h"
+#include "renderer/renderer.h"
 #include "renderer/shader.h"
 
 
@@ -25,6 +26,7 @@ typedef struct {
     DG_Fonts fonts;
     GLE2D_Texture dirt_tex;
     DG3D_Shader tess_shady;
+    DG3D_Renderer renderer;
     GLuint vao;
 } DG_GameState;
 
@@ -32,7 +34,7 @@ static DG_GameState game_state = {0};
 
 #define TEXT_COLOR (vec4){0.0f, 0.5f, 0.5f, 1.0f}
 
-int w, h;
+int fb_w, fb_h;
 
 int dg_init(void)
 {
@@ -40,8 +42,8 @@ int dg_init(void)
         return 1;
     }
     // Usually you want viewport to match framebuffer
-    platform_get_framebuffer_size(&w, &h);
-    gle2d_update_rendering_area(w, h);
+    platform_get_framebuffer_size(&fb_w, &fb_h);
+    gle2d_update_rendering_area(fb_w, fb_h);
 
     game_state.tess_shady = shader_program_tess_compile_from_path("shaders/dungen.vert",
         "shaders/dungen.tcs", "shaders/dungen.tes", "shaders/dungen.frag");
@@ -64,12 +66,12 @@ int dg_init(void)
         return 1;
     }
 
+    platform_log_info("w:%d, h:%d", fb_w, fb_h);
+    dg3d_renderer_init(&game_state.renderer, fb_w, fb_h);
+
     glGenVertexArrays(1, &game_state.vao);
     return 0;
 }
-
-int point_x = 100;
-int point_y = 100;
 
 int dg_loop(float dt)
 {
@@ -107,7 +109,7 @@ int dg_loop(float dt)
     // render.
     glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
 
-    gle2d_shapes_draw_quad(0, 0, w, h, 0.0f, GLE2D_COLOR_GREEN, 0);
+    gle2d_shapes_draw_quad(0, 0, fb_w, fb_h, 0.0f, GLE2D_COLOR_GREEN, 0);
 
 #if 1 // MY 2D LIB SHOWCASE
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -121,7 +123,7 @@ int dg_loop(float dt)
     gle2d_font_render_text(&game_state.fonts.extra_font, (vec4){0.0f, 0.5f, 0.5f, (float)sin(dt)}, text, 50, 100);
     gle2d_font_render_text(&game_state.fonts.default_font, TEXT_COLOR, text, 50, 150);
     gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
-    gle2d_shapes_draw_quad(500, 250, 256 *(float)sin(dt) , 200 * (float)cos(dt), ((float)sin(dt) * 1.0f), GLE2D_COLOR_WHITE, game_state.dirt_tex.id);
+    gle2d_shapes_draw_quad(fb_w / 3, fb_h / 3, 256 *(float)sin(dt) , 200 * (float)cos(dt), ((float)sin(dt) * 1.0f), GLE2D_COLOR_WHITE, game_state.dirt_tex.id);
     gle2d_font_render_text_rotation(&game_state.fonts.default_font, "gleter2d rotatin text", 200.0f, 200.0f, (float)sin(dt), TEXT_COLOR);
    // gle2d_shapes_draw_quad(500, 600, 500, 500, 0.0f, GLE2D_COLOR_WHITE, 0);
 #endif
@@ -138,6 +140,8 @@ void dg_close(void)
 {
     shader_program_delete(&game_state.tess_shady);
     glDeleteVertexArrays(1, &game_state.vao);
+
+    dg3d_renderer_shutdown(&game_state.renderer);
 
     gle2d_font_destroy(&game_state.fonts.default_font);
     gle2d_font_destroy(&game_state.fonts.extra_font);
