@@ -69,12 +69,16 @@ static unsigned int dg3d_index_data_cube[] = {
 };
 
 static float dg3d_fullscreen_quad[] = {
-    -1.0f,  1.0f,  0.0f, 1.0f,
-    -1.0f, -1.0f,  0.0f, 0.0f,
-    1.0f, -1.0f,  1.0f, 0.0f,
-    -1.0f,  1.0f,  0.0f, 1.0f,
-    1.0f, -1.0f,  1.0f, 0.0f,
-    1.0f,  1.0f,  1.0f, 1.0f
+
+  // Position // TexCoord (UV/ST)
+   -1.,  1.,     .0,   1.,
+   -1., -1.,     .0,  .0,
+    1., -1.,      1., .0,
+
+    1., -1.,      1., .0,
+    1.,  1.,      1.,  1.,
+   -1.,  1.,     .0,   1.
+
 };
 
 
@@ -115,8 +119,8 @@ typedef struct {
     DG3D_DefaultShader shader_default;
 
     GLuint FBO;
-    GLuint fbo_texture;
-    GLuint fbo_renderbuffer;
+    GLuint fbo_texture; // RGBA8
+    GLuint fbo_renderbuffer; // DEPTH 24 STENCIL 8
 
     int viewport_width;
     int viewport_height;
@@ -150,7 +154,8 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int width, int height)
 
     glGenRenderbuffers(1, &renderer->fbo_renderbuffer); // bind renderbuffer
     glBindRenderbuffer(GL_RENDERBUFFER, renderer->fbo_renderbuffer);
-
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height); 
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderer->fbo_renderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, 0); // unbind renderbuffer
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -162,8 +167,6 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int width, int height)
     // init shaders.
     renderer->shader_default.shader = shader_program_compile_from_path("shaders/dg3d_default.vert", "shaders/dg3d_default.frag");
     if (renderer->shader_default.shader.id == 0) return 1;
-
-
 
 }
 
