@@ -1,5 +1,6 @@
 #include "renderer.h"
 
+#include <stddef.h>
 #include <assert.h>
 
 #include <glad/glad.h>
@@ -10,7 +11,7 @@
 #define MEBIBYTE(x) ((size_t)(x) * 1024 * 1024)
 
 // Cube with minimal data for displaying textures / using normals.
-static float dg3d_vertex_data_cube[] = {
+static float dg3d_vertex_data[] = {
     
     // CUBE //////
     // Front face
@@ -46,7 +47,7 @@ static float dg3d_vertex_data_cube[] = {
     //////////////
 };
 
-static unsigned int dg3d_index_data_cube[] = {
+static unsigned int dg3d_index_data[] = {
 
     // CUBE //////
     // Front face
@@ -88,30 +89,52 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
     assert(renderer);
     assert(fb_width > 0 && fb_height > 0);
 
-    // Region Renderer specific initialization
-    renderer->viewport_width = fb_width;
-    renderer->viewport_height = fb_height;
+#pragma region Buffers
 
-#pragma region Buffer and Geometry setup
+    // SCREEN RENDERING QUAD.
+    glGenVertexArrays(1, &renderer->SCREEN_QUAD_VAO);
 
-    // BIGBUFCIO - will see how it goes.
-    glGenBuffers(1, &renderer->BIG_BUFCIO);
-    glBindBuffer(GL_ARRAY_BUFFER, renderer->BIG_BUFCIO);
-    glBufferData(GL_ARRAY_BUFFER, MEBIBYTE(1), NULL, GL_STATIC_DRAW);
+    glGenBuffers(1, renderer->SCREEN_QUAD_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->SCREEN_QUAD_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(dg3d_fullscreen_quad), NULL, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // GLuint quad_VAO;
-    // glGenVertexArrays(1, &quad_VAO);
-    // glBindVertexArray(quad_VAO);
+    // BIG BUFFER.
+    glGenVertexArrays(1, &renderer->BIG_BUFCIO_VAO);
 
-    // GLuint quad_VBO;
-    // glGenBuffers(1, &quad_VBO);
-    // glBindBuffer(GL_ARRAY_BUFFER, quad_VBO);
-    // glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)sizeof(geo_quad_vertices), geo_quad_vertices, GL_STATIC_DRAW);
+    glGenBuffers(1, &renderer->BIG_BUFCIO_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->BIG_BUFCIO_VBO);
+    glBufferData(GL_ARRAY_BUFFER, MEBIBYTE(8), NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glGenBuffers(1, &renderer->BIG_BUFCIO_EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->BIG_BUFCIO_EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, MEBIBYTE(8), NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+#pragma endregion
+
+#pragma region Send data to GPU
+
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->SCREEN_QUAD_VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(dg3d_fullscreen_quad), dg3d_fullscreen_quad);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->BIG_BUFCIO_VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->BIG_BUFCIO_EBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(dg3d_vertex_data), dg3d_vertex_data);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(dg3d_index_data), dg3d_index_data);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+#pragma endregion
+
+#pragma region VAO Setup
+
+    glBindVertexArray(renderer->SCREEN_QUAD_VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->SCREEN_QUAD_VBO);
+
     
-    // glEnableVertexAttribArray(0); // only enable position.
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex2D), (void*)0);
-
 
 #pragma endregion
 
@@ -144,21 +167,47 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
     glBindFramebuffer(GL_FRAMEBUFFER, 0); // unbind FBO.
 #pragma endregion
 
-    // init shaders.
+    // Init shaders.
     renderer->shader_default.shader = shader_program_compile_from_path("shaders/dg3d_default.vert", "shaders/dg3d_default.frag");
     if (renderer->shader_default.shader.id == 0) return 1;
 
-    glViewport(0, 0, fb_width, fb_height);
+    // Mesh things
+    renderer->mesh_count = 1; // Only one now.
+    renderer->meshes = malloc(sizeof(*renderer->meshes) * renderer->mesh_count);
+    if (!renderer->meshes) {
+        return 1;
+    }
+    // CUBE
+    renderer->meshes[0].vertex_offset = 0;
+    renderer->meshes[0].index_offset = 0;
+    renderer->meshes[0].vertex_count = 24;
+    renderer->meshes[0].index_count = 36;
+
+    // Region Renderer specific initialization
+    renderer->viewport_width = fb_width;
+    renderer->viewport_height = fb_height;
+    glViewport(0, 0, fb_width, fb_height); //? To be here or not to be here?
+
     return 0;
 }
 
 void dg3d_renderer_shutdown(DG3D_Renderer* renderer)
 {
-    // Shaders Cleanup
+    if (!renderer) return;
+
+    // Shaders Cleanup.
     shader_program_delete(&renderer->shader_default.shader);
     renderer->shader_default.u_model = -1; // -1 for shader uniforms.
     renderer->shader_default.u_res   = -1;
     renderer->shader_default.u_time  = -1;
+
+    // Buffers cleanup.
+    glDeleteVertexArrays(1, &renderer->SCREEN_QUAD_VAO);
+    glDeleteBuffers(1, &renderer->SCREEN_QUAD_VBO);
+
+    glDeleteVertexArrays(1, &renderer->BIG_BUFCIO_VAO);
+    glDeleteBuffers(1, &renderer->BIG_BUFCIO_VBO);
+    glDeleteBuffers(1, &renderer->BIG_BUFCIO_EBO);
 
     // main FBO cleanup.
     glDeleteFramebuffers(1, &renderer->FBO);
@@ -170,6 +219,9 @@ void dg3d_renderer_shutdown(DG3D_Renderer* renderer)
 
     renderer->viewport_width = 0;
     renderer->viewport_height = 0;
+    renderer->mesh_count = 0;
+
+    free(renderer->meshes);
 }
 
 // void glDrawArrays( 	GLenum mode,
