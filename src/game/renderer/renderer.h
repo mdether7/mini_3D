@@ -20,14 +20,14 @@ typedef struct {
     size_t index_offset;
     size_t vertex_count;
     size_t index_count;
-} DG3D_Mesh;
+} DG3D_MeshInfo;
 
 typedef struct {
 
     DG3D_DefaultShader shader_default;
     //DG3D_Camera*       camera;
 
-    DG3D_Mesh* meshes;
+    DG3D_MeshInfo* meshes;
     size_t     mesh_count;
 
     GLuint BIG_BUFCIO_VAO;

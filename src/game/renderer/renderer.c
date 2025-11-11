@@ -1,5 +1,6 @@
 #include "renderer.h"
 
+#include <stdlib.h>
 #include <stddef.h>
 #include <assert.h>
 
@@ -94,7 +95,7 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
     // SCREEN RENDERING QUAD.
     glGenVertexArrays(1, &renderer->SCREEN_QUAD_VAO);
 
-    glGenBuffers(1, renderer->SCREEN_QUAD_VBO);
+    glGenBuffers(1, &renderer->SCREEN_QUAD_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->SCREEN_QUAD_VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(dg3d_fullscreen_quad), NULL, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -134,7 +135,7 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
     glBindVertexArray(renderer->SCREEN_QUAD_VAO);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->SCREEN_QUAD_VBO);
 
-    
+
 
 #pragma endregion
 
