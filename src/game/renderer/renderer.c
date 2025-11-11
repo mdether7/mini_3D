@@ -7,6 +7,7 @@
 #include <glad/glad.h>
 #include <linmath/linmath.h>
 
+#include "gpu_buffer.h"
 #include "shader.h"
 
 #define MEBIBYTE(x) ((size_t)(x) * 1024 * 1024)
