@@ -7,15 +7,17 @@
 #include "platform/platform_input.h"
 #include "platform/platform_other.h"
 #include "platform/platform_log.h"
+#include "game/world_gen.h"
 #include "renderer/renderer.h"
 #include "renderer/shader.h"
 
-
+#if 0
 // https://stackoverflow.com/questions/427477/fastest-way-to-clamp-a-real-fixed-floating-point-value
 static inline float clampf(float f, float min, float max) {
   const float t = f < min ? min : f;
   return t > max ? max : t;
 }
+#endif
 
 typedef struct {
     GLE2D_Font default_font;
@@ -28,7 +30,10 @@ typedef struct {
     DG3D_Shader tess_shady;
     DG3D_Renderer renderer;
     GLuint vao;
+    Chunk chunk;
 } DG_GameState;
+
+
 
 static DG_GameState game_state = {0};
 
@@ -73,6 +78,9 @@ int dg_init(void)
         return 1;
 #endif
     }
+
+    fill_chunk(&game_state.chunk, DIRT);
+    print_chunk(&game_state.chunk);
 
     glGenVertexArrays(1, &game_state.vao);
     return 0;

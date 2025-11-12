@@ -31,6 +31,7 @@ dungen: generate_bin
 	src/platform/platform_debug.c \
 	src/platform/platform_log.c \
 	src/game/game_main.c \
+	src/game/world_gen.c \
 	src/game/renderer/renderer.c \
 	src/game/renderer/camera.c \
 	src/game/renderer/shader.c \

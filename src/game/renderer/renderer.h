@@ -44,6 +44,5 @@ typedef struct {
 
 int  dg3d_renderer_init(DG3D_Renderer* renderer, int width, int height);
 void dg3d_renderer_shutdown(DG3D_Renderer* renderer);
-void dg3d_renderer_draw_cube(DG3D_Renderer* renderer, mat4x4 model);
 
 #endif
