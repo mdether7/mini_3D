@@ -1,15 +1,18 @@
 #include "game_main.h"
 
-#include <glad/glad.h>
+#include <stdint.h>
 #include <math.h>
+
+#include <glad/glad.h>
 
 #include "../../gleter2d/gleter2d.h" // placeholder, this needs to be a lib.
 #include "platform/platform_input.h"
 #include "platform/platform_other.h"
 #include "platform/platform_log.h"
-#include "game/world_gen.h"
 #include "renderer/renderer.h"
 #include "renderer/shader.h"
+
+#define TEXT_COLOR (vec4){0.0f, 0.5f, 0.5f, 1.0f}
 
 #if 0
 // https://stackoverflow.com/questions/427477/fastest-way-to-clamp-a-real-fixed-floating-point-value
@@ -30,16 +33,29 @@ typedef struct {
     DG3D_Shader tess_shady;
     DG3D_Renderer renderer;
     GLuint vao;
-    Chunk chunk;
 } DG_GameState;
-
 
 
 static DG_GameState game_state = {0};
 
-#define TEXT_COLOR (vec4){0.0f, 0.5f, 0.5f, 1.0f}
-
 int fb_w, fb_h;
+
+typedef enum {
+    BLOCK_AIR = 0,
+    BLOCK_STONE,
+    BLOCK_TYPE_COUNT,
+} block_type;
+
+typedef struct {
+    uint8_t blocks[128][16][16];
+} Chunk;
+
+void chunk_create(Chunk* chunk)
+{
+
+}
+
+
 
 int dg_init(void)
 {
@@ -78,9 +94,6 @@ int dg_init(void)
         return 1;
 #endif
     }
-
-    fill_chunk(&game_state.chunk, DIRT);
-    print_chunk(&game_state.chunk);
 
     glGenVertexArrays(1, &game_state.vao);
     return 0;
