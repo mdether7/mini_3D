@@ -4,8 +4,7 @@
 #include <stddef.h>
 #include "shader.h"
 
-// I think i can forward declare camera (TODO: check it!)
-// as of right now it's just a pointer to it.
+typedef struct DG3D_Camera DG3D_Camera;
 
 typedef struct {
     DG3D_Shader shader;
@@ -16,28 +15,14 @@ typedef struct {
 } DG3D_DefaultShader; 
 
 typedef struct {
-    size_t vertex_offset;
-    size_t index_offset;
-    size_t vertex_count;
-    size_t index_count;
-} DG3D_MeshInfo;
-
-typedef struct {
 
     DG3D_DefaultShader shader_default;
-    //DG3D_Camera*       camera;
+    DG3D_Camera       *camera;
 
-    DG3D_MeshInfo* meshes;
-    size_t     mesh_count;
+    GLuint screen_quad_vao;
+    GLuint screen_quad_vbo;
 
-    GLuint BIG_BUFCIO_VAO;
-    GLuint BIG_BUFCIO_VBO;
-    GLuint BIG_BUFCIO_EBO;
-
-    GLuint SCREEN_QUAD_VAO;
-    GLuint SCREEN_QUAD_VBO;
-
-    GLuint FBO;
+    GLuint fbo;
     GLuint fbo_texture;      // RGBA8           
     GLuint fbo_renderbuffer; // DEPTH 24 STENCIL 8
 
@@ -46,7 +31,8 @@ typedef struct {
     
 } DG3D_Renderer;
 
-int dg3d_renderer_init(DG3D_Renderer* renderer, int width, int height);
+
+int  dg3d_renderer_init(DG3D_Renderer* renderer, int width, int height);
 void dg3d_renderer_shutdown(DG3D_Renderer* renderer);
 
 #endif
