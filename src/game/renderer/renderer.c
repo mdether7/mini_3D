@@ -46,7 +46,7 @@ static float dg3d_vertex_data[] = {
     //////////////
 };
 
-static unsigned int dg3d_index_data[] = {
+static unsigned short dg3d_index_data[] = {
 
     // CUBE //////
     // Front face
@@ -88,7 +88,38 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
     assert(renderer);
     assert(fb_width > 0 && fb_height > 0);
 
-    // Configure data.
+    // Init shaders 
+    renderer->shader_default.shader = shader_program_compile_from_path("shaders/dg3d_default.vert", "shaders/dg3d_default.frag");
+    if (renderer->shader_default.shader.id == 0) return 1;
+    renderer->shader_screen_quad.shader = shader_program_compile_from_path("shaders/dg3d_default_screen.vert", "shaders/dg3d_default_screen.frag");
+    if (renderer->shader_screen_quad.shader.id == 0) return 1;
+
+    // Screen Quad VAO
+    glGenVertexArrays(1, &renderer->screen_quad_vao);
+    glGenBuffers(1, &renderer->screen_quad_vbo);
+    glBindVertexArray(renderer->screen_quad_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->screen_quad_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(dg3d_fullscreen_quad), dg3d_fullscreen_quad, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, (sizeof(float) * 4), (void*)0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, (sizeof(float) * 4), (void*)(sizeof(float) * 2));
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Cube VAO
+    glGenVertexArrays(1, &renderer->cube_vao);
+    glGenBuffers(1, &renderer->cube_vbo);
+    glGenBuffers(1, &renderer->cube_ebo);
+    glBindVertexArray(renderer->cube_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->cube_vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->cube_ebo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(dg3d_vertex_data), dg3d_vertex_data, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(dg3d_index_data), dg3d_index_data, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, (sizeof(float) * 3), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // Configure framebuffer //
     glGenFramebuffers(1, &renderer->fbo);
@@ -117,16 +148,16 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0); // unbind FBO.
 
-    // Init shaders //
-    renderer->shader_default.shader = shader_program_compile_from_path("shaders/dg3d_default.vert", "shaders/dg3d_default.frag");
-    if (renderer->shader_default.shader.id == 0) return 1;
-
-
     renderer->viewport_width = fb_width;
     renderer->viewport_height = fb_height;
     glViewport(0, 0, fb_width, fb_height); //? To be here or not to be here?
 
     return 0;
+}
+
+void dg3d_renderer_draw_cube(DG3D_Renderer* renderer, mat4x4 model)
+{   
+    
 }
 
 void dg3d_renderer_shutdown(DG3D_Renderer* renderer)
@@ -138,10 +169,16 @@ void dg3d_renderer_shutdown(DG3D_Renderer* renderer)
     renderer->shader_default.u_model = -1; // -1 for shader uniforms.
     renderer->shader_default.u_res   = -1;
     renderer->shader_default.u_time  = -1;
+    shader_program_delete(&renderer->shader_screen_quad.shader);
 
-    // Buffers cleanup.
+    // Screen quad cleanup.
     glDeleteVertexArrays(1, &renderer->screen_quad_vao);
     glDeleteBuffers(1, &renderer->screen_quad_vbo);
+
+    // Cube cleanup.
+    glDeleteVertexArrays(1, &renderer->cube_vao);
+    glDeleteBuffers(1, &renderer->cube_vbo);
+    glDeleteBuffers(1, &renderer->cube_ebo);
 
     // main FBO cleanup.
     glDeleteFramebuffers(1, &renderer->fbo);

@@ -67,7 +67,12 @@ int dg_init(void)
     }
 
     platform_log_info("w:%d, h:%d", fb_w, fb_h);
-    dg3d_renderer_init(&game_state.renderer, fb_w, fb_h);
+    if (dg3d_renderer_init(&game_state.renderer, fb_w, fb_h)) {
+#if 0
+        platform_log_error("Renderer init failed!");
+        return 1;
+#endif
+    }
 
     glGenVertexArrays(1, &game_state.vao);
     return 0;
@@ -125,7 +130,6 @@ int dg_loop(float dt)
     gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
     gle2d_shapes_draw_quad(fb_w / 3, fb_h / 3, 256 *(float)sin(dt) , 200 * (float)cos(dt), ((float)sin(dt) * 1.0f), GLE2D_COLOR_WHITE, game_state.dirt_tex.id);
     gle2d_font_render_text_rotation(&game_state.fonts.default_font, "gleter2d rotatin text", 200.0f, 200.0f, (float)sin(dt), TEXT_COLOR);
-   // gle2d_shapes_draw_quad(500, 600, 500, 500, 0.0f, GLE2D_COLOR_WHITE, 0);
 #endif
     gle2d_font_render_text(&game_state.fonts.default_font, GLE2D_COLOR_WHITE, "0,0", 0, 680);
     gle2d_font_render_text(&game_state.fonts.default_font, GLE2D_COLOR_WHITE, "1,0", 1220, 680);
