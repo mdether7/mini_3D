@@ -1,7 +1,11 @@
 #include "game_main.h"
 
+#include <stdlib.h>
+#include <time.h>
 #include <stdint.h>
 #include <math.h>
+
+#include <stdio.h> // DEBUG ONLY.
 
 #include <glad/glad.h>
 
@@ -9,6 +13,7 @@
 #include "platform/platform_input.h"
 #include "platform/platform_other.h"
 #include "platform/platform_log.h"
+#include "game/world_gen.h"
 #include "renderer/renderer.h"
 #include "renderer/shader.h"
 
@@ -33,32 +38,31 @@ typedef struct {
     DG3D_Shader tess_shady;
     DG3D_Renderer renderer;
     GLuint vao;
+    Chunk chunk;
 } DG_GameState;
-
-
 static DG_GameState game_state = {0};
 
 int fb_w, fb_h;
 
-typedef enum {
-    BLOCK_AIR = 0,
-    BLOCK_STONE,
-    BLOCK_TYPE_COUNT,
-} block_type;
-
-typedef struct {
-    uint8_t blocks[128][16][16];
-} Chunk;
-
-void chunk_create(Chunk* chunk)
+void chunk_print(Chunk* chunk)
 {
-
+    for (int i = 0; i < 128; i++) {
+        for (int j = 0; j < 16; j++) {
+            for (int k = 0; k < 16; k++) {
+                printf("%d", (int)chunk->blocks[i][j][k]);
+            }
+            putchar('\n');
+        }
+        putchar('\n');
+        putchar('\n');
+    } 
 }
-
-
 
 int dg_init(void)
 {
+    unsigned int seed = 97;
+    srand(seed);
+
     if (gle2d_init()) {
         return 1;
     }
@@ -94,6 +98,9 @@ int dg_init(void)
         return 1;
 #endif
     }
+
+    chunk_create(&game_state.chunk);
+    chunk_print(&game_state.chunk);
 
     glGenVertexArrays(1, &game_state.vao);
     return 0;

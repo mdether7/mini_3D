@@ -7,6 +7,7 @@
 #include <glad/glad.h>
 #include <linmath/linmath.h>
 
+#include "game/world_gen.h"
 #include "shader.h"
 
 // Cube with minimal data for displaying textures / using normals.
@@ -82,6 +83,27 @@ static float dg3d_fullscreen_quad[] = {
    -1.,  1.,     .0,   1.
 
 };
+
+void dg3d_renderer_render_chunk(DG3D_Renderer* renderer, Chunk* chunk, vec3 chunk_pos)
+{
+    glBindVertexArray(renderer->cube_vao);
+    shader_program_bind(&renderer->shader_default.shader); // TODO change to bind by id no struct.
+    
+    for (int y = 0; y < 128; y++) {
+        for (int z = 0; z < 16; z++) {
+            for (int x = 0; x < 16; x++) {
+                uint8_t block = chunk->blocks[y][z][x];
+
+                if (block == BLOCK_AIR) continue;
+
+                
+
+
+            }
+        }
+    }
+
+}
 
 int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
 {   
@@ -186,6 +208,7 @@ void dg3d_renderer_shutdown(DG3D_Renderer* renderer)
     renderer->viewport_width = 0;
     renderer->viewport_height = 0;
 }
+
 
 // void glDrawArrays( 	GLenum mode,
 //   	GLint first,
