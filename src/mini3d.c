@@ -63,8 +63,6 @@
 #include "data_geometry.h"
 #include "mini_types.h"
 
-#include "render/renderer2d.h"
-
 #include "dungen/dungen.h"
 #include "dungen/dice.h"
 #include "dun_mesh.h"

@@ -120,12 +120,29 @@ int dg_loop(float dt)
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    mat4x4 projection;
+    mat4x4 model;
+    mat4x4 view;
+    mat4x4_identity(projection);
+    mat4x4_identity(view);
+    mat4x4_identity(model);
+    mat4x4_perspective(projection, 1.0f, (float)fb_w/(float)fb_h, 0.1f, 100.0f);
 
+    glBindVertexArray(game_state.renderer.cube_vao);
+    shader_program_bind(game_state.renderer.shader_default.id);
+    mat4x4_translate_in_place(model, 0.0f, 0.0f, -50.0f);
 
-    
+    glUniformMatrix4fv(game_state.renderer.shader_default.u_model, 1, GL_FALSE, &model[0][0]);
+    glBindBuffer(GL_UNIFORM_BUFFER, game_state.renderer.ubo_matrices.handle);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4x4), view);
+    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(mat4x4), sizeof(mat4x4), projection);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
-    gle2d_shapes_draw_quad(0, 0, fb_w, fb_h, 0.0f, GLE2D_COLOR_GREEN, 0);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+    glBindVertexArray(0);
+
+    // glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
+    //gle2d_shapes_draw_quad(0, 0, fb_w, fb_h, 0.0f, GLE2D_COLOR_GREEN, 0);
 
 #if 0 // MY 2D LIB SHOWCASE
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

@@ -4,8 +4,8 @@
 #include <linmath/linmath.h>
 
 typedef struct {
-    mat4x4 projection;
     mat4x4 view;
+    mat4x4 projection;
     float near;
     float far;
     float fov;

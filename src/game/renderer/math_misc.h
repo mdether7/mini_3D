@@ -43,12 +43,12 @@ void mathm_print_vec2(const vec2 V)
 ////////////////
 // Conversions
 
-float inline mathm_deg_to_r(float d)
+inline float mathm_deg_to_r(float d)
 {
     return (MATHM_PI / 180.0f) * d;
 }
 
-float inline mathm_r_to_deg(float r)
+inline float mathm_r_to_deg(float r)
 {
     return (180.0f / MATHM_PI) * r;
 }
@@ -56,12 +56,12 @@ float inline mathm_r_to_deg(float r)
 ////////////
 // Vectors
 
-float inline mathm_vec3_dot(vec3 v1, vec3 v2)
+inline float mathm_vec3_dot(vec3 v1, vec3 v2)
 {
     return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
 
-float inline mathm_vec2_dot(vec2 v1, vec2 v2)
+inline float mathm_vec2_dot(vec2 v1, vec2 v2)
 {
     return v1[0] * v2[0] + v1[1] * v2[1];
 }
