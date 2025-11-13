@@ -10,7 +10,7 @@
 #include "game/world_gen.h"
 #include "shader.h"
 
-#define U_BLOCK_MATRICES_BINDING 0
+#define U_BLOCK_MATRICES_BINDING 1 // 0 is for gleter2d
 
 // Cube with minimal data for displaying textures / using normals.
 static float dg3d_vertex_data[] = {
@@ -98,8 +98,8 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
     renderer->shader_screen_quad.id = shader_program_compile_from_path("shaders/dg3d_default_screen.vert", "shaders/dg3d_default_screen.frag");
 
     if (renderer->shader_default.id == 0 ||renderer->shader_screen_quad.id == 0) {
-        shader_program_delete(&renderer->shader_default.id);
-        shader_program_delete(&renderer->shader_screen_quad.id);
+        shader_program_delete(renderer->shader_default.id);
+        shader_program_delete(renderer->shader_screen_quad.id);
         return 1;
     }
 

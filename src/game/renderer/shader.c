@@ -32,9 +32,9 @@ GLuint shader_get_uniform_block_index(GLuint id, const char* name)
     return index;
 }
 
-GLuint shader_get_uniform_location(GLuint id, const char* name)
+GLint shader_get_uniform_location(GLuint id, const char* name)
 {
-    GLuint loc = glGetUniformLocation(id, name);
+    GLint loc = glGetUniformLocation(id, name);
     if (loc == -1) {
         assert(0 && "Name does not correspond to an active uniform variable!");
     }

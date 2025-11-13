@@ -72,7 +72,7 @@ int dg_init(void)
 
     platform_log_info("w:%d, h:%d", fb_w, fb_h);
     if (dg3d_renderer_init(&game_state.renderer, fb_w, fb_h)) {
-#if 0
+#if 1
         platform_log_error("Renderer init failed!");
         return 1;
 #endif
@@ -150,7 +150,7 @@ int dg_loop(float dt)
 
 void dg_close(void)
 {
-    shader_program_delete(&game_state.tess_shady);
+    shader_program_delete(game_state.tess_shady);
     glDeleteVertexArrays(1, &game_state.vao);
 
     dg3d_renderer_shutdown(&game_state.renderer);
