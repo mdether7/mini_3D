@@ -7,7 +7,7 @@
 #include <glad/glad.h>
 #include <linmath/linmath.h>
 
-#include "game/world_gen.h"
+#include "math_misc.h"
 #include "shader.h"
 
 #define U_BLOCK_MATRICES_BINDING 1 // 0 is for gleter2d
@@ -164,9 +164,9 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0); // unbind FBO.
 
-
     renderer->viewport_width = fb_width;
     renderer->viewport_height = fb_height;
+    renderer->camera_current = NULL;
     glViewport(0, 0, fb_width, fb_height); //? To be here or not to be here?
 
     return 0;

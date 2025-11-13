@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <linmath/linmath.h>
-#include "../../../gleter2d/gleter2d.h"
+
 #include "shader.h"
 
 typedef struct DG3D_Camera DG3D_Camera;
@@ -34,12 +34,10 @@ typedef struct {
 // Renderer
 typedef struct {
 
-    mat4x4 view;
-    mat4x4 projection;
-
     DefaultShader    shader_default;
     ScreenQuadShader shader_screen_quad;
-    DG3D_Camera     *current_camera;
+
+    DG3D_Camera     *camera_current;
 
     DG3D_UniformBuffer ubo_matrices;
 
@@ -60,6 +58,7 @@ typedef struct {
 } DG3D_Renderer;
 
 int  dg3d_renderer_init(DG3D_Renderer* renderer, int width, int height);
+int  dg3d_renderer_set_camera(DG3D_Renderer* renderer, DG3D_Camera* camera);
 void dg3d_renderer_shutdown(DG3D_Renderer* renderer);
 
 #endif

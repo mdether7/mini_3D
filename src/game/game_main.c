@@ -117,8 +117,9 @@ int dg_loop(float dt)
 
     // render.
 
-    // glBindFramebuffer(GL_FRAMEBUFFER, game_state.renderer.fbo);
-    // glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
+    
+
 
     
 
