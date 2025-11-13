@@ -13,27 +13,41 @@
 static int shader_compile_error(GLuint shader);
 static int shader_program_link_error(GLuint program);
 
-void shader_program_delete(DG3D_Shader* shader)
+void shader_program_delete(GLuint id)
 {
-    if (shader && shader->id != 0) {
-        glDeleteProgram(shader->id);
-        shader->id = 0;
+    glDeleteProgram(id);
+}
+
+void shader_program_bind(GLuint id)
+{
+    glUseProgram(id);
+}
+
+GLuint shader_get_uniform_block_index(GLuint id, const char* name)
+{
+    GLuint index = glGetUniformBlockIndex(id, name);
+    if (index == GL_INVALID_INDEX) {
+        assert(0 && "Uniform block invalid index!");
     }
+    return index;
 }
 
-void shader_program_bind(DG3D_Shader* shader)
+GLuint shader_get_uniform_location(GLuint id, const char* name)
 {
-    glUseProgram(shader->id);
+    GLuint loc = glGetUniformLocation(id, name);
+    if (loc == -1) {
+        assert(0 && "Name does not correspond to an active uniform variable!");
+    }
+    return loc;
 }
 
-DG3D_Shader shader_program_compile_from_path(const char* vert_path, const char* frag_path)
+GLuint shader_program_compile_from_path(const char* vert_path, const char* frag_path)
 {  
     assert(vert_path && frag_path);
     RELEASE_ASSERT(vert_path && frag_path);
 
     char*         vertex_source   = NULL;
     char*         fragment_source = NULL;
-    DG3D_Shader        shader          = {0};
 
     vertex_source   = read_file(vert_path);
     fragment_source = read_file(frag_path);
@@ -41,7 +55,7 @@ DG3D_Shader shader_program_compile_from_path(const char* vert_path, const char* 
     if (!vertex_source || !fragment_source) {
         free(vertex_source);
         free(fragment_source);
-        return shader;
+        return 0;
     }
 
     GLuint vertex_shader_id   = glCreateShader(GL_VERTEX_SHADER);
@@ -64,7 +78,7 @@ DG3D_Shader shader_program_compile_from_path(const char* vert_path, const char* 
         glDeleteShader(vertex_shader_id);  
         glDeleteShader(fragment_shader_id);
 
-        return shader;
+        return 0;
     }
 
     GLuint program_id = glCreateProgram();
@@ -79,16 +93,14 @@ DG3D_Shader shader_program_compile_from_path(const char* vert_path, const char* 
     if (shader_program_link_error(program_id) > 0) {
 
         glDeleteProgram(program_id);
-        return shader;
+        return 0;
 
     }
 
-    shader.id = program_id;
-
-    return shader;
+    return program_id;
 }
 
-DG3D_Shader shader_program_tess_compile_from_path(const char* vert_path, 
+GLuint shader_program_tess_compile_from_path(const char* vert_path, 
     const char* tcs_path, const char* tes_path, const char* frag_path)
 {  
     assert(vert_path && tcs_path && tes_path && frag_path);
@@ -98,7 +110,6 @@ DG3D_Shader shader_program_tess_compile_from_path(const char* vert_path,
     char*         tess_control_source = NULL;
     char*         tess_eval_source    = NULL;
     char*         fragment_source     = NULL;
-    DG3D_Shader   shader              = {0};
 
     vertex_source       = read_file(vert_path);
     tess_control_source = read_file(tcs_path);
@@ -110,7 +121,7 @@ DG3D_Shader shader_program_tess_compile_from_path(const char* vert_path,
         free(tess_control_source);
         free(tess_eval_source);
         free(fragment_source);
-        return shader;
+        return 0;
     }
 
     GLuint vertex_shader_id   = glCreateShader(GL_VERTEX_SHADER);
@@ -147,7 +158,7 @@ DG3D_Shader shader_program_tess_compile_from_path(const char* vert_path,
         glDeleteShader(tess_eval_id);
         glDeleteShader(fragment_shader_id);
 
-        return shader;
+        return 0;
     }
 
     GLuint program_id = glCreateProgram();
@@ -166,13 +177,11 @@ DG3D_Shader shader_program_tess_compile_from_path(const char* vert_path,
     if (shader_program_link_error(program_id) > 0) {
 
         glDeleteProgram(program_id);
-        return shader;
+        return 0;
 
     }
 
-    shader.id = program_id;
-
-    return shader;
+    return program_id;
 }
 
 static int shader_compile_error(GLuint shader)

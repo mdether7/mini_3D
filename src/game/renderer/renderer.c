@@ -10,40 +10,42 @@
 #include "game/world_gen.h"
 #include "shader.h"
 
+#define U_BLOCK_MATRICES_BINDING 0
+
 // Cube with minimal data for displaying textures / using normals.
 static float dg3d_vertex_data[] = {
     
     // CUBE //////
-    // Front face
-    -.5, .5, .5, // 0, 1
-    -.5, -.5, .5, // 0, 0
-    .5, -.5, .5, // 1, 0
-    .5, .5, .5,  // 1, 1
+    // Front face  TexCoords
+    -.5, .5, .5,   0.0, 1.0,
+    -.5, -.5, .5,  0.0, 0.0,
+    .5, -.5, .5,   1.0, 0.0,
+    .5, .5, .5,    1.0, 1.0,
     // Back face
-    .5, .5, -.5,
-    .5, -.5, -.5,
-    -.5, -.5, -.5,
-    -.5, .5, -.5,
-    // Right face
-    .5, .5, .5,
-    .5, -.5, .5,
-    .5, -.5, -.5,
-    .5, .5, -.5,
+    .5, .5, -.5,   0.0, 1.0,
+    .5, -.5, -.5,  0.0, 0.0,
+    -.5, -.5, -.5, 1.0, 0.0,
+    -.5, .5, -.5,  1.0, 1.0,
+    // Right face 
+    .5, .5, .5,    0.0, 1.0,       
+    .5, -.5, .5,   0.0, 0.0,      
+    .5, -.5, -.5,  1.0, 0.0,     
+    .5, .5, -.5,   1.0, 1.0,       
     // Left face
-    -.5, .5, -.5,
-    -.5, -.5, -.5,
-    -.5, -.5, .5,
-    -.5, .5, .5,
+    -.5, .5, -.5,  0.0, 1.0,    
+    -.5, -.5, -.5, 0.0, 0.0,      
+    -.5, -.5, .5,  1.0, 0.0,     
+    -.5, .5, .5,   1.0, 1.0,     
     // Top face
-    -.5, .5, -.5,
-    -.5, .5, .5,
-    .5, .5, .5,
-    .5, .5, -.5,
+    -.5, .5, -.5,  0.0, 1.0,
+    -.5, .5, .5,   0.0, 0.0,
+    .5, .5, .5,    1.0, 0.0,
+    .5, .5, -.5,   1.0, 1.0,
     // Bottom face
-    -.5, -.5, .5,
-    -.5, -.5, -.5,
-    .5, -.5, -.5,
-    .5, -.5, .5,
+    -.5, -.5, .5,  0.0, 1.0,
+    -.5, -.5, -.5, 0.0, 0.0,
+    .5, -.5, -.5,  1.0, 0.0,
+    .5, -.5, .5,   1.0, 1.0,
     //////////////
 };
 
@@ -72,7 +74,6 @@ static unsigned short dg3d_index_data[] = {
 };
 
 static float dg3d_fullscreen_quad[] = {
-
   // Position // TexCoord (UV/ST)
    -1.,  1.,     .0,   1.,
    -1., -1.,     .0,  .0,
@@ -81,29 +82,11 @@ static float dg3d_fullscreen_quad[] = {
     1., -1.,      1., .0,
     1.,  1.,      1.,  1.,
    -1.,  1.,     .0,   1.
-
+  //////////////////////////////
 };
 
-void dg3d_renderer_render_chunk(DG3D_Renderer* renderer, Chunk* chunk, vec3 chunk_pos)
-{
-    glBindVertexArray(renderer->cube_vao);
-    shader_program_bind(&renderer->shader_default.shader); // TODO change to bind by id no struct.
-    
-    for (int y = 0; y < 128; y++) {
-        for (int z = 0; z < 16; z++) {
-            for (int x = 0; x < 16; x++) {
-                uint8_t block = chunk->blocks[y][z][x];
-
-                if (block == BLOCK_AIR) continue;
-
-                
-
-
-            }
-        }
-    }
-
-}
+/////////////
+// Renderer
 
 int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
 {   
@@ -111,10 +94,21 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
     assert(fb_width > 0 && fb_height > 0);
 
     // Init shaders 
-    renderer->shader_default.shader = shader_program_compile_from_path("shaders/dg3d_default.vert", "shaders/dg3d_default.frag");
-    if (renderer->shader_default.shader.id == 0) return 1;
-    renderer->shader_screen_quad.shader = shader_program_compile_from_path("shaders/dg3d_default_screen.vert", "shaders/dg3d_default_screen.frag");
-    if (renderer->shader_screen_quad.shader.id == 0) return 1;
+    renderer->shader_default.id = shader_program_compile_from_path("shaders/dg3d_default.vert", "shaders/dg3d_default.frag");
+    renderer->shader_screen_quad.id = shader_program_compile_from_path("shaders/dg3d_default_screen.vert", "shaders/dg3d_default_screen.frag");
+
+    if (renderer->shader_default.id == 0 ||renderer->shader_screen_quad.id == 0) {
+        shader_program_delete(&renderer->shader_default.id);
+        shader_program_delete(&renderer->shader_screen_quad.id);
+        return 1;
+    }
+
+    renderer->shader_default.u_model = shader_get_uniform_location(renderer->shader_default.id, "uModel");
+
+    GLuint u_block_index = shader_get_uniform_block_index(renderer->shader_default.id, "uBlockMatrices");
+    glUniformBlockBinding(renderer->shader_default.id, u_block_index, U_BLOCK_MATRICES_BINDING);
+
+    dg3d_uniform_buffer_create(&renderer->ubo_matrices, 2 * sizeof(mat4x4), U_BLOCK_MATRICES_BINDING, GL_STREAM_DRAW);
 
     // Screen Quad VAO
     glGenVertexArrays(1, &renderer->screen_quad_vao);
@@ -122,10 +116,8 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
     glBindVertexArray(renderer->screen_quad_vao);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->screen_quad_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(dg3d_fullscreen_quad), dg3d_fullscreen_quad, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, (sizeof(float) * 4), (void*)0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, (sizeof(float) * 4), (void*)(sizeof(float) * 2));
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, (sizeof(float) * 4), (void*)0);
     glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -138,17 +130,19 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->cube_ebo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(dg3d_vertex_data), dg3d_vertex_data, GL_STATIC_DRAW);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(dg3d_index_data), dg3d_index_data, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, (sizeof(float) * 3), (void*)0);
-    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, (sizeof(float) * 5), (void*)0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, (sizeof(float) * 5), (void*)(sizeof(float) * 3));
+    glEnableVertexAttribArray(0);             // This is the full stride  // This is offset in a stride
+    glEnableVertexAttribArray(1);
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // Configure framebuffer //
-    glGenFramebuffers(1, &renderer->fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, renderer->fbo); // bind FBO
+    glGenFramebuffers(1, &renderer->fbo_main);
+    glBindFramebuffer(GL_FRAMEBUFFER, renderer->fbo_main); // bind FBO
 
-    glGenTextures(1, &renderer->fbo_texture);
-    glBindTexture(GL_TEXTURE_2D, renderer->fbo_texture); // bind texture
+    glGenTextures(1, &renderer->fbo_main_texture);
+    glBindTexture(GL_TEXTURE_2D, renderer->fbo_main_texture); // bind texture
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, fb_width, fb_height, 
                 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -156,19 +150,20 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
-                        GL_TEXTURE_2D, renderer->fbo_texture, 0);
+                        GL_TEXTURE_2D, renderer->fbo_main_texture, 0);
     glBindTexture(GL_TEXTURE_2D, 0); // unbind texture
 
-    glGenRenderbuffers(1, &renderer->fbo_renderbuffer); // bind renderbuffer
-    glBindRenderbuffer(GL_RENDERBUFFER, renderer->fbo_renderbuffer);
+    glGenRenderbuffers(1, &renderer->fbo_main_renderbuffer); // bind renderbuffer
+    glBindRenderbuffer(GL_RENDERBUFFER, renderer->fbo_main_renderbuffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, fb_width, fb_height); 
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderer->fbo_renderbuffer);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderer->fbo_main_renderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, 0); // unbind renderbuffer
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         return 1;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0); // unbind FBO.
+
 
     renderer->viewport_width = fb_width;
     renderer->viewport_height = fb_height;
@@ -182,11 +177,11 @@ void dg3d_renderer_shutdown(DG3D_Renderer* renderer)
     if (!renderer) return;
 
     // Shaders Cleanup.
-    shader_program_delete(&renderer->shader_default.shader);
-    renderer->shader_default.u_model = -1; // -1 for shader uniforms.
-    renderer->shader_default.u_res   = -1;
-    renderer->shader_default.u_time  = -1;
-    shader_program_delete(&renderer->shader_screen_quad.shader);
+    shader_program_delete(renderer->shader_default.id);
+    shader_program_delete(renderer->shader_screen_quad.id);
+
+    // Ubo
+    dg3d_uniform_buffer_destroy(&renderer->ubo_matrices);
 
     // Screen quad cleanup.
     glDeleteVertexArrays(1, &renderer->screen_quad_vao);
@@ -198,15 +193,31 @@ void dg3d_renderer_shutdown(DG3D_Renderer* renderer)
     glDeleteBuffers(1, &renderer->cube_ebo);
 
     // main FBO cleanup.
-    glDeleteFramebuffers(1, &renderer->fbo);
-    glDeleteRenderbuffers(1, &renderer->fbo_renderbuffer);
-    glDeleteTextures(1, &renderer->fbo_texture);
-    renderer->fbo = 0;
-    renderer->fbo_texture = 0;
-    renderer->fbo_renderbuffer = 0;
+    glDeleteFramebuffers(1, &renderer->fbo_main);
+    glDeleteRenderbuffers(1, &renderer->fbo_main_renderbuffer);
+    glDeleteTextures(1, &renderer->fbo_main);
+}
 
-    renderer->viewport_width = 0;
-    renderer->viewport_height = 0;
+///////////////////
+// Uniform Buffer
+int dg3d_uniform_buffer_create(DG3D_UniformBuffer* ubo, size_t size, GLuint binding_point, GLenum usage)
+{
+    glGenBuffers(1, &ubo->handle);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo->handle);
+    glBufferData(GL_UNIFORM_BUFFER, size, NULL, usage);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, binding_point, ubo->handle);
+
+    ubo->binding_point = binding_point;
+    ubo->size = size;
+
+    return 0;
+}
+
+void dg3d_uniform_buffer_destroy(DG3D_UniformBuffer* ubo)
+{
+    if (!ubo) return;
+    glDeleteBuffers(1, &ubo->handle);
 }
 
 

@@ -3,14 +3,12 @@
 
 #include <glad/glad.h>
 
-typedef struct {
-    GLuint id;
-} DG3D_Shader;
-
-DG3D_Shader shader_program_compile_from_path(const char* vert_path, const char* frag_path);
-DG3D_Shader shader_program_tess_compile_from_path(const char* vert_path, 
+GLuint shader_program_compile_from_path(const char* vert_path, const char* frag_path);
+GLuint shader_program_tess_compile_from_path(const char* vert_path, 
     const char* tcs_path, const char* tes_path, const char* frag_path);
-void   shader_program_delete(DG3D_Shader* shader);
-void   shader_program_bind(DG3D_Shader* shader);
+GLuint shader_get_uniform_location(GLuint id, const char* name);
+GLuint shader_get_uniform_block_index(GLuint id, const char* name);
+void   shader_program_delete(GLuint id);
+void   shader_program_bind(GLuint id);
 
 #endif

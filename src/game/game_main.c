@@ -1,7 +1,5 @@
 #include "game_main.h"
 
-#include <stdlib.h>
-#include <time.h>
 #include <stdint.h>
 #include <math.h>
 
@@ -13,7 +11,6 @@
 #include "platform/platform_input.h"
 #include "platform/platform_other.h"
 #include "platform/platform_log.h"
-#include "game/world_gen.h"
 #include "renderer/renderer.h"
 #include "renderer/shader.h"
 
@@ -35,34 +32,16 @@ typedef struct {
 typedef struct {
     DG_Fonts fonts;
     GLE2D_Texture dirt_tex;
-    DG3D_Shader tess_shady;
+    GLuint tess_shady;
     DG3D_Renderer renderer;
     GLuint vao;
-    Chunk chunk;
 } DG_GameState;
 static DG_GameState game_state = {0};
 
 int fb_w, fb_h;
 
-void chunk_print(Chunk* chunk)
-{
-    for (int i = 0; i < 128; i++) {
-        for (int j = 0; j < 16; j++) {
-            for (int k = 0; k < 16; k++) {
-                printf("%d", (int)chunk->blocks[i][j][k]);
-            }
-            putchar('\n');
-        }
-        putchar('\n');
-        putchar('\n');
-    } 
-}
-
 int dg_init(void)
 {
-    unsigned int seed = 97;
-    srand(seed);
-
     if (gle2d_init()) {
         return 1;
     }
@@ -72,7 +51,7 @@ int dg_init(void)
 
     game_state.tess_shady = shader_program_tess_compile_from_path("shaders/dungen.vert",
         "shaders/dungen.tcs", "shaders/dungen.tes", "shaders/dungen.frag");
-    if (game_state.tess_shady.id == 0) {
+    if (game_state.tess_shady == 0) {
         return 1;
     }
 
@@ -98,9 +77,6 @@ int dg_init(void)
         return 1;
 #endif
     }
-
-    chunk_create(&game_state.chunk);
-    chunk_print(&game_state.chunk);
 
     glGenVertexArrays(1, &game_state.vao);
     return 0;
@@ -132,19 +108,24 @@ int dg_loop(float dt)
     // update.
     GLfloat attrib[] = {(float)sin(dt) * 0.5f, (float)cos(dt) * 0.6f};
     GLfloat color[] = {1.0f, 0.0f, 0.5f, 1.0f};
-    glGetAttribLocation(game_state.tess_shady.id, "offset");
-    glGetAttribLocation(game_state.tess_shady.id, "color");
+    glGetAttribLocation(game_state.tess_shady, "offset");
+    glGetAttribLocation(game_state.tess_shady, "color");
     glVertexAttrib2fv(0, attrib);
     glVertexAttrib4fv(1, color);
     
     gle2d_update_time_uniform(dt);
 
     // render.
-    glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
 
+    // glBindFramebuffer(GL_FRAMEBUFFER, game_state.renderer.fbo);
+    // glEnable(GL_DEPTH_TEST);
+
+    
+
+    glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
     gle2d_shapes_draw_quad(0, 0, fb_w, fb_h, 0.0f, GLE2D_COLOR_GREEN, 0);
 
-#if 1 // MY 2D LIB SHOWCASE
+#if 0 // MY 2D LIB SHOWCASE
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     shader_program_bind(&game_state.tess_shady);
     glBindVertexArray(game_state.vao);
@@ -158,12 +139,11 @@ int dg_loop(float dt)
     gle2d_font_render_text(&game_state.fonts.extra_font, TEXT_COLOR, text, 50, 200);
     gle2d_shapes_draw_quad(fb_w / 3, fb_h / 3, 256 *(float)sin(dt) , 200 * (float)cos(dt), ((float)sin(dt) * 1.0f), GLE2D_COLOR_WHITE, game_state.dirt_tex.id);
     gle2d_font_render_text_rotation(&game_state.fonts.default_font, "gleter2d rotatin text", 200.0f, 200.0f, (float)sin(dt), TEXT_COLOR);
-#endif
     gle2d_font_render_text(&game_state.fonts.default_font, GLE2D_COLOR_WHITE, "0,0", 0, 680);
     gle2d_font_render_text(&game_state.fonts.default_font, GLE2D_COLOR_WHITE, "1,0", 1220, 680);
     gle2d_font_render_text(&game_state.fonts.default_font, GLE2D_COLOR_WHITE, "1,1", 1220, 0);
     gle2d_font_render_text(&game_state.fonts.default_font, GLE2D_COLOR_WHITE, "0,1", 0, 0);
-
+#endif
 
     return 0;
 }
