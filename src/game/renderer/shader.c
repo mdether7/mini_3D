@@ -10,8 +10,10 @@
 // TODO: add shader compilation from char* directly.
 // TODO: Try to make it compatible with gleter2d.
 
+// Internal stuff
 static int shader_compile_error(GLuint shader);
 static int shader_program_link_error(GLuint program);
+static int shader_gl_texture_unit_to_int(GLenum texture_unit);
 
 void shader_program_delete(GLuint id)
 {
@@ -30,6 +32,23 @@ GLuint shader_get_uniform_block_index(GLuint id, const char* name)
         assert(0 && "Uniform block invalid index!");
     }
     return index;
+}
+
+void shader_initialize_ubo_binding(GLuint id, const char* block_name, GLuint binding_point)
+{
+    GLuint block_index = glGetUniformBlockIndex(id, block_name);
+    assert(block_index != GL_INVALID_INDEX && "UBO block not found!");
+    glUniformBlockBinding(id, block_index, binding_point);
+}
+
+void shader_initialize_texture_binding(GLuint id, const char* texture_name, int texture_unit_index)
+{
+    glUseProgram(id);
+    GLint loc = glGetUniformLocation(id, texture_name);
+    if (loc == -1) {
+         assert(0 && "Name does not correspond to an active texture uniform variable!");
+    }
+    glUniform1i(loc, texture_unit_index);
 }
 
 GLint shader_get_uniform_location(GLuint id, const char* name)

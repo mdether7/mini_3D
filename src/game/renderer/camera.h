@@ -3,7 +3,7 @@
 
 #include <linmath/linmath.h>
 
-typedef struct s_camera {
+typedef struct {
     mat4x4 view;
     mat4x4 projection;
     vec3  pos;

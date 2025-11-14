@@ -93,21 +93,23 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int width, int height)
     assert(renderer);
     assert(width > 0 && height > 0);
 
-    // Init shaders 
+    // default shader
     renderer->shader_default.id = shader_program_compile_from_path("shaders/dg3d_default.vert", "shaders/dg3d_default.frag");
-    renderer->shader_screen_quad.id = shader_program_compile_from_path("shaders/dg3d_default_screen.vert", "shaders/dg3d_default_screen.frag");
+    if (renderer->shader_default.id == 0) {
+        return 1;
+    }
+    renderer->shader_default.u_model = shader_get_uniform_location(renderer->shader_default.id, "uModel");
+    shader_initialize_texture_binding(renderer->shader_default.id, "texture_one", 0);
+    shader_initialize_ubo_binding(renderer->shader_default.id, "uBlockMatrices", U_BLOCK_MATRICES_BINDING);
 
-    if (renderer->shader_default.id == 0 ||renderer->shader_screen_quad.id == 0) {
+    // default quad screen shader.
+    renderer->shader_screen_quad.id = shader_program_compile_from_path("shaders/dg3d_default_screen.vert", "shaders/dg3d_default_screen.frag");
+    if (renderer->shader_screen_quad.id == 0) {
         shader_program_delete(renderer->shader_default.id);
-        shader_program_delete(renderer->shader_screen_quad.id);
         return 1;
     }
 
-    renderer->shader_default.u_model = shader_get_uniform_location(renderer->shader_default.id, "uModel");
-
-    GLuint u_block_index = shader_get_uniform_block_index(renderer->shader_default.id, "uBlockMatrices");
-    glUniformBlockBinding(renderer->shader_default.id, u_block_index, U_BLOCK_MATRICES_BINDING);
-
+    // UBO
     dg3d_uniform_buffer_create(&renderer->ubo_matrices, 2 * sizeof(mat4x4), U_BLOCK_MATRICES_BINDING, GL_STREAM_DRAW);
 
     // Screen Quad VAO

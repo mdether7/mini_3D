@@ -28,6 +28,16 @@ int camera_init(DG3D_Camera* cam, const vec3 pos, const vec3 target, const vec3 
     return 0;
 }
 
+void camera_update(DG3D_Camera* cam)
+{
+
+}
+
+void camera_move(DG3D_Camera* cam, vec3 velocity)
+{
+    
+}
+
 void camera_get_projection_matrix(DG3D_Camera* cam, mat4x4 out)
 {
     mat4x4_dup(cam->projection, out);

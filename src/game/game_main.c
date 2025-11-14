@@ -11,6 +11,7 @@
 #include "platform/platform_input.h"
 #include "platform/platform_other.h"
 #include "platform/platform_log.h"
+#include "renderer/camera.h"
 #include "renderer/renderer.h"
 #include "renderer/shader.h"
 
@@ -34,6 +35,7 @@ typedef struct {
     GLE2D_Texture dirt_tex;
     GLuint tess_shady;
     DG3D_Renderer renderer;
+    DG3D_Camera camera;
     GLuint vao;
 } DG_GameState;
 static DG_GameState game_state = {0};
@@ -81,6 +83,8 @@ int dg_init(void)
     glGenVertexArrays(1, &game_state.vao);
     return 0;
 }
+
+
 
 int dg_loop(float dt)
 {
