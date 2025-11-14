@@ -88,10 +88,10 @@ static float dg3d_fullscreen_quad[] = {
 /////////////
 // Renderer
 
-int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
+int dg3d_renderer_init(DG3D_Renderer* renderer, int width, int height)
 {   
     assert(renderer);
-    assert(fb_width > 0 && fb_height > 0);
+    assert(width > 0 && height > 0);
 
     // Init shaders 
     renderer->shader_default.id = shader_program_compile_from_path("shaders/dg3d_default.vert", "shaders/dg3d_default.frag");
@@ -143,7 +143,7 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
 
     glGenTextures(1, &renderer->fbo_main_texture);
     glBindTexture(GL_TEXTURE_2D, renderer->fbo_main_texture); // bind texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, fb_width, fb_height, 
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 
                 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -155,7 +155,7 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
 
     glGenRenderbuffers(1, &renderer->fbo_main_renderbuffer); // bind renderbuffer
     glBindRenderbuffer(GL_RENDERBUFFER, renderer->fbo_main_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, fb_width, fb_height); 
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height); 
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderer->fbo_main_renderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, 0); // unbind renderbuffer
 
@@ -164,12 +164,47 @@ int dg3d_renderer_init(DG3D_Renderer* renderer, int fb_width, int fb_height)
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0); // unbind FBO.
 
-    renderer->viewport_width = fb_width;
-    renderer->viewport_height = fb_height;
+    renderer->viewport_width = width;
+    renderer->viewport_height = height;
     renderer->camera_current = NULL;
-    glViewport(0, 0, fb_width, fb_height); //? To be here or not to be here?
+    glViewport(0, 0, width, height); //? To be here or not to be here?
 
     return 0;
+}
+
+void dg3d_renderer_set_camera(DG3D_Renderer* renderer, DG3D_Camera* camera)
+{
+    renderer->camera_current = camera;
+}
+
+void dg3d_begin_frame(DG3D_Renderer* renderer)
+{
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void dg3d_render_cube(DG3D_Renderer* renderer, mat4x4 model, GLuint texture)
+{
+    mat4x4 projection;
+    mat4x4 view;
+    mat4x4_identity(projection);
+    mat4x4_identity(view);
+    mat4x4_perspective(projection, 1.0f, (float)renderer->viewport_width/(float)renderer->viewport_height, 0.1f, 100.0f);
+
+    glBindVertexArray(renderer->cube_vao);
+    shader_program_bind(renderer->shader_default.id);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    mat4x4_translate_in_place(model, 0.0f, 0.0f, -5.0f);
+
+    glUniformMatrix4fv(renderer->shader_default.u_model, 1, GL_FALSE, &model[0][0]);
+    glBindBuffer(GL_UNIFORM_BUFFER, renderer->ubo_matrices.handle);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4x4), view);
+    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(mat4x4), sizeof(mat4x4), projection);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+    glBindVertexArray(0);
 }
 
 void dg3d_renderer_shutdown(DG3D_Renderer* renderer)

@@ -58,7 +58,9 @@ typedef struct {
 } DG3D_Renderer;
 
 int  dg3d_renderer_init(DG3D_Renderer* renderer, int width, int height);
-int  dg3d_renderer_set_camera(DG3D_Renderer* renderer, DG3D_Camera* camera);
+void dg3d_begin_frame(DG3D_Renderer* renderer);
+void dg3d_render_cube(DG3D_Renderer* renderer, mat4x4 model, GLuint texture);
+void dg3d_renderer_set_camera(DG3D_Renderer* renderer, DG3D_Camera* camera);
 void dg3d_renderer_shutdown(DG3D_Renderer* renderer);
 
 #endif

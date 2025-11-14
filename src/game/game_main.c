@@ -117,36 +117,39 @@ int dg_loop(float dt)
 
     // render.
 
-    glEnable(GL_DEPTH_TEST);
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    mat4x4 projection;
-    mat4x4 model;
-    mat4x4 view;
-    mat4x4_identity(projection);
-    mat4x4_identity(view);
-    mat4x4_identity(model);
-    mat4x4_perspective(projection, 1.0f, (float)fb_w/(float)fb_h, 0.1f, 100.0f);
+    mat4x4 model_1;
+    mat4x4 model_2;
+    mat4x4 model_3;
+    mat4x4 model_4;
+    mat4x4 model_5;
+    mat4x4 model_6;
+    mat4x4 model_7;
+    mat4x4 model_8;
+    mat4x4_translate(model_1, (float)cos(dt), (float)sin(dt), -5.0f);
+    mat4x4_translate(model_2, 0.0f, 5.0f, -5.0f);
+    mat4x4_translate(model_3, 1.0f, 0.0f, -5.0f);
+    mat4x4_translate(model_4, 0.0f, 3.0f, -5.0f);
+    mat4x4_translate(model_5, 3.0f, 0.0f, -5.0f);
+    mat4x4_translate(model_6, 2.0f, 5.0f, -5.0f);
+    mat4x4_translate(model_7, 0.0f, 6.0f, -5.0f);
+    mat4x4_translate(model_8, 5.0f, 20.0f, -5.0f);
+    dg3d_begin_frame(&game_state.renderer);
+    dg3d_render_cube(&game_state.renderer, model_1, game_state.dirt_tex.id);
+    dg3d_render_cube(&game_state.renderer, model_2, game_state.dirt_tex.id);
+    dg3d_render_cube(&game_state.renderer, model_3, game_state.dirt_tex.id);
+    dg3d_render_cube(&game_state.renderer, model_4, game_state.dirt_tex.id);
+    dg3d_render_cube(&game_state.renderer, model_5, game_state.dirt_tex.id);
+    dg3d_render_cube(&game_state.renderer, model_6, game_state.dirt_tex.id);
+    dg3d_render_cube(&game_state.renderer, model_7, game_state.dirt_tex.id);
+    dg3d_render_cube(&game_state.renderer, model_8, game_state.dirt_tex.id);
 
-    glBindVertexArray(game_state.renderer.cube_vao);
-    shader_program_bind(game_state.renderer.shader_default.id);
-    mat4x4_translate_in_place(model, 0.0f, 0.0f, -50.0f);
-
-    glUniformMatrix4fv(game_state.renderer.shader_default.u_model, 1, GL_FALSE, &model[0][0]);
-    glBindBuffer(GL_UNIFORM_BUFFER, game_state.renderer.ubo_matrices.handle);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4x4), view);
-    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(mat4x4), sizeof(mat4x4), projection);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
-    glBindVertexArray(0);
 
     // glClearBufferfv(GL_COLOR, 0, (GLfloat[]){0.0f, 0.0f, 0.0f, 1.0f});
     //gle2d_shapes_draw_quad(0, 0, fb_w, fb_h, 0.0f, GLE2D_COLOR_GREEN, 0);
 
-#if 0 // MY 2D LIB SHOWCASE
+#if 1 // MY 2D LIB SHOWCASE
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    shader_program_bind(&game_state.tess_shady);
+    shader_program_bind(game_state.tess_shady);
     glBindVertexArray(game_state.vao);
     glDrawArrays(GL_PATCHES, 0, 6);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

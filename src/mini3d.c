@@ -356,7 +356,7 @@ camera_update_view_matrix(Camera* cam)
 static void
 camera_update_projection_matrix(Camera* cam)
 {
-    mat4x4_perspective(cam->projection,
+    mat4x4_perspective(cam->projection, // should be here??
                        mini_degrees_to_radians(cam->fov),
                        ((float)g_window_state.width / (float)g_window_state.height),
                        cam->near,
