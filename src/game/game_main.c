@@ -17,7 +17,7 @@
 
 #define TEXT_COLOR (vec4){0.0f, 0.5f, 0.5f, 1.0f}
 
-#if 0
+#if 1
 // https://stackoverflow.com/questions/427477/fastest-way-to-clamp-a-real-fixed-floating-point-value
 static inline float clampf(float f, float min, float max) {
   const float t = f < min ? min : f;
@@ -87,8 +87,26 @@ int dg_init(void)
     return 0;
 }
 
-vec3 velocity = {1.0f};
-vec3 pos = {0};
+vec3 velocity = {0.0f, 0.0f, 0.0f};
+vec3 direction = {0};
+float speed = 2.0f;
+float speed_cap = 5.0f;
+float delta = 0.01667;
+vec3 pos = {0.0f, 0.0f, 0.0f};
+
+
+
+// direction * speed = velocity.
+
+// TODO delta time!
+// TODO velocity based movement with damping!.
+
+void vec3_zero(vec3 v)
+{
+    v[0] = 0.0f;
+    v[1] = 0.0f;
+    v[2] = 0.0f;
+}
 
 int dg_loop(float dt)
 {
@@ -100,12 +118,37 @@ int dg_loop(float dt)
         }
     }
 
-    vec3_add(pos, pos, velocity);
-
-    if (platform_is_key_down(KEY_A)) {
-        fprintf(stdout, "%.2f, %.2f, %.2f\n", pos[0], pos[1], pos[2]);
-        fflush(stdout);
+    if (platform_is_key_down(KEY_W)) {
+        vec3_add(direction, direction, (vec3){0.0f, 0.0f, 1.0f});
+    }   
+    if (platform_is_key_down(KEY_S)) {
+        vec3_sub(direction, direction, (vec3){0.0f, 0.0f, 1.0f});
     }
+    if (platform_is_key_down(KEY_A)) {
+        vec3_sub(direction, direction, (vec3){1.0f, 0.0f, 0.0f});
+    }
+    if (platform_is_key_down(KEY_D)) {
+        vec3_add(direction, direction, (vec3){1.0f, 0.0f, 0.0f});
+    }
+    float length = vec3_len(direction);
+    if (length > 0.0001f) {
+        vec3_norm(direction, direction); // TODO add this by myself.....
+    }
+        vec3_scale(velocity, direction, speed);
+        vec3_scale(velocity, velocity, delta);
+        if (vec3_len(velocity))
+        vec3_add(pos, pos, velocity);
+    }
+    
+    
+#if 0
+    fprintf(stdout, "%.6f, %.6f, %.6f\n", pos[0], pos[1], pos[2]);
+    fflush(stdout);
+#endif
+
+    fprintf(stdout, "%.6f, %.6f, %.6f\n", direction[0], direction[1], direction[2]);
+    fflush(stdout);
+
 
 
     // update.
