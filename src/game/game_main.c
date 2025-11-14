@@ -44,12 +44,21 @@ int fb_w, fb_h;
 
 int dg_init(void)
 {
-    if (gle2d_init()) {
+    platform_get_framebuffer_size(&fb_w, &fb_h);
+
+    if (gle2d_init()) return 1;
+    gle2d_update_rendering_area(fb_w, fb_h);
+
+    if (dg3d_renderer_init(&game_state.renderer, fb_w, fb_h)) {
+        platform_log_error("Renderer init failed!");
         return 1;
     }
-    // Usually you want viewport to match framebuffer
-    platform_get_framebuffer_size(&fb_w, &fb_h);
-    gle2d_update_rendering_area(fb_w, fb_h);
+
+    vec3 pos = {0.0f, 0.0f, 5.0f};
+    vec3 target = {0.0f, 0.0f, 0.0f};
+    vec3 up = {0.0f, 1.0f, 0.0f};
+    camera_init(&game_state.camera, pos, target, up, 1.0f, (float)fb_w, (float)fb_h, 0.1f, 100.f);
+    dg3d_renderer_set_camera(&game_state.renderer, &game_state.camera);
 
     game_state.tess_shady = shader_program_tess_compile_from_path("shaders/dungen.vert",
         "shaders/dungen.tcs", "shaders/dungen.tes", "shaders/dungen.frag");
@@ -73,34 +82,16 @@ int dg_init(void)
     }
 
     platform_log_info("w:%d, h:%d", fb_w, fb_h);
-    if (dg3d_renderer_init(&game_state.renderer, fb_w, fb_h)) {
-#if 1
-        platform_log_error("Renderer init failed!");
-        return 1;
-#endif
-    }
 
     glGenVertexArrays(1, &game_state.vao);
     return 0;
 }
 
-
+vec3 velocity = {1.0f};
+vec3 pos = {0};
 
 int dg_loop(float dt)
 {
-    // input.
-    if (platform_is_key_down(KEY_W)) {
-        platform_log_info("UP");
-    }
-    if (platform_is_key_down(KEY_S)) {
-        platform_log_info("DOWN");
-    } 
-    if (platform_is_key_down(KEY_A)) {
-        platform_log_info("LEFT");
-    }
-    if (platform_is_key_down(KEY_D)) {
-        platform_log_info("RIGHT");
-    }
     if (platform_is_key_down(KEY_R)) {
         if (gle2d_misc_shader_hot_reload(GLE2D_SHADER_SOLID, "shaders/gle2dsolid.vert", "shaders/gle2dsolid.frag")) {
             platform_log_error("Shader hot reaload error!");
@@ -109,6 +100,14 @@ int dg_loop(float dt)
         }
     }
 
+    vec3_add(pos, pos, velocity);
+
+    if (platform_is_key_down(KEY_A)) {
+        fprintf(stdout, "%.2f, %.2f, %.2f\n", pos[0], pos[1], pos[2]);
+        fflush(stdout);
+    }
+
+
     // update.
     GLfloat attrib[] = {(float)sin(dt) * 0.5f, (float)cos(dt) * 0.6f};
     GLfloat color[] = {1.0f, 0.0f, 0.5f, 1.0f};
@@ -116,6 +115,8 @@ int dg_loop(float dt)
     glGetAttribLocation(game_state.tess_shady, "color");
     glVertexAttrib2fv(0, attrib);
     glVertexAttrib4fv(1, color);
+
+    camera_update(&game_state.camera, 0.0f);
     
     gle2d_update_time_uniform(dt);
 

@@ -12,11 +12,15 @@ typedef struct {
     float fov;
     float znear; 
     float zfar; 
+    // Experiment
+    vec3  velocity;
+    float damping;
 } DG3D_Camera;
 
 int camera_init(DG3D_Camera* cam, const vec3 pos, const vec3 target, const vec3 up, 
     float fov, float width, float height, float znear, float zfar);
 
+void camera_update(DG3D_Camera* cam, float delta_time);
 void camera_get_projection_matrix(DG3D_Camera* cam, mat4x4 out);
 void camera_get_view_matrix(DG3D_Camera* cam, mat4x4 out);
 

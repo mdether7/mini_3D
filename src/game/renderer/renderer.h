@@ -4,9 +4,8 @@
 #include <stddef.h>
 #include <linmath/linmath.h>
 
+#include "camera.h"
 #include "shader.h"
-
-typedef struct DG3D_Camera DG3D_Camera;
 
 ///////////////////
 // Unifrom Buffer

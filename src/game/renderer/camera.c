@@ -3,6 +3,11 @@
 #include <assert.h>
 #include <linmath/linmath.h>
 
+#include "platform/platform_input.h"
+#ifdef DEBUG
+#include "platform/platform_log.h"
+#endif
+
 int camera_init(DG3D_Camera* cam, const vec3 pos, const vec3 target, const vec3 up, float fov, float width, float height, float znear, float zfar) 
 {
     mat4x4_identity(cam->view);
@@ -28,14 +33,13 @@ int camera_init(DG3D_Camera* cam, const vec3 pos, const vec3 target, const vec3 
     return 0;
 }
 
-void camera_update(DG3D_Camera* cam)
+void camera_update(DG3D_Camera* cam, float delta_time)
 {
-
+    if (platform_is_key_down(KEY_C)) {
+#ifdef DEBUG
+        platform_log_info("CAMERA!");
+#endif
 }
-
-void camera_move(DG3D_Camera* cam, vec3 velocity)
-{
-    
 }
 
 void camera_get_projection_matrix(DG3D_Camera* cam, mat4x4 out)
