@@ -66,4 +66,10 @@ inline float mathm_vec2_dot(vec2 v1, vec2 v2)
     return v1[0] * v2[0] + v1[1] * v2[1];
 }
 
+inline void vec3_zero(vec3 v)
+{
+    for (int i = 0; i < 3; i++)
+        v[i] = 0.0f;
+}
+
 #endif

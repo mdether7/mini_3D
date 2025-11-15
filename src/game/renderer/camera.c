@@ -9,6 +9,8 @@
 #include "platform/platform_log.h"
 #include <stdio.h>
 
+#define MOUSE_SENS 0.1f
+
 #if 0
 void mathy_print_mat4x4(const mat4x4 M)
 {
@@ -42,14 +44,14 @@ int camera_init(DG3D_Camera* cam, const vec3 pos, const vec3 target, const vec3 
     cam->up[1] = up[1];
     cam->up[2] = up[2];
 
-    float aspect_ratio = width / height;
+    cam->aspect_ratio = width / height;
 
     mat4x4_look_at(cam->view, pos, target, up);
-    mat4x4_perspective(cam->projection, fov, aspect_ratio, znear, zfar);
+    mat4x4_perspective(cam->projection, fov, cam->aspect_ratio, znear, zfar);
 
     // Movement aspects.
     cam->mov_speed = 5.0f;
-    cam->mov_friction = 0.95f;
+    cam->mov_friction = 5.0f;
     cam->mov_velocity[0] = 0.0f;
     cam->mov_velocity[1] = 0.0f;
     cam->mov_velocity[2] = 0.0f;
@@ -83,7 +85,7 @@ void camera_update(DG3D_Camera* cam, float dt)
     vec3_add(cam->pos, cam->pos, displacement);
 
     // apply friction
-    vec3_scale(cam->mov_velocity, cam->mov_velocity, cam->mov_friction);
+    vec3_scale(cam->mov_velocity, cam->mov_velocity, (1 - cam->mov_friction * dt));
 
     if (vec3_len(cam->mov_velocity) <= FLT_EPSILON) {
         cam->mov_velocity[0] = 0.0f;
@@ -100,19 +102,30 @@ void camera_update(DG3D_Camera* cam, float dt)
 void camera_update_on_screen_resize(DG3D_Camera* cam, float width, float height)
 {
     float aspect_ratio = width / height;
+    cam->aspect_ratio = aspect_ratio;
     mat4x4_perspective(cam->projection, cam->fov, aspect_ratio, cam->znear, cam->zfar);
+}
+
+void camera_process_mouse_movement(DG3D_Camera* cam, float xoffset, float yoffset)
+{
+    xoffset *= MOUSE_SENS;
+    yoffset *= MOUSE_SENS;
+
+    
 }
 
 // in radians!!
 void camera_set_fov(DG3D_Camera* cam, float fov)
 {
     cam->fov = fov;
+    mat4x4_perspective(cam->projection, cam->fov, cam->aspect_ratio, cam->znear, cam->zfar);
 }
 
 void camera_set_clip_planes(DG3D_Camera* cam, float znear, float zfar)
 {
     cam->znear = znear;
     cam->zfar = zfar;
+    mat4x4_perspective(cam->projection, cam->fov, cam->aspect_ratio, cam->znear, cam->zfar);
 }  
 
 void camera_get_projection_matrix(DG3D_Camera* cam, mat4x4 out)

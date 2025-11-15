@@ -92,13 +92,6 @@ int dg_init(void)
 
 float delta = 0.01667;
 
-void vec3_zero(vec3 v)
-{
-    v[0] = 0.0f;
-    v[1] = 0.0f;
-    v[2] = 0.0f;
-}
-
 int dg_loop(float dt)
 {
     if (platform_is_key_pressed(KEY_R)) {
