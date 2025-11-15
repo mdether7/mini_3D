@@ -2,8 +2,8 @@
 
 #include <stdint.h>
 #include <math.h>
-
-#include <stdio.h> // DEBUG ONLY.
+#include <float.h>
+#include <stdio.h>
 
 #include <glad/glad.h>
 
@@ -54,7 +54,7 @@ int dg_init(void)
         return 1;
     }
 
-    vec3 pos = {0.0f, 0.0f, 5.0f};
+    vec3 pos = {0.0f, 0.0f, -5.0f};
     vec3 target = {0.0f, 0.0f, 0.0f};
     vec3 up = {0.0f, 1.0f, 0.0f};
     camera_init(&game_state.camera, pos, target, up, 1.0f, (float)fb_w, (float)fb_h, 0.1f, 100.f);
@@ -87,19 +87,8 @@ int dg_init(void)
     return 0;
 }
 
-vec3 velocity = {0.0f, 0.0f, 0.0f};
-vec3 direction = {0};
-float speed = 2.0f;
-float speed_cap = 5.0f;
+
 float delta = 0.01667;
-vec3 pos = {0.0f, 0.0f, 0.0f};
-
-
-
-// direction * speed = velocity.
-
-// TODO delta time!
-// TODO velocity based movement with damping!.
 
 void vec3_zero(vec3 v)
 {
@@ -118,39 +107,6 @@ int dg_loop(float dt)
         }
     }
 
-    if (platform_is_key_down(KEY_W)) {
-        vec3_add(direction, direction, (vec3){0.0f, 0.0f, 1.0f});
-    }   
-    if (platform_is_key_down(KEY_S)) {
-        vec3_sub(direction, direction, (vec3){0.0f, 0.0f, 1.0f});
-    }
-    if (platform_is_key_down(KEY_A)) {
-        vec3_sub(direction, direction, (vec3){1.0f, 0.0f, 0.0f});
-    }
-    if (platform_is_key_down(KEY_D)) {
-        vec3_add(direction, direction, (vec3){1.0f, 0.0f, 0.0f});
-    }
-    float length = vec3_len(direction);
-    if (length > 0.0001f) {
-        vec3_norm(direction, direction); // TODO add this by myself.....
-    }
-        vec3_scale(velocity, direction, speed);
-        vec3_scale(velocity, velocity, delta);
-        if (vec3_len(velocity))
-        vec3_add(pos, pos, velocity);
-    }
-    
-    
-#if 0
-    fprintf(stdout, "%.6f, %.6f, %.6f\n", pos[0], pos[1], pos[2]);
-    fflush(stdout);
-#endif
-
-    fprintf(stdout, "%.6f, %.6f, %.6f\n", direction[0], direction[1], direction[2]);
-    fflush(stdout);
-
-
-
     // update.
     GLfloat attrib[] = {(float)sin(dt) * 0.5f, (float)cos(dt) * 0.6f};
     GLfloat color[] = {1.0f, 0.0f, 0.5f, 1.0f};
@@ -158,12 +114,6 @@ int dg_loop(float dt)
     glGetAttribLocation(game_state.tess_shady, "color");
     glVertexAttrib2fv(0, attrib);
     glVertexAttrib4fv(1, color);
-
-    camera_update(&game_state.camera, 0.0f);
-    
-    gle2d_update_time_uniform(dt);
-
-    // render.
 
     mat4x4 model_1;
     mat4x4 model_2;
@@ -180,7 +130,15 @@ int dg_loop(float dt)
     mat4x4_translate(model_5, 3.0f, 0.0f, -5.0f);
     mat4x4_translate(model_6, 2.0f, 5.0f, -5.0f);
     mat4x4_translate(model_7, 0.0f, 6.0f, -5.0f);
-    mat4x4_translate(model_8, 5.0f, 20.0f, -5.0f);
+    mat4x4_translate(model_8, 0.0f, 0.0f, 0.0f);
+
+    camera_update(&game_state.camera, delta);
+    gle2d_update_time_uniform(dt);
+
+    // render.
+
+    camera_print_movement(&game_state.camera);
+
     dg3d_begin_frame(&game_state.renderer);
     dg3d_render_cube(&game_state.renderer, model_1, game_state.dirt_tex.id);
     dg3d_render_cube(&game_state.renderer, model_2, game_state.dirt_tex.id);

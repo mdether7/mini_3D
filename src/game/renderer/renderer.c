@@ -181,31 +181,44 @@ void dg3d_renderer_set_camera(DG3D_Renderer* renderer, DG3D_Camera* camera)
 
 void dg3d_begin_frame(DG3D_Renderer* renderer)
 {
+    assert(renderer->camera_current && "Camera null");
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    mathm_print_mat4x4(renderer->camera_current->view);
+
+
+    glBindBuffer(GL_UNIFORM_BUFFER, renderer->ubo_matrices.handle);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4x4), renderer->camera_current->view);
+    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(mat4x4), sizeof(mat4x4), renderer->camera_current->projection);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 }
 
 void dg3d_render_cube(DG3D_Renderer* renderer, mat4x4 model, GLuint texture)
 {
-    mat4x4 projection;
-    mat4x4 view;
-    mat4x4_identity(projection);
-    mat4x4_identity(view);
-    mat4x4_perspective(projection, 1.0f, (float)renderer->viewport_width/(float)renderer->viewport_height, 0.1f, 100.0f);
+    // mat4x4 projection;
+    // mat4x4 view;
+    // mat4x4_identity(projection);
+    // mat4x4_identity(view);
+    // mat4x4_perspective(projection, 1.0f, (float)renderer->viewport_width/(float)renderer->viewport_height, 0.1f, 100.0f);
 
-    glBindVertexArray(renderer->cube_vao);
+    // 1 program bind.
     shader_program_bind(renderer->shader_default.id);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    mat4x4_translate_in_place(model, 0.0f, 0.0f, -5.0f);
 
+    // 2 update unifroms (program need to be bound)
+    mat4x4_translate_in_place(model, 0.0f, 0.0f, 0.0f);
     glUniformMatrix4fv(renderer->shader_default.u_model, 1, GL_FALSE, &model[0][0]);
-    glBindBuffer(GL_UNIFORM_BUFFER, renderer->ubo_matrices.handle);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4x4), view);
-    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(mat4x4), sizeof(mat4x4), projection);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+    // 3 Ready opengl.
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindVertexArray(renderer->cube_vao);
+
+    // 4 opengl Draw
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+
+    // 5 Unbind (can be skipped, but for safety and debugging)
     glBindVertexArray(0);
 }
 
