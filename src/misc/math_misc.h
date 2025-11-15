@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <linmath/linmath.h>
 
+#ifndef MATHM_PI
 #define MATHM_PI 3.14159265358979323846f
+#endif
 
 /////////////////////////////
 // Debug prints for linmath
@@ -66,9 +68,10 @@ static inline float mathm_vec2_dot(vec2 v1, vec2 v2)
     return v1[0] * v2[0] + v1[1] * v2[1];
 }
 
-static inline void vec3_zero(vec3 v)
+static inline void mathm_vec3_zero(vec3 v)
 {
     for (int i = 0; i < 3; i++)
         v[i] = 0.0f;
 }
+
 #endif
