@@ -44,6 +44,7 @@ int fb_w, fb_h;
 
 int dg_init(void)
 {
+    platform_input_disable_cursor();
     platform_get_framebuffer_size(&fb_w, &fb_h);
 
     if (gle2d_init()) return 1;
@@ -83,14 +84,15 @@ int dg_init(void)
 
     platform_log_info("w:%d, h:%d", fb_w, fb_h);
 
-    platform_input_disable_cursor();
-
     glGenVertexArrays(1, &game_state.vao);
     return 0;
 }
 
 
 float delta = 0.01667;
+
+double dx;
+double dy;
 
 int dg_loop(float dt)
 {
@@ -106,6 +108,16 @@ int dg_loop(float dt)
         platform_input_get_cursor_pos(&x, &y);
         platform_log_info("[CURSOR] X:%f, Y:%f", x, y);
     }
+
+
+    platform_input_get_mouse_delta(&dx, &dy);
+    platform_log_info("[CURSOR] X:%f, Y:%f", dx, dy);
+
+    // if (platform_input_mouse_moved()) {
+    //     double x, y;
+    //     platform_input_get_cursor_pos(&x, &y);
+    //     platform_log_info("[CURSOR] X:%f, Y:%f", x, y);
+    // }
 
     // update.
     GLfloat attrib[] = {(float)sin(dt) * 0.5f, (float)cos(dt) * 0.6f};

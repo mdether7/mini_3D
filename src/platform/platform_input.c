@@ -3,12 +3,21 @@
 #include <assert.h>
 
 Key keys[KEY_COUNT];
+int mouse_moved = 1;
+double mouse_dx;
+double mouse_dy;
 
 extern GLFWwindow* window;
 
 void platform_input_get_cursor_pos(double* xpos, double* ypos)
 {
    glfwGetCursorPos(window, xpos, ypos);
+}
+
+void platform_input_get_mouse_delta(double* dx, double* dy)
+{
+    *dx = mouse_dx;
+    *dy = mouse_dy;
 }
 
 void platform_input_show_cursor(void)
@@ -19,6 +28,11 @@ void platform_input_show_cursor(void)
 void platform_input_disable_cursor(void)
 {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+int platform_input_mouse_moved(void)
+{
+    return mouse_moved;
 }
 
 int platform_is_key_pressed(key_type key)
@@ -78,4 +92,8 @@ void platform_input_reset_keys_state(void)
         keys[i].pressed  = 0;
         keys[i].released = 0;
     }
+
+    mouse_dx = 0.0;
+    mouse_dy = 0.0;
+    mouse_moved = 0;
 }

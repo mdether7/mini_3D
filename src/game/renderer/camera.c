@@ -75,6 +75,8 @@ void camera_update(DG3D_Camera* cam, float dt)
         vec3_add(direction, direction, (vec3){1.0f, 0.0f, 0.0f});
     }
 
+    
+
     if (vec3_len(direction) > FLT_EPSILON) {
         vec3_norm(direction, direction);
         vec3_scale(cam->mov_velocity, direction, cam->mov_speed);
@@ -111,7 +113,7 @@ void camera_process_mouse_movement(DG3D_Camera* cam, float xoffset, float yoffse
     xoffset *= MOUSE_SENS;
     yoffset *= MOUSE_SENS;
 
-    
+
 }
 
 // in radians!!

@@ -63,6 +63,18 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 #endif
 }
 
+static double last_x;
+static double last_y;
+static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    mouse_dx = xpos - last_x;
+    mouse_dy = ypos - last_y;
+    last_x = xpos;
+    last_y = ypos;
+    mouse_moved = 1;
+}
+
+
 
 int main(void)
 {
@@ -89,11 +101,15 @@ int main(void)
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // enable vsync
 
+    // glfwFocusWindow(window);
+    // glfwSetCursorPos(window, window_width/2, window_height/2);
+
     if (glfwRawMouseMotionSupported())
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 
 
     glfwSetKeyCallback(window, key_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
 
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
