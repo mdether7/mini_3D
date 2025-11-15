@@ -15,6 +15,10 @@ typedef struct {
  
 extern Key keys[KEY_COUNT];
 
+void platform_input_get_cursor_pos(double* xpos, double* ypos);
+void platform_input_show_cursor(void);
+void platform_input_disable_cursor(void);
+
 int platform_is_key_pressed(key_type key);
 int platform_is_key_held(key_type key);
 int platform_is_key_released(key_type key);

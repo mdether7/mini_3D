@@ -89,6 +89,9 @@ int main(void)
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // enable vsync
 
+    if (glfwRawMouseMotionSupported())
+        glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+
 
     glfwSetKeyCallback(window, key_callback);
 

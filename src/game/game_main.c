@@ -83,6 +83,8 @@ int dg_init(void)
 
     platform_log_info("w:%d, h:%d", fb_w, fb_h);
 
+    platform_input_disable_cursor();
+
     glGenVertexArrays(1, &game_state.vao);
     return 0;
 }
@@ -99,12 +101,17 @@ void vec3_zero(vec3 v)
 
 int dg_loop(float dt)
 {
-    if (platform_is_key_down(KEY_R)) {
+    if (platform_is_key_pressed(KEY_R)) {
         if (gle2d_misc_shader_hot_reload(GLE2D_SHADER_SOLID, "shaders/gle2dsolid.vert", "shaders/gle2dsolid.frag")) {
             platform_log_error("Shader hot reaload error!");
         } else {
             platform_log_success("Shader reloaded sucesfully!");
         }
+    }
+    if (platform_is_key_pressed(KEY_C)) {
+        double x, y;
+        platform_input_get_cursor_pos(&x, &y);
+        platform_log_info("[CURSOR] X:%f, Y:%f", x, y);
     }
 
     // update.
@@ -136,10 +143,8 @@ int dg_loop(float dt)
     gle2d_update_time_uniform(dt);
 
     // render.
-
-    camera_print_movement(&game_state.camera);
-
     dg3d_begin_frame(&game_state.renderer);
+
     dg3d_render_cube(&game_state.renderer, model_1, game_state.dirt_tex.id);
     dg3d_render_cube(&game_state.renderer, model_2, game_state.dirt_tex.id);
     dg3d_render_cube(&game_state.renderer, model_3, game_state.dirt_tex.id);

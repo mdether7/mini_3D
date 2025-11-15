@@ -9,6 +9,7 @@
 #include "platform/platform_log.h"
 #include <stdio.h>
 
+#if 0
 void mathy_print_mat4x4(const mat4x4 M)
 {
     int i, j;
@@ -22,6 +23,7 @@ void mathy_print_mat4x4(const mat4x4 M)
     fprintf(stdout, "-------\n");
     fflush(stdout);
 }
+#endif
 
 int camera_init(DG3D_Camera* cam, const vec3 pos, const vec3 target, const vec3 up, float fov, float width, float height, float znear, float zfar) 
 {
@@ -45,9 +47,9 @@ int camera_init(DG3D_Camera* cam, const vec3 pos, const vec3 target, const vec3 
     mat4x4_look_at(cam->view, pos, target, up);
     mat4x4_perspective(cam->projection, fov, aspect_ratio, znear, zfar);
 
-    cam->mov_speed = 1.0f;
-    cam->mov_friction = 0.75f;
-    // VEC3 ZERO
+    // Movement aspects.
+    cam->mov_speed = 5.0f;
+    cam->mov_friction = 0.95f;
     cam->mov_velocity[0] = 0.0f;
     cam->mov_velocity[1] = 0.0f;
     cam->mov_velocity[2] = 0.0f;
@@ -55,14 +57,14 @@ int camera_init(DG3D_Camera* cam, const vec3 pos, const vec3 target, const vec3 
     return 0;
 }
 
-void camera_update(DG3D_Camera* cam, float delta_time)
+void camera_update(DG3D_Camera* cam, float dt)
 {
     vec3 direction = {0};
     if (platform_is_key_down(KEY_W)) {
-        vec3_add(direction, direction, (vec3){0.0f, 0.0f, 1.0f});
+        vec3_sub(direction, direction, (vec3){0.0f, 0.0f, 1.0f});
     }   
     if (platform_is_key_down(KEY_S)) {
-        vec3_sub(direction, direction, (vec3){0.0f, 0.0f, 1.0f});
+        vec3_add(direction, direction, (vec3){0.0f, 0.0f, 1.0f});
     }
     if (platform_is_key_down(KEY_A)) {
         vec3_sub(direction, direction, (vec3){1.0f, 0.0f, 0.0f});
@@ -74,11 +76,10 @@ void camera_update(DG3D_Camera* cam, float delta_time)
     if (vec3_len(direction) > FLT_EPSILON) {
         vec3_norm(direction, direction);
         vec3_scale(cam->mov_velocity, direction, cam->mov_speed);
-
     }
 
     vec3 displacement;
-    vec3_scale(displacement, cam->mov_velocity, delta_time);
+    vec3_scale(displacement, cam->mov_velocity, dt);
     vec3_add(cam->pos, cam->pos, displacement);
 
     // apply friction
@@ -91,16 +92,28 @@ void camera_update(DG3D_Camera* cam, float delta_time)
     }
 
     // update cam view matrix;
-    mat4x4_look_at(cam->view, cam->pos, cam->target, cam->up);
+    vec3 target;
+    vec3_sub(target, cam->pos, (vec3){0.0f, 0.0f, 1.0f});
+    mat4x4_look_at(cam->view, cam->pos, target, cam->up);
 }
 
-void camera_print_movement(DG3D_Camera* cam)
+void camera_update_on_screen_resize(DG3D_Camera* cam, float width, float height)
 {
-#if 0
-    fprintf(stdout, "%.6f, %.6f, %.6f\n", cam->pos[0], cam->pos[1], cam->pos[2]);
-    fflush(stdout);
-#endif
+    float aspect_ratio = width / height;
+    mat4x4_perspective(cam->projection, cam->fov, aspect_ratio, cam->znear, cam->zfar);
 }
+
+// in radians!!
+void camera_set_fov(DG3D_Camera* cam, float fov)
+{
+    cam->fov = fov;
+}
+
+void camera_set_clip_planes(DG3D_Camera* cam, float znear, float zfar)
+{
+    cam->znear = znear;
+    cam->zfar = zfar;
+}  
 
 void camera_get_projection_matrix(DG3D_Camera* cam, mat4x4 out)
 {
@@ -110,5 +123,4 @@ void camera_get_projection_matrix(DG3D_Camera* cam, mat4x4 out)
 void camera_get_view_matrix(DG3D_Camera* cam, mat4x4 out)
 {
     mat4x4_dup(cam->view, out);
-    //memcpy(out, cam->view, sizeof(mat4x4));
 }

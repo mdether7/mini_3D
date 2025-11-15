@@ -4,6 +4,23 @@
 
 Key keys[KEY_COUNT];
 
+extern GLFWwindow* window;
+
+void platform_input_get_cursor_pos(double* xpos, double* ypos)
+{
+   glfwGetCursorPos(window, xpos, ypos);
+}
+
+void platform_input_show_cursor(void)
+{
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
+void platform_input_disable_cursor(void)
+{
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
 int platform_is_key_pressed(key_type key)
 {
     return keys[key].pressed;

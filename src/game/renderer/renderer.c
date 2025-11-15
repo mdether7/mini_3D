@@ -185,25 +185,15 @@ void dg3d_begin_frame(DG3D_Renderer* renderer)
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    mathm_print_mat4x4(renderer->camera_current->view);
-
 
     glBindBuffer(GL_UNIFORM_BUFFER, renderer->ubo_matrices.handle);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4x4), renderer->camera_current->view);
     glBufferSubData(GL_UNIFORM_BUFFER, sizeof(mat4x4), sizeof(mat4x4), renderer->camera_current->projection);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
 }
 
 void dg3d_render_cube(DG3D_Renderer* renderer, mat4x4 model, GLuint texture)
 {
-    // mat4x4 projection;
-    // mat4x4 view;
-    // mat4x4_identity(projection);
-    // mat4x4_identity(view);
-    // mat4x4_perspective(projection, 1.0f, (float)renderer->viewport_width/(float)renderer->viewport_height, 0.1f, 100.0f);
-
     // 1 program bind.
     shader_program_bind(renderer->shader_default.id);
 
