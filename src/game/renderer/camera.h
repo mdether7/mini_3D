@@ -14,11 +14,14 @@ typedef struct {
     float znear; 
     float zfar; 
 
+    // euler Angles
+    float yaw;
+    float pitch;
+
     // Movement
     vec3  mov_velocity;
     float mov_speed;
     float mov_friction;
-
 } DG3D_Camera;
 
 int camera_init(DG3D_Camera* cam, const vec3 pos, const vec3 target, const vec3 up, 

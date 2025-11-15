@@ -5,27 +5,9 @@
 #include <linmath/linmath.h>
 
 #include "platform/platform_input.h"
-
-#include "platform/platform_log.h"
-#include <stdio.h>
+#include "misc/math_misc.h"
 
 #define MOUSE_SENS 0.1f
-
-#if 0
-void mathy_print_mat4x4(const mat4x4 M)
-{
-    int i, j;
-    fprintf(stdout, "-------\n");
-	for(i=0; i<4; ++i) {
-        for(j=0; j<4; ++j) {
-            fprintf(stdout, "%.2f ", M[j][i]);
-        }
-        putchar('\n');
-    }
-    fprintf(stdout, "-------\n");
-    fflush(stdout);
-}
-#endif
 
 int camera_init(DG3D_Camera* cam, const vec3 pos, const vec3 target, const vec3 up, float fov, float width, float height, float znear, float zfar) 
 {
@@ -76,7 +58,6 @@ void camera_update(DG3D_Camera* cam, float dt)
     }
 
     
-
     if (vec3_len(direction) > FLT_EPSILON) {
         vec3_norm(direction, direction);
         vec3_scale(cam->mov_velocity, direction, cam->mov_speed);
@@ -92,7 +73,7 @@ void camera_update(DG3D_Camera* cam, float dt)
     if (vec3_len(cam->mov_velocity) <= FLT_EPSILON) {
         cam->mov_velocity[0] = 0.0f;
         cam->mov_velocity[1] = 0.0f;
-        cam->mov_velocity[2] = 0.0f;
+        cam->mov_velocity[2] = 0.0f;vec3 direction;
     }
 
     // update cam view matrix;
@@ -113,6 +94,23 @@ void camera_process_mouse_movement(DG3D_Camera* cam, float xoffset, float yoffse
     xoffset *= MOUSE_SENS;
     yoffset *= MOUSE_SENS;
 
+    cam->yaw   += xoffset;
+    cam->pitch += yoffset;
+
+    if (cam->pitch > 89.0f)
+        cam->pitch = 89.0f;
+    if (cam->pitch < -89.0f)
+        cam->pitch = -89.0f;
+
+    // x = cos(yaw) * cos(pitch)
+    // y = sin(yaw) * cos(pitch)
+    // z = sin(pitch) but since y here is the up.
+    vec3 direction;
+    direction[0] = cos(mathm_deg_to_r(cam->yaw)) * cos(mathm_deg_to_r(cam->pitch));
+    direction[1] = sin(mathm_deg_to_r(cam->pitch));
+    direction[2] = sin(mathm_deg_to_r(cam->yaw)) * cos(mathm_deg_to_r(cam->pitch));
+    vec3_norm(direction, direction);
+    // vec3_dup(g_camera.direction, direction);
 
 }
 

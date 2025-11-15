@@ -7,7 +7,7 @@
 #include <glad/glad.h>
 #include <linmath/linmath.h>
 
-#include "math_misc.h"
+#include "misc/math_misc.h"
 #include "shader.h"
 
 #define U_BLOCK_MATRICES_BINDING 1 // 0 is for gleter2d
