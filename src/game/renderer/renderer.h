@@ -56,6 +56,9 @@ typedef struct {
     
 } DG3D_Renderer;
 
+
+// TODO pass camera directly as parameter update.
+
 int  dg3d_renderer_init(DG3D_Renderer* renderer, int width, int height);
 void dg3d_begin_frame(DG3D_Renderer* renderer);
 void dg3d_render_cube(DG3D_Renderer* renderer, mat4x4 model, GLuint texture);

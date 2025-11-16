@@ -1,5 +1,6 @@
 #include "platform_input.h"
 #include <GLFW/glfw3.h>
+#include <stdbool.h>
 #include <assert.h>
 
 Key keys[KEY_COUNT];
@@ -29,6 +30,15 @@ void platform_input_disable_cursor(void)
 {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
+ 
+void platform_input_set_cursor_visibility(bool cursor_visible)
+{
+    if (cursor_visible) {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    } else {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+}
 
 int platform_input_mouse_moved(void)
 {
@@ -54,6 +64,8 @@ int platform_is_key_down(key_type key)
 {
     return keys[key].down;
 }
+
+
 
 
 void platform_input_set_key(key_type type, int action)

@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <float.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 #include <glad/glad.h>
@@ -93,6 +94,7 @@ float delta = 0.01667;
 
 double dx;
 double dy;
+static bool cursor_visible = false;
 
 int dg_loop(float dt)
 {
@@ -107,6 +109,11 @@ int dg_loop(float dt)
         double x, y;
         platform_input_get_cursor_pos(&x, &y);
         platform_log_info("[CURSOR] X:%f, Y:%f", x, y);
+    }
+
+    if (platform_is_key_pressed(KEY_I)) {
+        cursor_visible = !cursor_visible;
+        platform_input_set_cursor_visibility(cursor_visible);
     }
 
 
